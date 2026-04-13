@@ -1,0 +1,130 @@
+﻿@model Rebel.Web.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container py-4">
+    <div class="dashboard-hero rounded-4 p-4 p-lg-5 mb-4">
+        <span class="hero-badge">ADMIN PANEL</span>
+        <h1 class="hero-title mt-3">Control the Rebel vibe</h1>
+        <p class="hero-subtitle">
+            Manage categories, menu items and events from one place.
+        </p>
+
+        <div class="d-flex gap-3 flex-wrap mt-4">
+            <a asp-controller="AdminEvents" asp-action="Index" class="btn btn-warning rounded-pill px-4">
+                All Events
+            </a>
+            <a asp-controller="Category" asp-action="Index" class="btn btn-outline-light rounded-pill px-4">
+                Categories
+            </a>
+            <a asp-controller="Product" asp-action="Index" class="btn btn-outline-warning rounded-pill px-4">
+                Menu
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <a asp-controller="Category" asp-action="Index" class="dashboard-stat-link text-decoration-none">
+                <div class="dashboard-card stat-card h-100">
+                    <p class="stat-label">Categories</p>
+                    <h2 class="stat-number">@Model.CategoriesCount</h2>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="Product" asp-action="Index" class="dashboard-stat-link text-decoration-none">
+                <div class="dashboard-card stat-card h-100">
+                    <p class="stat-label">Products</p>
+                    <h2 class="stat-number">@Model.ProductsCount</h2>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="AdminEvents" asp-action="Index" class="dashboard-stat-link text-decoration-none">
+                <div class="dashboard-card stat-card h-100">
+                    <p class="stat-label">Events</p>
+                    <h2 class="stat-number">@Model.EventsCount</h2>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-card p-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="text-white m-0 dashboard-section-title">Upcoming Events</h3>
+                <p class="dashboard-section-subtitle mb-0">What’s coming next at Rebel Rebel</p>
+            </div>
+
+            <a asp-controller="AdminEvents" asp-action="Index"
+               class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                View All
+            </a>
+        </div>
+
+        @if (Model.UpcomingEvents.Any())
+        {
+            <div class="row g-4">
+                @foreach (var ev in Model.UpcomingEvents)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <a asp-controller="AdminEvents" asp-action="Edit" asp-route-id="@ev.Id"
+                           class="admin-event-link text-decoration-none">
+                            <div class="admin-event-card h-100">
+                                <div class="admin-event-image-wrap">
+                                    @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
+                                    {
+                                        <img src="@ev.ImageUrl" alt="@ev.Title" class="admin-event-card-img" />
+                                    }
+                                    else
+                                    {
+                                        <div class="admin-event-card-placeholder">
+                                            No image
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="admin-event-card-body">
+                                    <div class="admin-event-date-chip">
+                                        @ev.Date.ToString("dd MMM yyyy")
+                                    </div>
+
+                                    <h5 class="admin-event-title mt-3">@ev.Title</h5>
+
+                                    @if (!string.IsNullOrWhiteSpace(ev.Description))
+                                    {
+                                        <p class="admin-event-description">
+                                            @(ev.Description.Length > 90
+                                                                            ? ev.Description.Substring(0, 90) + "..."
+                                                                            : ev.Description)
+                            </p>
+                                                        }
+
+                                    <div class="admin-event-footer">
+                                        <span class="admin-event-edit">Open event →</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-events-box text-center">
+                <h5 class="text-white mb-2">No upcoming events yet</h5>
+                <p class="mb-3">Start by adding your next Rebel Rebel event.</p>
+                <a asp-controller="AdminEvents" asp-action="Create"
+                   class="btn btn-warning rounded-pill px-4">
+                    Add Event
+                </a>
+            </div>
+        }
+    </div>
+</div>

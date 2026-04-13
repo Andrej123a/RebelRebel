@@ -1,0 +1,94 @@
+﻿@model Rebel.Domain.Entities.Category
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">@Model.Name</h1>
+            <p class="text-secondary mb-0">
+                @(string.IsNullOrWhiteSpace(Model.Description) ? "Products in this category." : Model.Description)
+            </p>
+        </div>
+
+        <a asp-controller="Product"
+           asp-action="Create"
+           asp-route-categoryId="@Model.Id"
+           class="btn btn-primary rounded-pill px-4">
+            + Add Product
+        </a>
+    </div>
+
+    @if (Model.Products != null && Model.Products.Any())
+    {
+        <div class="row g-4">
+            @foreach (var item in Model.Products)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 bg-dark text-light border-secondary shadow-sm">
+                        <img src="@item.ImageUrl"
+                             class="card-img-top"
+                             alt="@item.Name"
+                             style="height: 220px; object-fit: cover;" />
+
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title fw-bold mb-0">@item.Name</h5>
+
+                                @if (item.IsAvailable)
+                                {
+                                    <span class="badge bg-success">Available</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Unavailable</span>
+                                }
+                        </div>
+
+                        <p class="text-secondary small mb-3">
+                            @(string.IsNullOrWhiteSpace(item.Description)
+                                                    ? "No description available."
+                                                    : item.Description)
+                    </p>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-info fs-5">MKD @item.Price</span>
+
+                                <div>
+                                    <a asp-action="Edit"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-info me-2">
+                                        Edit
+                                    </a>
+                                    <a asp-action="Delete"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+        </div>
+    }
+    else
+    {
+        <div class="card bg-dark border-secondary text-light shadow-sm">
+            <div class="card-body py-5 text-center">
+                <h4 class="fw-bold mb-2">No products yet</h4>
+                <p class="text-secondary mb-4">Start by adding the first product to this category.</p>
+
+                <a asp-controller="Product"
+                   asp-action="Create"
+                   asp-route-categoryId="@Model.Id"
+                   class="btn btn-primary rounded-pill px-4">
+                    + Add First Product
+                </a>
+            </div>
+        </div>
+    }
+</div>

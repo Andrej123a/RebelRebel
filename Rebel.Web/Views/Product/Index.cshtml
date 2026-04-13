@@ -1,0 +1,138 @@
+﻿@model IEnumerable<Rebel.Domain.Entities.Product>
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold">Products</h1>
+
+        <a asp-action="Create" class="btn btn-primary">
+            + Add Product
+        </a>
+    </div>
+
+    <form id="productFilterForm" class="mb-4" onsubmit="return false;">
+        <div class="row g-2">
+            <div class="col-md-5">
+                <input type="text"
+                       name="searchTerm"
+                       value="@ViewBag.SearchTerm"
+                       class="form-control"
+                       placeholder="Search products by name..."
+                       id="searchTermInput" />
+            </div>
+
+            <div class="col-md-3">
+                <select name="categoryId"
+                        class="form-select"
+                        asp-items="ViewBag.Categories"
+                        id="categorySelect">
+                    <option value="">All categories</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="isAvailable" class="form-select" id="statusSelect">
+                    <option value="">All status</option>
+
+                    @if (ViewBag.IsAvailable == true)
+                    {
+                        <option value="true" selected>Available</option>
+                    }
+                    else
+                    {
+                        <option value="true">Available</option>
+                    }
+
+                    @if (ViewBag.IsAvailable == false)
+                    {
+                        <option value="false" selected>Unavailable</option>
+                    }
+                    else
+                    {
+                        <option value="false">Unavailable</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <a asp-action="Index" class="btn btn-outline-light w-100">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <div id="productsTableContainer">
+        <partial name="_ProductsTablePartial" model="Model" />
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById("searchTermInput");
+            const categorySelect = document.getElementById("categorySelect");
+            const statusSelect = document.getElementById("statusSelect");
+            const tableContainer = document.getElementById("productsTableContainer");
+
+            let debounceTimer;
+
+            async function loadProducts() {
+                const searchTerm = searchInput.value;
+                const categoryId = categorySelect.value;
+                const isAvailable = statusSelect.value;
+
+                const query = new URLSearchParams({
+                    searchTerm: searchTerm,
+                    categoryId: categoryId,
+                    isAvailable: isAvailable
+                });
+
+                try {
+                    tableContainer.style.opacity = "0.6";
+
+                    const response = await fetch(`/Product/FilterProducts?${query.toString()}`, {
+                        method: "GET",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Failed to load products.");
+                    }
+
+                    const html = await response.text();
+                    tableContainer.innerHTML = html;
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    tableContainer.style.opacity = "1";
+                }
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener("input", function () {
+                    clearTimeout(debounceTimer);
+
+                    debounceTimer = setTimeout(function () {
+                        if (searchInput.value.trim().length === 1) {
+                            return;
+                        }
+
+                        loadProducts();
+                    }, 350);
+                });
+            }
+
+            if (categorySelect) {
+                categorySelect.addEventListener("change", loadProducts);
+            }
+
+            if (statusSelect) {
+                statusSelect.addEventListener("change", loadProducts);
+            }
+        });
+    </script>
+}

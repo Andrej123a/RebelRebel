@@ -1,0 +1,194 @@
+﻿@using Rebel.Domain.Enums
+@model List<Rebel.Domain.Entities.Product>
+
+@{
+    ViewData["Title"] = "Menu";
+    var selectedSection = (ViewBag.Section as string ?? "food").ToLower();
+}
+
+<div class="menu-page">
+    <div class="menu-header text-center mb-5">
+        <p class="menu-subtitle">FOOD, BEER & DRINK MENU</p>
+        <h1 class="menu-title">REBEL REBEL PUB</h1>
+        <p class="menu-description">Explore our food, beers and drinks.</p>
+
+        <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+            <a asp-controller="Home" asp-action="Menu" asp-route-section="food"
+               class="btn @(selectedSection == "food" ? "btn-warning" : "btn-outline-light")">
+                Food
+            </a>
+
+            <a asp-controller="Home" asp-action="Menu" asp-route-section="beer"
+               class="btn @(selectedSection == "beer" ? "btn-warning" : "btn-outline-light")">
+                Beer
+            </a>
+
+            <a asp-controller="Home" asp-action="Menu" asp-route-section="drink"
+               class="btn @(selectedSection == "drink" ? "btn-warning" : "btn-outline-light")">
+                Drinks
+            </a>
+        </div>
+    </div>
+    @if (selectedSection == "food")
+    {
+        <section id="food-menu" class="mb-5">
+            <h2 class="menu-category-title text-warning mb-4">Food Menu</h2>
+
+            @foreach (var group in Model
+                    .Where(p => p.Category != null && p.Category.Type == CategoryType.Food)
+                    .GroupBy(p => p.Category!.Name))
+            {
+                <section class="menu-category-section mb-5">
+                    <h3 class="menu-category-title">@group.Key</h3>
+
+                    <div class="row g-4">
+                        @foreach (var product in group)
+                        {
+                            <div class="col-md-6 col-lg-4">
+                                <div class="menu-card h-100">
+                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                    {
+                                        <img src="@product.ImageUrl" alt="@product.Name" class="menu-card-image" />
+                                    }
+                                    else
+                                    {
+                                        <div class="menu-card-image-placeholder">No Image</div>
+                                    }
+
+                                    <div class="menu-card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h5 class="menu-card-title">@product.Name</h5>
+                                            <span class="menu-card-price">@product.Price ден</span>
+                                        </div>
+
+                                        <p class="menu-card-description">
+                                            @product.Description
+                                        </p>
+
+                                        @if (product.IsAvailable)
+                                        {
+                                            <span class="menu-status available">Available</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="menu-status unavailable">Unavailable</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+        </section>
+    }
+
+    @if (selectedSection == "beer")
+    {
+        <section id="beer-menu" class="mb-5">
+            <h2 class="menu-category-title text-warning mb-4">Beer Menu</h2>
+
+            @foreach (var group in Model
+                    .Where(p => p.Category != null && p.Category.Type == CategoryType.Beer)
+                    .GroupBy(p => p.Category!.Name))
+            {
+                <section class="menu-category-section mb-5">
+                    <h3 class="menu-category-title">@group.Key</h3>
+
+                    <div class="row g-4">
+                        @foreach (var product in group)
+                        {
+                            <div class="col-md-6 col-lg-4">
+                                <div class="menu-card h-100">
+                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                    {
+                                        <img src="@product.ImageUrl" alt="@product.Name" class="menu-card-image" />
+                                    }
+                                    else
+                                    {
+                                        <div class="menu-card-image-placeholder">No Image</div>
+                                    }
+
+                                    <div class="menu-card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h5 class="menu-card-title">@product.Name</h5>
+                                            <span class="menu-card-price">@product.Price ден</span>
+                                        </div>
+
+                                        <p class="menu-card-description">
+                                            @product.Description
+                                        </p>
+
+                                        @if (product.IsAvailable)
+                                        {
+                                            <span class="menu-status available">Available</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="menu-status unavailable">Unavailable</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+        </section>
+    }
+
+    @if (selectedSection == "drink")
+    {
+        <section id="drink-menu" class="mb-5">
+            <h2 class="menu-category-title text-warning mb-4">Drink Menu</h2>
+
+            @foreach (var group in Model
+                    .Where(p => p.Category != null && p.Category.Type == CategoryType.Drink)
+                    .GroupBy(p => p.Category!.Name))
+            {
+                <section class="menu-category-section mb-5">
+                    <h3 class="menu-category-title">@group.Key</h3>
+
+                    <div class="row g-4">
+                        @foreach (var product in group)
+                        {
+                            <div class="col-md-6 col-lg-4">
+                                <div class="menu-card h-100">
+                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                    {
+                                        <img src="@product.ImageUrl" alt="@product.Name" class="menu-card-image" />
+                                    }
+                                    else
+                                    {
+                                        <div class="menu-card-image-placeholder">No Image</div>
+                                    }
+
+                                    <div class="menu-card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h5 class="menu-card-title">@product.Name</h5>
+                                            <span class="menu-card-price">@product.Price ден</span>
+                                        </div>
+
+                                        <p class="menu-card-description">
+                                            @product.Description
+                                        </p>
+
+                                        @if (product.IsAvailable)
+                                        {
+                                            <span class="menu-status available">Available</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="menu-status unavailable">Unavailable</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+        </section>
+    }
+    
+</div>

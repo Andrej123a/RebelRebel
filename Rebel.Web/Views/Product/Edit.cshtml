@@ -1,0 +1,46 @@
+﻿@model Rebel.Domain.Entities.Product
+
+<h1 style="color:white;">Edit Product</h1>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div>
+        <label style="color:white;">Name</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div>
+        <label style="color:white;">Description</label>
+        <input asp-for="Description" class="form-control" />
+    </div>
+
+    <div>
+        <label style="color:white;">Price</label>
+        <input asp-for="Price" class="form-control" />
+    </div>
+
+    <div>
+        <label style="color:white;">Image URL</label>
+        <input asp-for="ImageUrl" class="form-control" />
+    </div>
+
+    <div>
+        <label style="color:white;">Category</label>
+        <select asp-for="CategoryId" class="form-control">
+            @foreach (var category in ViewBag.Categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+
+    <div>
+        <label style="color:white;">Available</label>
+        <input asp-for="IsAvailable" type="checkbox" />
+    </div>
+
+    <button type="submit">Save</button>
+</form>
+
+<a asp-action="Index">Back</a>

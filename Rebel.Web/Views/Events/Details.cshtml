@@ -1,0 +1,117 @@
+﻿@model Rebel.Domain.Entities.Event
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@functions {
+    public string FormatEventDate(DateTime date)
+    {
+        var today = DateTime.UtcNow.Date;
+        var eventDate = date.Date;
+
+        if (eventDate == today)
+            return "Tonight";
+
+        if (eventDate == today.AddDays(1))
+            return "Tomorrow";
+
+        if (eventDate <= today.AddDays(7))
+            return $"This {eventDate:dddd}";
+
+        return eventDate.ToString("dd MMM yyyy");
+    }
+
+    public string GetEventTypeClass(Rebel.Domain.Enums.EventType type)
+    {
+        return type switch
+        {
+            Rebel.Domain.Enums.EventType.DJNight => "bg-warning text-dark",
+            Rebel.Domain.Enums.EventType.LiveMusic => "bg-danger",
+            Rebel.Domain.Enums.EventType.BeerTasting => "bg-success",
+            Rebel.Domain.Enums.EventType.SpecialEvent => "bg-primary",
+            Rebel.Domain.Enums.EventType.AcousticNight => "bg-secondary",
+            _ => "bg-light text-dark"
+        };
+    }
+
+    public string FormatEventType(Rebel.Domain.Enums.EventType type)
+    {
+        return type switch
+        {
+            Rebel.Domain.Enums.EventType.DJNight => "DJ Night",
+            Rebel.Domain.Enums.EventType.LiveMusic => "Live Music",
+            Rebel.Domain.Enums.EventType.BeerTasting => "Beer Tasting",
+            Rebel.Domain.Enums.EventType.SpecialEvent => "Special Event",
+            Rebel.Domain.Enums.EventType.AcousticNight => "Acoustic Night",
+            _ => type.ToString()
+        };
+    }
+}
+
+<section class="py-5 text-white">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-6">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" alt="@Model.Title" class="img-fluid rounded-4 shadow w-100" />
+                }
+                else
+                {
+                    <div class="rounded-4 d-flex align-items-center justify-content-center bg-dark text-secondary"
+                         style="min-height: 420px;">
+                        No Image
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-6">
+                <p class="text-warning fw-bold text-uppercase mb-2">
+                    @FormatEventDate(Model.Date)
+                </p>
+
+                @if (Model.StartTime.HasValue)
+                {
+                    <p class="text-warning small fw-bold mb-3">
+                        Starts at @Model.StartTime.Value.ToString(@"hh\:mm")
+                    </p>
+                }
+
+                <span class="badge @GetEventTypeClass(Model.EventType) mb-3">
+                    @FormatEventType(Model.EventType)
+                </span>
+
+                <h1 class="fw-bold mb-3">@Model.Title</h1>
+
+                <p class="lead text-secondary mb-4">
+                    @Model.Description
+                </p>
+
+                <div class="mb-4">
+                    <p class="mb-2">
+                        <strong>Date:</strong> @Model.Date.ToString("dd MMMM yyyy")
+                    </p>
+
+                    @if (Model.StartTime.HasValue)
+                    {
+                        <p class="mb-2">
+                            <strong>Start:</strong> @Model.StartTime.Value.ToString(@"hh\:mm")
+                        </p>
+                    }
+
+                    @if (Model.EndTime.HasValue)
+                    {
+                        <p class="mb-2">
+                            <strong>Ends:</strong> @Model.EndTime.Value.ToString(@"hh\:mm")
+                        </p>
+                    }
+                </div>
+
+                <a asp-controller="Events" asp-action="Index" class="btn btn-outline-warning btn-lg">
+                    Back to Events
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

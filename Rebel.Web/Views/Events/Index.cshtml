@@ -1,0 +1,121 @@
+﻿@model List<Rebel.Domain.Entities.Event>
+
+@{
+    ViewData["Title"] = "Events";
+}
+
+@functions {
+    public string FormatEventDate(DateTime date)
+    {
+        var today = DateTime.UtcNow.Date;
+        var eventDate = date.Date;
+
+        if (eventDate == today)
+            return "Tonight";
+
+        if (eventDate == today.AddDays(1))
+            return "Tomorrow";
+
+        if (eventDate <= today.AddDays(7))
+            return $"This {eventDate:dddd}";
+
+        return eventDate.ToString("dd MMM yyyy");
+    }
+
+    public string GetEventTypeClass(Rebel.Domain.Enums.EventType type)
+    {
+        return type switch
+        {
+            Rebel.Domain.Enums.EventType.DJNight => "bg-warning text-dark",
+            Rebel.Domain.Enums.EventType.LiveMusic => "bg-danger",
+            Rebel.Domain.Enums.EventType.BeerTasting => "bg-success",
+            Rebel.Domain.Enums.EventType.SpecialEvent => "bg-primary",
+            Rebel.Domain.Enums.EventType.AcousticNight => "bg-secondary",
+            _ => "bg-light text-dark"
+        };
+    }
+
+    public string FormatEventType(Rebel.Domain.Enums.EventType type)
+    {
+        return type switch
+        {
+            Rebel.Domain.Enums.EventType.DJNight => "DJ Night",
+            Rebel.Domain.Enums.EventType.LiveMusic => "Live Music",
+            Rebel.Domain.Enums.EventType.BeerTasting => "Beer Tasting",
+            Rebel.Domain.Enums.EventType.SpecialEvent => "Special Event",
+            Rebel.Domain.Enums.EventType.AcousticNight => "Acoustic Night",
+            _ => type.ToString()
+        };
+    }
+}
+
+<section class="home-events py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <p class="events-subtitle">WHAT'S ON</p>
+            <h2 class="events-title">Upcoming Nights</h2>
+            <p class="text-secondary">
+                The next reasons to show up, stay late and come back again.
+            </p>
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="row g-4">
+                @foreach (var e in Model)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <a asp-controller="Events" asp-action="Details" asp-route-id="@e.Id" class="text-decoration-none text-reset">
+                            <div class="event-card h-100">
+                                @if (!string.IsNullOrEmpty(e.ImageUrl))
+                                {
+                                    <img src="@e.ImageUrl" class="event-card-image w-100" alt="@e.Title" />
+                                }
+                                else
+                                {
+                                    <div class="event-card-image d-flex align-items-center justify-content-center text-secondary">
+                                        No Image
+                                    </div>
+                                }
+
+                                <div class="p-3 d-flex flex-column h-100">
+                                    <p class="event-date mb-2">@FormatEventDate(e.Date)</p>
+
+                                    @if (e.StartTime.HasValue)
+                                    {
+                                        <p class="text-warning small fw-bold mb-2">
+                                            Starts at @e.StartTime.Value.ToString(@"hh\:mm")
+                                        </p>
+                                    }
+
+                                    <span class="badge @GetEventTypeClass(e.EventType) mb-2 align-self-start">
+                                        @FormatEventType(e.EventType)
+                                    </span>
+
+                                    <h5 class="mb-2">@e.Title</h5>
+                                    <p class="text-secondary mb-0">@e.Description</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center mt-5">
+                <div class="empty-events-box">
+                    <h4 class="mb-3">No upcoming events right now</h4>
+                    <p class="mb-0">Check back soon for new nights, live sets and special events.</p>
+                </div>
+            </div>
+        }
+
+        <div class="text-center mt-5">
+            <a asp-controller="Home" asp-action="Index"
+               class="btn btn-outline-warning btn-lg">
+                Back to Home
+            </a>
+        </div>
+    </div>
+</section>

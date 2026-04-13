@@ -1,0 +1,194 @@
+﻿@model List<Rebel.Domain.Entities.Category>
+@using Rebel.Domain.Enums
+
+@{
+    ViewData["Title"] = "Categories";
+
+    var foodCategories = Model.Where(c => c.Type == CategoryType.Food).ToList();
+    var drinkCategories = Model.Where(c => c.Type == CategoryType.Drink).ToList();
+    var beerCategories = Model.Where(c => c.Type == CategoryType.Beer).ToList();
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold text-light mb-1">Categories</h1>
+            <p class="text-secondary mb-0">Choose a category to manage its products.</p>
+        </div>
+
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4">
+            + Add Category
+        </a>
+    </div>
+
+    <!-- FOOD -->
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-warning mb-0">Food Categories</h2>
+            <a asp-action="Create" asp-route-type="@CategoryType.Food" class="btn btn-outline-warning btn-sm rounded-pill">
+                + Add Food Category
+            </a>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var category in foodCategories)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 bg-dark text-light border-secondary shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h4 class="fw-bold mb-2">@category.Name</h4>
+
+                            <p class="text-secondary mb-3">
+                                @(string.IsNullOrWhiteSpace(category.Description)
+                                                            ? "No description available."
+                                                            : category.Description)
+                        </p>
+
+                            <p class="mb-2">
+                                <span class="badge bg-warning text-dark">Food</span>
+                            </p>
+
+                            <p class="mb-4">
+                                <span class="badge bg-secondary">
+                                    @(category.Products?.Count ?? 0) products
+                                </span>
+                            </p>
+
+                            <div class="mt-auto d-flex flex-wrap gap-2">
+                                <a asp-controller="Product" asp-action="ByCategory" asp-route-id="@category.Id" class="btn btn-outline-light btn-sm">
+                                    View Products
+                                </a>
+
+                                <a asp-controller="Product" asp-action="Create" asp-route-categoryId="@category.Id" class="btn btn-primary btn-sm">
+                                    Add Product
+                                </a>
+
+                                <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-outline-info btn-sm">
+                                    Edit
+                                </a>
+
+                                <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-outline-danger btn-sm">
+                                    Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        }
+        </div>
+    </section>
+
+    <!-- DRINK -->
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-warning mb-0">Drink Categories</h2>
+            <a asp-action="Create" asp-route-type="@CategoryType.Drink" class="btn btn-outline-warning btn-sm rounded-pill">
+                + Add Drink Category
+            </a>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var category in drinkCategories)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 bg-dark text-light border-secondary shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h4 class="fw-bold mb-2">@category.Name</h4>
+
+                            <p class="text-secondary mb-3">
+                                @(string.IsNullOrWhiteSpace(category.Description)
+                                                            ? "No description available."
+                                                            : category.Description)
+                        </p>
+
+                            <p class="mb-2">
+                                <span class="badge bg-info text-dark">Drink</span>
+                            </p>
+
+                            <p class="mb-4">
+                                <span class="badge bg-secondary">
+                                    @(category.Products?.Count ?? 0) products
+                                </span>
+                            </p>
+
+                            <div class="mt-auto d-flex flex-wrap gap-2">
+                                <a asp-controller="Product" asp-action="ByCategory" asp-route-id="@category.Id" class="btn btn-outline-light btn-sm">
+                                    View Products
+                                </a>
+
+                                <a asp-controller="Product" asp-action="Create" asp-route-categoryId="@category.Id" class="btn btn-primary btn-sm">
+                                    Add Product
+                                </a>
+
+                                <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-outline-info btn-sm">
+                                    Edit
+                                </a>
+
+                                <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-outline-danger btn-sm">
+                                    Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        }
+        </div>
+    </section>
+
+    <!-- BEER -->
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-warning mb-0">Beer Categories</h2>
+            <a asp-action="Create" asp-route-type="@CategoryType.Beer" class="btn btn-outline-warning btn-sm rounded-pill">
+                + Add Beer Category
+            </a>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var category in beerCategories)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 bg-dark text-light border-secondary shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h4 class="fw-bold mb-2">@category.Name</h4>
+
+                            <p class="text-secondary mb-3">
+                                @(string.IsNullOrWhiteSpace(category.Description)
+                                                            ? "No description available."
+                                                            : category.Description)
+                        </p>
+
+                            <p class="mb-2">
+                                <span class="badge bg-success">Beer</span>
+                            </p>
+
+                            <p class="mb-4">
+                                <span class="badge bg-secondary">
+                                    @(category.Products?.Count ?? 0) products
+                                </span>
+                            </p>
+
+                            <div class="mt-auto d-flex flex-wrap gap-2">
+                                <a asp-controller="Product" asp-action="ByCategory" asp-route-id="@category.Id" class="btn btn-outline-light btn-sm">
+                                    View Products
+                                </a>
+
+                                <a asp-controller="Product" asp-action="Create" asp-route-categoryId="@category.Id" class="btn btn-primary btn-sm">
+                                    Add Product
+                                </a>
+
+                                <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-outline-info btn-sm">
+                                    Edit
+                                </a>
+
+                                <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-outline-danger btn-sm">
+                                    Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        }
+        </div>
+    </section>
+</div>

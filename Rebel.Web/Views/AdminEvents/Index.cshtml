@@ -1,0 +1,71 @@
+﻿@model List<Rebel.Domain.Entities.Event>
+
+@{
+    ViewData["Title"] = "Manage Events";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Manage Events</h2>
+
+        <a asp-action="Create" class="btn btn-warning">
+            + Add Event
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="table table-dark table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Active</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td>@e.Title</td>
+
+                        <td>
+                            @e.Date.ToString("dd MMM yyyy")
+                        </td>
+
+                        <td>
+                            @if (e.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Hidden</span>
+                            }
+                        </td>
+
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@e.Id"
+                               class="btn btn-sm btn-outline-light me-2">
+                                Edit
+                            </a>
+
+                            <a asp-action="Delete" asp-route-id="@e.Id"
+                               class="btn btn-sm btn-outline-danger">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="text-center text-secondary mt-5">
+            <p>No events created yet.</p>
+        </div>
+    }
+</div>

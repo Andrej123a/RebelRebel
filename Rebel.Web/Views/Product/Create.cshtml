@@ -1,0 +1,79 @@
+﻿@model Rebel.Domain.Entities.Product
+
+@{
+    ViewData["Title"] = "Create Product";
+    var categories = ViewBag.Categories as List<Rebel.Domain.Entities.Category>;
+    var selectedCategory = categories?.FirstOrDefault(c => c.Id == Model.CategoryId);
+}
+
+<div class="container py-4">
+    <h1 class="fw-bold mb-4">Create Product</h1>
+
+    <form asp-action="Create" method="post" autocomplete="off">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" autocomplete="off" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Price" class="form-label"></label>
+            <input asp-for="Price" class="form-control" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ImageUrl" class="form-label"></label>
+            <input asp-for="ImageUrl" class="form-control" autocomplete="off" />
+            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+        </div>
+
+        @if (Model.CategoryId != Guid.Empty && selectedCategory != null)
+        {
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <input type="text" class="form-control" value="@selectedCategory.Name" readonly />
+                <input type="hidden" asp-for="CategoryId" />
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <label asp-for="CategoryId" class="form-label"></label>
+                <select asp-for="CategoryId" class="form-select">
+                    <option value="">-- Select category --</option>
+                    @if (categories != null)
+                    {
+                        foreach (var category in categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
+        }
+
+        <div class="form-check mb-4">
+            <input asp-for="IsAvailable" class="form-check-input" />
+            <label asp-for="IsAvailable" class="form-check-label"></label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
