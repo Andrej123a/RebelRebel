@@ -1,13 +1,17 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Rebel.Infrastructure.Data;
+using Rebel.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
@@ -15,6 +19,14 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<AppDbContext>();
+
+// EMAIL SETTINGS
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings")
+);
+
+// EMAIL SERVICE
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 
@@ -34,15 +46,20 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
 
 app.MapRazorPages();
 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+    var userManager =
+        services.GetRequiredService<UserManager<IdentityUser>>();
+
+    var roleManager =
+        services.GetRequiredService<RoleManager<IdentityRole>>();
 
     string adminEmail = "admin@rebel.com";
     string adminPassword = "Admin123!";
@@ -50,10 +67,13 @@ using (var scope = app.Services.CreateScope())
 
     if (!await roleManager.RoleExistsAsync(adminRole))
     {
-        await roleManager.CreateAsync(new IdentityRole(adminRole));
+        await roleManager.CreateAsync(
+            new IdentityRole(adminRole)
+        );
     }
 
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    var adminUser =
+        await userManager.FindByEmailAsync(adminEmail);
 
     if (adminUser == null)
     {
@@ -64,11 +84,17 @@ using (var scope = app.Services.CreateScope())
             EmailConfirmed = true
         };
 
-        var result = await userManager.CreateAsync(adminUser, adminPassword);
+        var result = await userManager.CreateAsync(
+            adminUser,
+            adminPassword
+        );
 
         if (result.Succeeded)
         {
-            await userManager.AddToRoleAsync(adminUser, adminRole);
+            await userManager.AddToRoleAsync(
+                adminUser,
+                adminRole
+            );
         }
     }
 }

@@ -1,0 +1,158 @@
+﻿@model Rebel.Web.Models.ReservationCreateViewModel
+
+@{
+    ViewData["Title"] = "Book a Table";
+}
+
+<section class="py-5 text-white">
+    <div class="container" style="max-width: 850px;">
+
+        <div class="text-center mb-5">
+            <p class="text-warning fw-bold text-uppercase mb-2">
+                Rebel Rebel
+            </p>
+
+            <h1 class="display-4 fw-bold text-uppercase">
+                Book a Table
+            </h1>
+
+            <p class="text-secondary">
+                Send us your request and our team will confirm your reservation.
+            </p>
+        </div>
+
+        <div class="bg-dark border border-secondary rounded-4 p-4 p-md-5 shadow-lg">
+
+            <form asp-controller="Reservations"
+                  asp-action="Create"
+                  method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger">
+                </div>
+
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+                        <label asp-for="FullName"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="FullName"
+                               class="form-control form-control-lg"
+                               placeholder="Your full name" />
+
+                        <span asp-validation-for="FullName"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Email"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="Email"
+                               class="form-control form-control-lg"
+                               placeholder="you@example.com" />
+
+                        <span asp-validation-for="Email"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PhoneNumber"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="PhoneNumber"
+                               class="form-control form-control-lg"
+                               placeholder="+389..." />
+
+                        <span asp-validation-for="PhoneNumber"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="NumberOfGuests"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="NumberOfGuests"
+                               type="number"
+                               min="1"
+                               max="20"
+                               class="form-control form-control-lg" />
+
+                        <span asp-validation-for="NumberOfGuests"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ReservationDate"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="ReservationDate"
+                               type="date"
+                               min="@ViewBag.MinimumReservationDate"
+                               class="form-control form-control-lg" />
+
+                        <span asp-validation-for="ReservationDate"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ReservationTime"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <input asp-for="ReservationTime"
+                               type="time"
+                               step="900"
+                               class="form-control form-control-lg" />
+
+                        <span asp-validation-for="ReservationTime"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Note"
+                               class="form-label fw-bold">
+                        </label>
+
+                        <textarea asp-for="Note"
+                                  rows="4"
+                                  class="form-control"
+                                  placeholder="Birthday, preferred table, allergies or anything else we should know...">
+                        </textarea>
+
+                        <span asp-validation-for="Note"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit"
+                                class="btn btn-warning btn-lg fw-bold text-uppercase w-100">
+                            Send Reservation Request
+                        </button>
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

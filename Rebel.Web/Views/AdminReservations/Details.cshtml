@@ -1,0 +1,313 @@
+﻿@model Rebel.Domain.Entities.Reservation
+
+@using Rebel.Domain.Enums
+
+@{
+    ViewData["Title"] = "Reservation Details";
+
+    var statusClass = Model.Status switch
+    {
+        ReservationStatus.Pending => "bg-warning text-dark",
+        ReservationStatus.Approved => "bg-success",
+        ReservationStatus.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    var skopjeTimeZone =
+        TimeZoneInfo.FindSystemTimeZoneById("Europe/Skopje");
+
+    var createdAtUtc = DateTime.SpecifyKind(
+        Model.CreatedAtUtc,
+        DateTimeKind.Utc
+    );
+
+    var createdInSkopje = TimeZoneInfo.ConvertTimeFromUtc(
+        createdAtUtc,
+        skopjeTimeZone
+    );
+
+    var reservationDateText =
+        Model.ReservationDate.ToString("dd MMMM yyyy");
+
+    var reservationTimeText =
+        Model.ReservationTime.ToString(@"hh\:mm");
+
+    var createdAtText =
+        createdInSkopje.ToString("dd MMM yyyy, HH:mm");
+
+    string? respondedAtText = null;
+
+    if (Model.RespondedAtUtc.HasValue)
+    {
+        var respondedAtUtc = DateTime.SpecifyKind(
+            Model.RespondedAtUtc.Value,
+            DateTimeKind.Utc
+        );
+
+        var respondedInSkopje = TimeZoneInfo.ConvertTimeFromUtc(
+            respondedAtUtc,
+            skopjeTimeZone
+        );
+
+        respondedAtText =
+            respondedInSkopje.ToString("dd MMM yyyy, HH:mm");
+    }
+
+    var guestNote = string.IsNullOrWhiteSpace(Model.Note)
+        ? "No special requests."
+        : Model.Note;
+
+    var adminResponse = string.IsNullOrWhiteSpace(Model.AdminNote)
+        ? "No additional message was added."
+        : Model.AdminNote;
+}
+
+<section class="py-5 text-white">
+    <div class="container" style="max-width: 950px;">
+
+        <a asp-controller="AdminReservations"
+           asp-action="Index"
+           class="text-warning text-decoration-none fw-bold text-uppercase small">
+            ← Back to Reservations
+        </a>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success mt-4">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger mt-4">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="bg-dark border border-secondary rounded-4 p-4 p-md-5 shadow-lg mt-4">
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-5">
+
+                <div>
+                    <p class="text-warning fw-bold text-uppercase mb-2">
+                        Reservation Request
+                    </p>
+
+                    <h1 class="fw-bold text-uppercase mb-0">
+                        @Model.FullName
+                    </h1>
+                </div>
+
+                <span class="badge @statusClass fs-6 px-3 py-2">
+                    @Model.Status
+                </span>
+
+            </div>
+
+            <div class="row g-4 mb-5">
+
+                <div class="col-md-6">
+                    <div class="border-bottom border-secondary pb-3">
+
+                        <div class="small text-secondary text-uppercase fw-bold">
+                            Email
+                        </div>
+
+                        <div class="fw-bold">
+                            @Model.Email
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="border-bottom border-secondary pb-3">
+
+                        <div class="small text-secondary text-uppercase fw-bold">
+                            Phone
+                        </div>
+
+                        <div class="fw-bold">
+                            @Model.PhoneNumber
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border-bottom border-secondary pb-3">
+
+                        <div class="small text-secondary text-uppercase fw-bold">
+                            Date
+                        </div>
+
+                        <div class="fw-bold">
+                            @reservationDateText
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border-bottom border-secondary pb-3">
+
+                        <div class="small text-secondary text-uppercase fw-bold">
+                            Time
+                        </div>
+
+                        <div class="fw-bold">
+                            @reservationTimeText
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border-bottom border-secondary pb-3">
+
+                        <div class="small text-secondary text-uppercase fw-bold">
+                            Guests
+                        </div>
+
+                        <div class="fw-bold">
+                            @Model.NumberOfGuests
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mb-4">
+
+                <div class="small text-secondary text-uppercase fw-bold mb-2">
+                    Guest note
+                </div>
+
+                <div class="border border-secondary rounded-3 p-3 text-light">
+                    @guestNote
+                </div>
+
+            </div>
+
+            <div class="row g-3 small text-secondary mb-5">
+
+                <div class="col-md-6">
+                    Submitted:
+
+                    <strong class="text-white">
+                        @createdAtText
+                    </strong>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(respondedAtText))
+                {
+                    <div class="col-md-6">
+                        Processed:
+
+                        <strong class="text-white">
+                            @respondedAtText
+                        </strong>
+                    </div>
+                }
+
+            </div>
+
+            @if (Model.Status == ReservationStatus.Pending)
+            {
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+
+                        <form asp-controller="AdminReservations"
+                              asp-action="Approve"
+                              method="post"
+                              class="border border-success rounded-4 p-4 h-100">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.Id" />
+
+                            <h3 class="text-success fw-bold">
+                                Approve
+                            </h3>
+
+                            <p class="text-secondary">
+                                Confirm that the table is available.
+                            </p>
+
+                            <textarea name="adminNote"
+                                  rows="3"
+                                  maxlength="500"
+                                  class="form-control mb-3"
+                                  placeholder="Optional message for the guest..."></textarea>
+
+                            <button type="submit"
+                                    class="btn btn-success fw-bold w-100">
+                                Approve Reservation
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <form asp-controller="AdminReservations"
+                              asp-action="Reject"
+                              method="post"
+                              class="border border-danger rounded-4 p-4 h-100">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.Id" />
+
+                            <h3 class="text-danger fw-bold">
+                                Reject
+                            </h3>
+
+                            <p class="text-secondary">
+                                Decline the reservation request.
+                            </p>
+
+                            <textarea name="adminNote"
+                                  rows="3"
+                                  maxlength="500"
+                                  class="form-control mb-3"
+                                  placeholder="Reason or alternative time..."></textarea>
+
+                            <button type="submit"
+                                    class="btn btn-danger fw-bold w-100">
+                                Reject Reservation
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+            }
+            else
+            {
+                <div class="border border-secondary rounded-4 p-4">
+
+                    <div class="small text-secondary text-uppercase fw-bold mb-2">
+                        Admin response
+                    </div>
+
+                    <p class="mb-0">
+                        @adminResponse
+                    </p>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+</section>

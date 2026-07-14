@@ -11,54 +11,102 @@ namespace Rebel.Web.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly AppDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger, AppDbContext context)
+        private static readonly TimeZoneInfo SkopjeTimeZone =
+            TimeZoneInfo.FindSystemTimeZoneById("Europe/Skopje");
+
+        public HomeController(
+            ILogger<HomeController> logger,
+            AppDbContext context)
         {
             _logger = logger;
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<IActionResult> Index(
+            CancellationToken cancellationToken)
         {
-            var today = DateTime.UtcNow.Date;
+            var skopjeNow = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                SkopjeTimeZone
+            );
 
-            var allUpcomingEvents = _context.Events
-                .AsEnumerable()
-                .Where(e => e.IsActive && e.Date.Date >= today)
-                .OrderBy(e => e.Date)
-                .ToList();
+            var startOfTodayInSkopje = DateTime.SpecifyKind(
+                skopjeNow.Date,
+                DateTimeKind.Unspecified
+            );
 
-            ViewBag.FeaturedEvent = allUpcomingEvents.FirstOrDefault();
-            ViewBag.Events = allUpcomingEvents.Take(3).ToList();
+            var startOfTodayUtc = TimeZoneInfo.ConvertTimeToUtc(
+                startOfTodayInSkopje,
+                SkopjeTimeZone
+            );
 
-            return View();
+            var upcomingEvents = await _context.Events
+                .AsNoTracking()
+                .Where(eventItem =>
+                    eventItem.IsActive &&
+                    eventItem.Date >= startOfTodayUtc
+                )
+                .OrderBy(eventItem => eventItem.Date)
+                .ThenBy(eventItem => eventItem.StartTime)
+                .Take(4)
+                .ToListAsync(cancellationToken);
+
+            var model = new HomeViewModel
+            {
+                FeaturedEvent = upcomingEvents.FirstOrDefault(),
+
+                UpcomingEvents = upcomingEvents
+                    .Skip(1)
+                    .Take(3)
+                    .ToList()
+            };
+
+            return View(model);
         }
 
+        [HttpGet]
         public IActionResult Privacy()
         {
             return View();
         }
 
+        [HttpGet]
         public IActionResult Contact()
         {
             return View();
         }
 
-        public async Task<IActionResult> Menu(string section = "food")
+        [HttpGet]
+        public async Task<IActionResult> Menu(
+            string section = "food",
+            CancellationToken cancellationToken = default)
         {
             var products = await _context.Products
-                .Include(p => p.Category)
-                .Where(p => p.IsAvailable)
-                .ToListAsync();
+                .AsNoTracking()
+                .Include(product => product.Category)
+                .Where(product => product.IsAvailable)
+                .ToListAsync(cancellationToken);
 
             ViewBag.Section = section;
 
             return View(products);
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [ResponseCache(
+            Duration = 0,
+            Location = ResponseCacheLocation.None,
+            NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(
+                new ErrorViewModel
+                {
+                    RequestId =
+                        Activity.Current?.Id ??
+                        HttpContext.TraceIdentifier
+                }
+            );
         }
     }
 }

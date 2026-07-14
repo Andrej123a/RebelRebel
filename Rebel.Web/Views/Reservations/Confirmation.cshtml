@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Reservation Sent";
+}
+
+<section class="py-5 text-white">
+    <div class="container text-center"
+         style="max-width: 760px;">
+
+        <div class="bg-dark border border-warning rounded-4 p-5 shadow-lg">
+
+            <div class="display-1 mb-3">
+                ✓
+            </div>
+
+            <p class="text-warning fw-bold text-uppercase">
+                Request received
+            </p>
+
+            <h1 class="fw-bold mb-3">
+                Thanks, @ViewBag.ReservationName!
+            </h1>
+
+            <p class="lead text-secondary mb-4">
+                Your reservation request has been sent successfully.
+                Our team will review it and you will receive an email
+                once it has been approved or rejected.
+            </p>
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn btn-outline-warning btn-lg">
+                Back to Home
+            </a>
+
+        </div>
+
+    </div>
+</section>

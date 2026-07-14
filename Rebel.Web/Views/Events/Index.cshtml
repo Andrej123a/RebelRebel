@@ -1,4 +1,5 @@
 ﻿@model List<Rebel.Domain.Entities.Event>
+@using System.Globalization
 
 @{
     ViewData["Title"] = "Events";
@@ -7,7 +8,12 @@
 @functions {
     public string FormatEventDate(DateTime date)
     {
-        var today = DateTime.UtcNow.Date;
+        var skopjeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Skopje");
+
+        var today = TimeZoneInfo
+            .ConvertTimeFromUtc(DateTime.UtcNow, skopjeTimeZone)
+            .Date;
+
         var eventDate = date.Date;
 
         if (eventDate == today)
@@ -17,9 +23,9 @@
             return "Tomorrow";
 
         if (eventDate <= today.AddDays(7))
-            return $"This {eventDate:dddd}";
+            return $"This {eventDate.ToString("dddd", CultureInfo.InvariantCulture)}";
 
-        return eventDate.ToString("dd MMM yyyy");
+        return eventDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture);
     }
 
     public string GetEventTypeClass(Rebel.Domain.Enums.EventType type)

@@ -1,301 +1,766 @@
-﻿@{
+﻿@model Rebel.Web.Models.HomeViewModel
+
+@using Rebel.Domain.Enums
+
+@{
     ViewData["Title"] = "Home";
-    var featuredEvent = ViewBag.FeaturedEvent as Rebel.Domain.Entities.Event;
-    var upcomingEvents = ViewBag.Events as List<Rebel.Domain.Entities.Event> ?? new List<Rebel.Domain.Entities.Event>();
+
+    var featuredEvent = Model.FeaturedEvent;
 }
 
 @functions {
+    public DateTime GetSkopjeDate(DateTime date)
+    {
+        var timeZone =
+            TimeZoneInfo.FindSystemTimeZoneById("Europe/Skopje");
+
+        var utcDate = date.Kind == DateTimeKind.Utc
+            ? date
+            : DateTime.SpecifyKind(date, DateTimeKind.Utc);
+
+        return TimeZoneInfo
+            .ConvertTimeFromUtc(utcDate, timeZone)
+            .Date;
+    }
+
     public string FormatEventDate(DateTime date)
     {
-        var today = DateTime.UtcNow.Date;
-        var eventDate = date.Date;
+        var timeZone =
+            TimeZoneInfo.FindSystemTimeZoneById("Europe/Skopje");
+
+        var today = TimeZoneInfo
+            .ConvertTimeFromUtc(DateTime.UtcNow, timeZone)
+            .Date;
+
+        var eventDate = GetSkopjeDate(date);
 
         if (eventDate == today)
+        {
             return "Tonight";
+        }
 
         if (eventDate == today.AddDays(1))
+        {
             return "Tomorrow";
+        }
 
-        if (eventDate <= today.AddDays(7))
+        if (eventDate > today &&
+            eventDate <= today.AddDays(7))
+        {
             return $"This {eventDate:dddd}";
+        }
 
         return eventDate.ToString("dd MMM yyyy");
     }
+
+    public string FormatEventType(EventType type)
+    {
+        return type switch
+        {
+            EventType.DJNight => "DJ Night",
+            EventType.LiveMusic => "Live Music",
+            EventType.BeerTasting => "Beer Tasting",
+            EventType.SpecialEvent => "Special Event",
+            EventType.AcousticNight => "Acoustic Night",
+            _ => type.ToString()
+        };
+    }
+
+    public string GetEventTypeClass(EventType type)
+    {
+        return type switch
+        {
+            EventType.DJNight => "rr-type-dj",
+            EventType.LiveMusic => "rr-type-live",
+            EventType.BeerTasting => "rr-type-beer",
+            EventType.SpecialEvent => "rr-type-special",
+            EventType.AcousticNight => "rr-type-acoustic",
+            _ => "rr-type-default"
+        };
+    }
 }
 
-<section class="hero-section d-flex align-items-center text-white">
-    <div class="container hero-container">
-        <div class="row align-items-center g-5 hero-row">
-            <div class="col-lg-6">
-                <div class="hero-content">
-                    <span class="badge rounded-pill hero-badge mb-3 px-3 py-2">
-                        Skopje • Alternative Pub Experience
-                    </span>
+<div class="rr-home">
 
-                    <h1 class="display-2 fw-bold mb-3 hero-title">
-                        Rebel Rebel
-                    </h1>
+    <section class="rr-hero">
 
-                    <p class="hero-subtitle mb-3">
-                        Cold beer. Loud music. No rules.
-                    </p>
+        <div class="rr-hero-word" aria-hidden="true">
+            REBEL
+        </div>
 
-                    <p class="hero-text mb-4">
-                        Not your average pub.
-                        No filters, no pretenses — just good beer, real food and nights that go longer than planned.
-                    </p>
+        <div class="rr-container rr-hero-grid">
 
-                    <div class="d-flex gap-3 flex-wrap hero-actions">
-                        <a asp-controller="Home" asp-action="Menu" asp-route-section="beer"
-                           class="btn btn-warning btn-lg px-4">
-                            🍺 Explore Beers
-                        </a>
+            <div class="rr-hero-content">
 
-                        <a asp-controller="Home" asp-action="Menu" asp-route-section="food"
-                           class="btn btn-outline-light btn-lg px-4">
-                            🍔 View Menu
-                        </a>
-
-                        <a asp-controller="Home" asp-action="Contact"
-                           class="btn btn-outline-warning btn-lg px-4">
-                            📍 Contact Us
-                        </a>
-                    </div>
+                <div class="rr-eyebrow">
+                    Skopje · Alternative pub · Est. after dark
                 </div>
+
+                <h1 class="rr-hero-title">
+                    Drink
+                    <span>different.</span>
+                    Stay late.
+                </h1>
+
+                <p class="rr-hero-lead">
+                    Rare beer, dirty-good food and nights built around
+                    alternative sound. No polished nonsense. No boring tables.
+                </p>
+
+                <div class="rr-hero-actions">
+
+                    <a asp-controller="Reservations"
+                       asp-action="Create"
+                       class="rr-button rr-button-primary">
+                        Book a Table
+                        <span>↗</span>
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Menu"
+                       asp-route-section="food"
+                       class="rr-button rr-button-ghost">
+                        Explore Menu
+                        <span>→</span>
+                    </a>
+
+                </div>
+
+                <div class="rr-hero-footnote">
+                    <span class="rr-live-dot"></span>
+                    Good beer · Loud records · Questionable decisions
+                </div>
+
             </div>
 
-            <div class="col-lg-6">
-                <div class="hero-visual">
-                    <div class="hero-image-wrap">
-                        <img src="~/images/hero.jpg" alt="Rebel Rebel hero" class="hero-image" />
+            <div class="rr-hero-visual">
 
-                        <div class="hero-quote-card p-4 rounded-4 shadow-lg">
-                            <p class="fs-4 mb-3">
-                                “Good music. Good beer. No compromises.”
-                            </p>
-                            <span class="hero-quote-author">Rebel Rebel vibe</span>
+                <div class="rr-hero-photo-frame">
+
+                    <img src="~/images/hero.jpg"
+                         alt="Rebel Rebel pub atmosphere"
+                         class="rr-hero-photo" />
+
+                    <div class="rr-photo-scratch"></div>
+
+                    <div class="rr-photo-label">
+                        SKOPJE<br />
+                        AFTER<br />
+                        DARK
+                    </div>
+
+                    <div class="rr-photo-tape">
+                        NO BORING NIGHTS
+                    </div>
+
+                </div>
+
+                @if (featuredEvent != null)
+                {
+                    var featuredDateText =
+                    FormatEventDate(featuredEvent.Date);
+
+                    var featuredTimeText =
+                    featuredEvent.StartTime.HasValue
+                    ? featuredEvent.StartTime.Value
+                    .ToString(@"hh\:mm")
+                    : "TBA";
+
+                    <a asp-controller="Events"
+                       asp-action="Details"
+                       asp-route-id="@featuredEvent.Id"
+                       class="rr-next-event">
+
+                        <div class="rr-next-event-top">
+                            <span>Next disturbance</span>
+                            <span>↗</span>
                         </div>
-                    </div>
-                </div>
+
+                        <strong>
+                            @featuredEvent.Title
+                        </strong>
+
+                        <div class="rr-next-event-meta">
+                            @featuredDateText · @featuredTimeText
+                        </div>
+
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Events"
+                       asp-action="Index"
+                       class="rr-next-event">
+
+                        <div class="rr-next-event-top">
+                            <span>Events board</span>
+                            <span>↗</span>
+                        </div>
+
+                        <strong>
+                            New nights loading.
+                        </strong>
+
+                        <div class="rr-next-event-meta">
+                            Check what is coming next
+                        </div>
+
+                    </a>
+                }
+
             </div>
+
+        </div>
+
+    </section>
+
+    <div class="rr-ticker" aria-hidden="true">
+        <div class="rr-ticker-track">
+            <span>RARE BEER</span>
+            <i>✦</i>
+            <span>BOLD FOOD</span>
+            <i>✦</i>
+            <span>ALTERNATIVE SOUND</span>
+            <i>✦</i>
+            <span>LATE NIGHTS</span>
+            <i>✦</i>
+            <span>NO BORING TABLES</span>
+            <i>✦</i>
+            <span>RARE BEER</span>
+            <i>✦</i>
+            <span>BOLD FOOD</span>
         </div>
     </div>
-</section>
 
-<section id="about" class="about-section py-5 text-white">
-    <div class="container py-5">
-        <div class="row align-items-center g-5">
+    <section class="rr-manifesto">
 
-            <div class="col-lg-6">
-                <span class="about-badge">REBEL REBEL VIBE</span>
+        <div class="rr-container rr-manifesto-grid">
 
-                <h2 class="about-heading mt-3 mb-3">
-                    More than a pub.<br />
-                    A whole mood.
+            <div class="rr-manifesto-visual">
+
+                <div class="rr-manifesto-image-wrap">
+
+                    <img src="~/images/pub-about.jpg"
+                         alt="Inside Rebel Rebel"
+                         class="rr-manifesto-image" />
+
+                </div>
+
+                <div class="rr-manifesto-stamp">
+                    NOT<br />
+                    YOUR<br />
+                    AVERAGE<br />
+                    PUB
+                </div>
+
+                <div class="rr-manifesto-note">
+                    Beer tastes better<br />
+                    when the playlist is right.
+                </div>
+
+            </div>
+
+            <div class="rr-manifesto-copy">
+
+                <div class="rr-section-number">
+                    01 / THE MOOD
+                </div>
+
+                <h2>
+                    More than a pub.
+                    <span>A controlled riot.</span>
                 </h2>
 
-                <div class="about-accent-line mb-4"></div>
-
-                <p class="about-lead">
-                    Rebel Rebel is more than a pub. It is a place for people who want something different:
-                    rare imported beers, <strong>bold food</strong>, a strong visual identity, and nights shaped by carefully selected music.
+                <p class="rr-manifesto-lead">
+                    Rebel Rebel is built for people who want something
+                    different from the usual night out.
                 </p>
 
-                <p class="about-body-text">
-                    Inspired by a rebellious spirit and a love for atmosphere, our space blends character,
-                    sound and taste into one experience. Whether you come for a new beer, a favorite record,
-                    or the energy of the place itself, Rebel Rebel is built to feel unforgettable.
+                <p>
+                    Imported beer, bold food, carefully selected music and a
+                    space with enough character to ruin ordinary pubs for you.
+                    Come for one drink. Stay longer than planned.
                 </p>
-            </div>
 
-            <div class="col-lg-6">
-                <div class="about-visual">
-                    <div class="about-image-frame">
-                        <img src="~/images/pub-about.jpg"
-                             alt="Rebel Rebel interior"
-                             class="about-main-image" />
-                    </div>
+                <div class="rr-manifesto-tags">
 
-                    <div class="about-floating-card">
-                        <span class="about-floating-label">Imported beers</span>
-                        <h5 class="mb-2">Bold atmosphere.</h5>
-                        <p class="mb-0">Beer, food and music in one rebellious experience.</p>
-                    </div>
+                    <span>Imported beers</span>
+                    <span>Alternative music</span>
+                    <span>Real food</span>
+                    <span>Skopje nights</span>
+
                 </div>
+
             </div>
 
         </div>
-    </div>
-</section>
 
-<section id="serve" class="py-5 section-black text-white">
-    <div class="container py-4 text-center">
-        <h2 class="fw-bold section-title mb-3">What We Serve</h2>
+    </section>
 
-        <p class="serve-text mb-4">
-            Cold beers, bold flavors and good times. <br />
-            Whether you're here for a quick drink or a full table – we've got you covered.
-        </p>
+    <section class="rr-menu-section">
 
-        <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
-            <a asp-controller="Home" asp-action="Menu" asp-route-section="food"
-               class="btn btn-outline-light btn-lg px-4">
-                🍔 Food
-            </a>
+        <div class="rr-container">
 
-            <a asp-controller="Home" asp-action="Menu" asp-route-section="beer"
-               class="btn btn-warning btn-lg px-4">
-                🍺 Beer
-            </a>
+            <header class="rr-section-header">
 
-            <a asp-controller="Home" asp-action="Menu" asp-route-section="drink"
-               class="btn btn-outline-warning btn-lg px-4">
-                🍹 Drinks
-            </a>
+                <div>
+                    <div class="rr-section-number">
+                        02 / FEED THE NOISE
+                    </div>
+
+                    <h2>
+                        Pick your poison.
+                    </h2>
+                </div>
+
+                <p>
+                    Food that fights back. Beer worth remembering.
+                    Drinks that make tomorrow somebody else’s problem.
+                </p>
+
+            </header>
+
+            <div class="rr-menu-grid">
+
+                <a asp-controller="Home"
+                   asp-action="Menu"
+                   asp-route-section="food"
+                   class="rr-menu-panel rr-menu-food">
+
+                    <span class="rr-menu-code">
+                        01
+                    </span>
+
+                    <div class="rr-menu-content">
+
+                        <span class="rr-menu-kicker">
+                            Wings · Burgers · Pizza
+                        </span>
+
+                        <h3>
+                            Food with<br />
+                            bad intentions.
+                        </h3>
+
+                        <div class="rr-menu-action">
+                            See the food →
+                        </div>
+
+                    </div>
+
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Menu"
+                   asp-route-section="beer"
+                   class="rr-menu-panel rr-menu-beer">
+
+                    <span class="rr-menu-code">
+                        02
+                    </span>
+
+                    <div class="rr-menu-content">
+
+                        <span class="rr-menu-kicker">
+                            Bottles · Draft · Rare finds
+                        </span>
+
+                        <h3>
+                            Beer beyond<br />
+                            the usual.
+                        </h3>
+
+                        <div class="rr-menu-action">
+                            Open the beer list →
+                        </div>
+
+                    </div>
+
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Menu"
+                   asp-route-section="drink"
+                   class="rr-menu-panel rr-menu-drinks">
+
+                    <span class="rr-menu-code">
+                        03
+                    </span>
+
+                    <div class="rr-menu-content">
+
+                        <span class="rr-menu-kicker">
+                            Spirits · Cocktails · Shots
+                        </span>
+
+                        <h3>
+                            Liquid<br />
+                            courage.
+                        </h3>
+
+                        <div class="rr-menu-action">
+                            View drinks →
+                        </div>
+
+                    </div>
+
+                </a>
+
+            </div>
+
         </div>
-    </div>
-</section>
 
-<section class="events-combined py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <p class="events-subtitle">WHAT'S ON</p>
-            <h2 class="events-title">Upcoming Nights</h2>
-            <p class="events-description">
-                The next reasons to show up, stay late and come back again.
-            </p>
-        </div>
+    </section>
 
-        @if (featuredEvent != null)
-        {
-            <div class="row g-4 align-items-stretch">
-                <div class="col-lg-7">
-                    <a asp-controller="Events" asp-action="Details" asp-route-id="@featuredEvent.Id"
-                       class="text-decoration-none text-reset d-block h-100">
-                        <div class="featured-event-card h-100">
-                            @if (!string.IsNullOrEmpty(featuredEvent.ImageUrl))
+    <section class="rr-events-section">
+
+        <div class="rr-container">
+
+            <header class="rr-events-heading">
+
+                <div>
+                    <div class="rr-section-number rr-section-number-red">
+                        03 / WHAT'S ON
+                    </div>
+
+                    <h2>
+                        Upcoming noise.
+                    </h2>
+                </div>
+
+                <a asp-controller="Events"
+                   asp-action="Index"
+                   class="rr-inline-link">
+                    Full events board →
+                </a>
+
+            </header>
+
+            @if (featuredEvent != null)
+            {
+                var featuredLocalDate =
+                GetSkopjeDate(featuredEvent.Date);
+
+                var featuredDay =
+                featuredLocalDate.ToString("dd");
+
+                var featuredMonth =
+                featuredLocalDate.ToString("MMM");
+
+                var featuredYear =
+                featuredLocalDate.ToString("yyyy");
+
+                var featuredTime =
+                featuredEvent.StartTime.HasValue
+                ? featuredEvent.StartTime.Value
+                .ToString(@"hh\:mm")
+                : "TBA";
+
+                var featuredDescription =
+                string.IsNullOrWhiteSpace(featuredEvent.Description)
+                ? "Another Rebel night is waiting."
+                : featuredEvent.Description.Length > 180
+                ? featuredEvent.Description[..180] + "..."
+                : featuredEvent.Description;
+
+                <div class="rr-events-grid">
+
+                    <a asp-controller="Events"
+                       asp-action="Details"
+                       asp-route-id="@featuredEvent.Id"
+                       class="rr-feature-event">
+
+                        <div class="rr-feature-event-image">
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                                    featuredEvent.ImageUrl))
                             {
-                                <img src="@featuredEvent.ImageUrl" alt="@featuredEvent.Title" class="featured-event-image" />
+                                <img src="@featuredEvent.ImageUrl"
+                                     alt="@featuredEvent.Title" />
                             }
                             else
                             {
-                                <div class="featured-event-image-placeholder">No Image</div>
+                                <div class="rr-event-placeholder">
+                                    REBEL REBEL
+                                </div>
                             }
 
-                            <div class="featured-event-body">
-                                <p class="featured-event-label">NEXT UP</p>
-                                <h3 class="featured-event-title">@featuredEvent.Title</h3>
-                                <p class="featured-event-date">@FormatEventDate(featuredEvent.Date)</p>
+                            <span class="rr-event-type @GetEventTypeClass(featuredEvent.EventType)">
+                                @FormatEventType(featuredEvent.EventType)
+                            </span>
 
-                                @if (featuredEvent.StartTime.HasValue)
-                                {
-                                    <p class="featured-event-time text-warning fw-bold small">
-                                        Starts at @featuredEvent.StartTime.Value.ToString(@"hh\:mm")
-                                    </p>
-                                }
+                            <div class="rr-event-big-date">
 
-                                <p class="featured-event-description">@featuredEvent.Description</p>
+                                <strong>
+                                    @featuredDay
+                                </strong>
+
+                                <span>
+                                    @featuredMonth<br />
+                                    @featuredYear
+                                </span>
+
                             </div>
+
                         </div>
+
+                        <div class="rr-feature-event-body">
+
+                            <div class="rr-feature-event-label">
+                                Next up · @featuredTime
+                            </div>
+
+                            <h3>
+                                @featuredEvent.Title
+                            </h3>
+
+                            <p>
+                                @featuredDescription
+                            </p>
+
+                            <span class="rr-feature-event-action">
+                                Enter the event →
+                            </span>
+
+                        </div>
+
                     </a>
 
-                    <a asp-controller="Events" asp-action="Index" class="btn btn-warning mt-3">
-                        View All Events
-                    </a>
-                </div>
+                    <div class="rr-event-stack">
 
-                <div class="col-lg-5">
-                    @if (upcomingEvents.Skip(1).Any())
-                    {
-                        <div class="d-flex flex-column gap-4 h-100">
-                            @foreach (var e in upcomingEvents.Skip(1))
+                        @if (Model.UpcomingEvents.Any())
+                        {
+                            @foreach (var eventItem in Model.UpcomingEvents)
                             {
-                                <a asp-controller="Events" asp-action="Details" asp-route-id="@e.Id"
-                                   class="text-decoration-none text-reset">
-                                    <div class="event-side-card d-flex">
-                                        @if (!string.IsNullOrEmpty(e.ImageUrl))
+                                var eventDateText =
+                                FormatEventDate(eventItem.Date);
+
+                                var eventTimeText =
+                                eventItem.StartTime.HasValue
+                                ? eventItem.StartTime.Value
+                                .ToString(@"hh\:mm")
+                                : "TBA";
+
+                                var descriptionText =
+                                string.IsNullOrWhiteSpace(
+                                eventItem.Description)
+                                ? "Details coming soon."
+                                : eventItem.Description.Length > 85
+                                ? eventItem.Description[..85] + "..."
+                                : eventItem.Description;
+
+                                <a asp-controller="Events"
+                                   asp-action="Details"
+                                   asp-route-id="@eventItem.Id"
+                                   class="rr-side-event">
+
+                                    <div class="rr-side-event-image">
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                                                    eventItem.ImageUrl))
                                         {
-                                            <img src="@e.ImageUrl" class="event-side-img" alt="@e.Title" />
+                                            <img src="@eventItem.ImageUrl"
+                                                 alt="@eventItem.Title" />
                                         }
                                         else
                                         {
-                                            <div class="event-side-img-placeholder">No Image</div>
+                                            <div class="rr-side-placeholder">
+                                                RR
+                                            </div>
                                         }
 
-                                        <div class="p-3">
-                                            <p class="event-date mb-2">@FormatEventDate(e.Date)</p>
-
-                                            @if (e.StartTime.HasValue)
-                                            {
-                                                <p class="text-warning small mb-1">
-                                                    Starts at @e.StartTime.Value.ToString(@"hh\:mm")
-                                                </p>
-                                            }
-
-                                            <h6 class="mb-2">@e.Title</h6>
-                                            <p class="mb-0 text-secondary small">@e.Description</p>
-                                        </div>
                                     </div>
+
+                                    <div class="rr-side-event-content">
+
+                                        <div class="rr-side-event-meta">
+                                            @eventDateText · @eventTimeText
+                                        </div>
+
+                                        <h4>
+                                            @eventItem.Title
+                                        </h4>
+
+                                        <p>
+                                            @descriptionText
+                                        </p>
+
+                                    </div>
+
+                                    <span class="rr-side-event-arrow">
+                                        ↗
+                                    </span>
+
                                 </a>
                             }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-events-box h-100 d-flex align-items-center justify-content-center text-center">
-                            <div>
-                                <h4 class="mb-3">Only one event scheduled</h4>
-                                <p class="mb-0">More upcoming nights will appear here soon.</p>
+                        }
+                        else
+                        {
+                            <div class="rr-event-empty">
+
+                                <span>
+                                    More chaos soon.
+                                </span>
+
+                                <p>
+                                    New events will appear here as soon as
+                                    the next night is announced.
+                                </p>
+
                             </div>
-                        </div>
-                    }
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="text-center">
-                <div class="empty-events-box">
-                    <h4 class="mb-3">No upcoming events right now</h4>
-                    <p class="mb-0">Check back soon for new nights, live sets and special events.</p>
-                </div>
-            </div>
-        }
-    </div>
-</section>
+                        }
 
-<section class="py-5 section-dark text-white">
-    <div class="container py-4">
-        <div class="row mb-4">
-            <div class="col text-center">
-                <h2 class="fw-bold section-title">Inside Rebel Rebel</h2>
-                <p class="text-secondary">
-                    A glimpse of the atmosphere, energy and style that define our space.
+                    </div>
+
+                </div>
+            }
+            else
+            {
+                <div class="rr-events-empty-state">
+
+                    <span class="rr-events-empty-code">
+                        00
+                    </span>
+
+                    <div>
+                        <h3>
+                            Suspiciously quiet.
+                        </h3>
+
+                        <p>
+                            No upcoming events are published right now.
+                            Check again before making responsible plans.
+                        </p>
+                    </div>
+
+                    <a asp-controller="Events"
+                       asp-action="Index">
+                        Check events →
+                    </a>
+
+                </div>
+            }
+
+        </div>
+
+    </section>
+
+    <section class="rr-gallery-section">
+
+        <div class="rr-container">
+
+            <header class="rr-gallery-heading">
+
+                <div class="rr-section-number">
+                    04 / SEEN INSIDE
+                </div>
+
+                <h2>
+                    The evidence.
+                </h2>
+
+                <p>
+                    Atmosphere cannot be explained properly.
+                    Here is the closest thing.
                 </p>
+
+            </header>
+
+            <div class="rr-gallery-grid">
+
+                <figure class="rr-gallery-item rr-gallery-one">
+
+                    <img src="~/images/gallery-1.jpg"
+                         alt="Rebel Rebel atmosphere" />
+
+                    <figcaption>
+                        LATE / LOUD / LOCAL
+                    </figcaption>
+
+                </figure>
+
+                <figure class="rr-gallery-item rr-gallery-two">
+
+                    <img src="~/images/gallery-2.jpg"
+                         alt="Drinks at Rebel Rebel" />
+
+                </figure>
+
+                <div class="rr-gallery-text-card">
+
+                    <span>
+                        WARNING
+                    </span>
+
+                    <strong>
+                        One drink may become six.
+                    </strong>
+
+                </div>
+
+                <figure class="rr-gallery-item rr-gallery-three">
+
+                    <img src="~/images/gallery-3.jpg"
+                         alt="Inside Rebel Rebel pub" />
+
+                </figure>
+
             </div>
+
         </div>
 
-        <div class="row g-4">
-            <div class="col-md-4">
-                <img src="~/images/gallery-1.jpg" class="img-fluid rounded-4 gallery-img shadow" alt="Pub gallery 1">
-            </div>
-            <div class="col-md-4">
-                <img src="~/images/gallery-2.jpg" class="img-fluid rounded-4 gallery-img shadow" alt="Pub gallery 2">
-            </div>
-            <div class="col-md-4">
-                <img src="~/images/gallery-3.jpg" class="img-fluid rounded-4 gallery-img shadow" alt="Pub gallery 3">
-            </div>
-        </div>
-    </div>
-</section>
+    </section>
 
-<section class="py-5 quote-section text-white text-center">
-    <div class="container py-4">
-        <p class="display-6 fw-semibold mb-3">
-            “Not your average pub.”
-        </p>
-        <p class="lead mb-0">
-            Rare beer. Alternative sound. Rebel atmosphere.
-        </p>
-    </div>
-</section>
+    <section class="rr-booking-section">
+
+        <div class="rr-container">
+
+            <div class="rr-booking-panel">
+
+                <div class="rr-booking-number">
+                    05
+                </div>
+
+                <div class="rr-booking-copy">
+
+                    <span>
+                        Your table is not going to book itself.
+                    </span>
+
+                    <h2>
+                        Bring the crew.<br />
+                        We’ll handle the rest.
+                    </h2>
+
+                    <p>
+                        Send a reservation request and wait for confirmation
+                        from the Rebel Rebel team.
+                    </p>
+
+                </div>
+
+                <div class="rr-booking-actions">
+
+                    <a asp-controller="Reservations"
+                       asp-action="Create"
+                       class="rr-booking-button">
+
+                        Book a Table
+                        <span>↗</span>
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Contact"
+                       class="rr-contact-link">
+                        Find us / Contact →
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>

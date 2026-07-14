@@ -1,94 +1,272 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var currentController =
+        ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+
+    var currentAction =
+        ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    string IsActive(string controller, string? action = null)
+    {
+        var controllerMatches =
+            currentController.Equals(
+                controller,
+                StringComparison.OrdinalIgnoreCase
+            );
+
+        var actionMatches =
+            string.IsNullOrWhiteSpace(action) ||
+            currentAction.Equals(
+                action,
+                StringComparison.OrdinalIgnoreCase
+            );
+
+        return controllerMatches && actionMatches
+            ? "active"
+            : "";
+    }
+}
+
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Rebel.Web</title>
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Rebel.Web.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - Rebel Rebel</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/Rebel.Web.styles.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/home.css"
+          asp-append-version="true" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet" />
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark mb-3 sticky-top">
-            <div class="container">
-                <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/logo.jpg" alt="Rebel Rebel" height="54" class="me-2 rounded rebel-logo" />                    <span class="fw-bold fs-5">Rebel Rebel</span>
+
+    <header class="rr-site-header">
+
+        <nav class="rr-site-nav">
+
+            <div class="rr-nav-container">
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="rr-site-brand">
+
+                    <span class="rr-brand-image-frame">
+
+                        <img src="~/images/logo.jpg"
+                             alt="Rebel Rebel"
+                             class="rr-brand-image" />
+
+                    </span>
+
+                    <span class="rr-brand-text">
+
+                        <small>
+                            Skopje / After dark
+                        </small>
+
+                        <strong>
+                            Rebel Rebel
+                        </strong>
+
+                    </span>
+
                 </a>
 
-                <button class="navbar-toggler border-warning shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-                        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                <button class="rr-nav-toggle"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#rebelNavigation"
+                        aria-controls="rebelNavigation"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                    <small>
+                        MENU
+                    </small>
+
                 </button>
 
-                <div class="collapse navbar-collapse" id="mainNavbar">
-                    <ul class="navbar-nav ms-auto align-items-lg-center">
-                        <li class="nav-item">
-                            <a class="nav-link @((ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
-                                                                                 ViewContext.RouteData.Values["action"]?.ToString() == "Index") ? "active" : "")"
-                               asp-controller="Home" asp-action="Index">
+                <div class="collapse rr-nav-collapse"
+                     id="rebelNavigation">
+
+                    <div class="rr-navigation">
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="rr-nav-link @IsActive("Home", "Index")">
+
+                            <span class="rr-nav-index">
+                                01
+                            </span>
+
+                            <span class="rr-nav-name">
                                 Home
-                            </a>
-                        </li>
+                            </span>
 
-                        <li class="nav-item">
-                            <a class="nav-link @((ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
-                                                                                 ViewContext.RouteData.Values["action"]?.ToString() == "Menu") ? "active" : "")"
-                               asp-controller="Home" asp-action="Menu">
+                        </a>
+
+                        <a asp-controller="Home"
+                           asp-action="Menu"
+                           asp-route-section="food"
+                           class="rr-nav-link @IsActive("Home", "Menu")">
+
+                            <span class="rr-nav-index">
+                                02
+                            </span>
+
+                            <span class="rr-nav-name">
                                 Menu
-                            </a>
-                        </li>
+                            </span>
 
-                        <li class="nav-item">
-                            <a class="nav-link @((ViewContext.RouteData.Values["controller"]?.ToString() == "Events") ? "active" : "")"
-                               asp-controller="Events" asp-action="Index">
+                        </a>
+
+                        <a asp-controller="Events"
+                           asp-action="Index"
+                           class="rr-nav-link @IsActive("Events")">
+
+                            <span class="rr-nav-index">
+                                03
+                            </span>
+
+                            <span class="rr-nav-name">
                                 Events
-                            </a>
-                        </li>
+                            </span>
 
-                        <li class="nav-item">
-                            <a class="nav-link @((ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
-                                                                                 ViewContext.RouteData.Values["action"]?.ToString() == "Contact") ? "active" : "")"
-                               asp-controller="Home" asp-action="Contact">
+                        </a>
+
+                        <a asp-controller="Home"
+                           asp-action="Contact"
+                           class="rr-nav-link @IsActive("Home", "Contact")">
+
+                            <span class="rr-nav-index">
+                                04
+                            </span>
+
+                            <span class="rr-nav-name">
                                 Contact
-                            </a>
-                        </li>
+                            </span>
 
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link admin-link @((ViewContext.RouteData.Values["controller"]?.ToString() == "Admin") ? "active" : "")"
-                                   asp-controller="Admin" asp-action="Index">
-                                    Admin
-                                </a>
-                            </li>
-                        }
+                        </a>
 
-                        <partial name="_LoginPartial" />
-                    </ul>
+                    </div>
+
+                    <a asp-controller="Reservations"
+                       asp-action="Create"
+                       class="rr-nav-reserve @IsActive("Reservations")">
+
+                        <span class="rr-reserve-label">
+                            Secure your spot
+                        </span>
+
+                        <strong>
+                            Book a Table
+                        </strong>
+
+                        <span class="rr-reserve-arrow">
+                            ↗
+                        </span>
+
+                    </a>
+
                 </div>
+
             </div>
+
+            <div class="rr-nav-warning-strip">
+
+                <div class="rr-nav-warning-track">
+
+                    <span>No boring nights</span>
+                    <i>✦</i>
+
+                    <span>Rare beer</span>
+                    <i>✦</i>
+
+                    <span>Bold food</span>
+                    <i>✦</i>
+
+                    <span>Alternative sound</span>
+                    <i>✦</i>
+
+                    <span>No boring nights</span>
+                    <i>✦</i>
+
+                    <span>Rare beer</span>
+
+                </div>
+
+            </div>
+
         </nav>
+
     </header>
 
-    <div class="container page-wrapper">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <main role="main">
+        @RenderBody()
+    </main>
 
-    <footer class="border-top footer text-muted">
-        <div class="container text-center">
-            &copy; 2026 - Rebel Rebel
+    <footer class="rr-site-footer">
+
+        <div class="rr-footer-container">
+
+            <div class="rr-footer-brand">
+
+                <span>
+                    Rebel Rebel
+                </span>
+
+                <strong>
+                    No boring nights.
+                </strong>
+
+            </div>
+
+            <div class="rr-footer-copy">
+                © 2026 Rebel Rebel · Skopje
+            </div>
+
+            <a asp-controller="Reservations"
+               asp-action="Create"
+               class="rr-footer-link">
+
+                Book a table ↗
+            </a>
+
         </div>
+
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="~/js/site.js"
+            asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
+
 </html>

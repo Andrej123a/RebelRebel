@@ -1,0 +1,186 @@
+﻿@{
+    var currentController =
+        ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+
+    string GetActiveClass(string controllerName)
+    {
+        return currentController == controllerName
+            ? "active"
+            : string.Empty;
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] — Rebel Control Room</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/admin.css"
+          asp-append-version="true" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet" />
+</head>
+
+<body class="admin-shell-body">
+
+    <div class="admin-shell">
+
+        <aside class="admin-rail">
+
+            <div class="admin-rail-header">
+
+                <a asp-controller="Admin"
+                   asp-action="Index"
+                   class="admin-brand">
+
+                    <span class="admin-brand-kicker">
+                        Private access
+                    </span>
+
+                    <span class="admin-brand-name">
+                        REBEL<br />
+                        CONTROL<br />
+                        ROOM
+                    </span>
+
+                </a>
+
+                <button class="admin-mobile-toggle"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#adminNavigation"
+                        aria-controls="adminNavigation"
+                        aria-expanded="false"
+                        aria-label="Toggle admin navigation">
+
+                    MENU
+                </button>
+
+            </div>
+
+            <div class="collapse d-lg-block"
+                 id="adminNavigation">
+
+                <nav class="admin-navigation">
+
+                    <a asp-controller="Admin"
+                       asp-action="Index"
+                       class="admin-nav-link @GetActiveClass("Admin")">
+
+                        <span class="admin-nav-number">01</span>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a asp-controller="AdminReservations"
+                       asp-action="Index"
+                       class="admin-nav-link @GetActiveClass("AdminReservations")">
+
+                        <span class="admin-nav-number">02</span>
+                        <span>Reservations</span>
+                    </a>
+
+                    <a asp-controller="AdminEvents"
+                       asp-action="Index"
+                       class="admin-nav-link @GetActiveClass("AdminEvents")">
+
+                        <span class="admin-nav-number">03</span>
+                        <span>Events</span>
+                    </a>
+
+                    <a asp-controller="Product"
+                       asp-action="Index"
+                       class="admin-nav-link @GetActiveClass("Product")">
+
+                        <span class="admin-nav-number">04</span>
+                        <span>Menu Items</span>
+                    </a>
+
+                    <a asp-controller="Category"
+                       asp-action="Index"
+                       class="admin-nav-link @GetActiveClass("Category")">
+
+                        <span class="admin-nav-number">05</span>
+                        <span>Categories</span>
+                    </a>
+
+                </nav>
+
+                <div class="admin-rail-footer">
+
+                    <div class="admin-user-block">
+                        <span class="admin-user-label">
+                            Signed in as
+                        </span>
+
+                        <strong>
+                            @User.Identity?.Name
+                        </strong>
+                    </div>
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       target="_blank"
+                       class="admin-view-site">
+
+                        View website ↗
+                    </a>
+
+                    <form asp-area="Identity"
+                          asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Home")"
+                          method="post">
+
+                        <button type="submit"
+                                class="admin-logout-button">
+
+                            Log out
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+        <main class="admin-stage">
+
+            <div class="admin-stage-topline">
+
+                <span>
+                    Rebel Rebel / Internal system
+                </span>
+
+                <span class="admin-live-mark">
+                    ● SYSTEM ONLINE
+                </span>
+
+            </div>
+
+            <div class="admin-page-frame">
+                @RenderBody()
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

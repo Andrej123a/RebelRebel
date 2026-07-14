@@ -3,192 +3,229 @@
 
 @{
     ViewData["Title"] = "Menu";
+
     var selectedSection = (ViewBag.Section as string ?? "food").ToLower();
+
+    if (selectedSection != "food" &&
+        selectedSection != "beer" &&
+        selectedSection != "drink")
+    {
+        selectedSection = "food";
+    }
+
+    var selectedType = selectedSection switch
+    {
+        "beer" => CategoryType.Beer,
+        "drink" => CategoryType.Drink,
+        _ => CategoryType.Food
+    };
+
+    var sectionTitle = selectedSection switch
+    {
+        "beer" => "Beer Menu",
+        "drink" => "Drinks Menu",
+        _ => "Food Menu"
+    };
+
+    var sectionMessage = selectedSection switch
+    {
+        "beer" => "Cold bottles, fresh pours and zero bad decisions.",
+        "drink" => "Pick your poison. We are not here to judge.",
+        _ => "Messy hands. Full stomach. No regrets."
+    };
+
+    var menuGroups = Model
+        .Where(p => p.Category != null && p.Category.Type == selectedType)
+        .GroupBy(p => p.Category!.Name)
+        .OrderBy(g => g.Key)
+        .ToList();
 }
 
-<div class="menu-page">
-    <div class="menu-header text-center mb-5">
-        <p class="menu-subtitle">FOOD, BEER & DRINK MENU</p>
-        <h1 class="menu-title">REBEL REBEL PUB</h1>
-        <p class="menu-description">Explore our food, beers and drinks.</p>
+<div class="rr-menu-page">
 
-        <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
-            <a asp-controller="Home" asp-action="Menu" asp-route-section="food"
-               class="btn @(selectedSection == "food" ? "btn-warning" : "btn-outline-light")">
-                Food
-            </a>
+    <header class="rr-menu-hero">
+        <div class="rr-menu-hero-noise"></div>
+        <div class="rr-menu-star rr-menu-star-one">✦</div>
+        <div class="rr-menu-star rr-menu-star-two">✦</div>
 
-            <a asp-controller="Home" asp-action="Menu" asp-route-section="beer"
-               class="btn @(selectedSection == "beer" ? "btn-warning" : "btn-outline-light")">
-                Beer
-            </a>
+        <div class="rr-menu-hero-content">
+            <div class="rr-menu-stamp">
+                EST. SKOPJE
+            </div>
 
-            <a asp-controller="Home" asp-action="Menu" asp-route-section="drink"
-               class="btn @(selectedSection == "drink" ? "btn-warning" : "btn-outline-light")">
-                Drinks
-            </a>
+            <p class="rr-menu-eyebrow">
+                FOOD · BEER · LOUD NIGHTS
+            </p>
+
+            <h1 class="rr-menu-main-title">
+                REBEL
+                <span>REBEL</span>
+            </h1>
+
+            <p class="rr-menu-lead">
+                Come hungry. Leave louder.
+            </p>
+
+            <nav class="rr-menu-navigation" aria-label="Menu sections">
+                <a asp-controller="Home"
+                   asp-action="Menu"
+                   asp-route-section="food"
+                   class="rr-menu-nav-link @(selectedSection == "food" ? "active" : "")">
+
+                    <span class="rr-menu-nav-number">01</span>
+                    <span>Food</span>
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Menu"
+                   asp-route-section="beer"
+                   class="rr-menu-nav-link @(selectedSection == "beer" ? "active" : "")">
+
+                    <span class="rr-menu-nav-number">02</span>
+                    <span>Beer</span>
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Menu"
+                   asp-route-section="drink"
+                   class="rr-menu-nav-link @(selectedSection == "drink" ? "active" : "")">
+
+                    <span class="rr-menu-nav-number">03</span>
+                    <span>Drinks</span>
+                </a>
+            </nav>
         </div>
-    </div>
-    @if (selectedSection == "food")
-    {
-        <section id="food-menu" class="mb-5">
-            <h2 class="menu-category-title text-warning mb-4">Food Menu</h2>
+    </header>
 
-            @foreach (var group in Model
-                    .Where(p => p.Category != null && p.Category.Type == CategoryType.Food)
-                    .GroupBy(p => p.Category!.Name))
+    <main class="rr-menu-content">
+
+        <div class="rr-menu-intro">
+            <div>
+                <p class="rr-menu-intro-label">CURRENTLY SERVING</p>
+                <h2>@sectionTitle</h2>
+            </div>
+
+            <p class="rr-menu-intro-text">
+                @sectionMessage
+            </p>
+        </div>
+
+        @if (!menuGroups.Any())
+        {
+            <div class="rr-menu-empty">
+                <span class="rr-menu-empty-symbol">✕</span>
+                <h3>Nothing here yet.</h3>
+                <p>The rebels are still working on this part of the menu.</p>
+            </div>
+        }
+        else
+        {
+            var categoryNumber = 1;
+
+            @foreach (var group in menuGroups)
             {
-                <section class="menu-category-section mb-5">
-                    <h3 class="menu-category-title">@group.Key</h3>
+                <section class="rr-menu-category">
+
+                    <div class="rr-category-heading">
+                        <div class="rr-category-number">
+                            @categoryNumber.ToString("00")
+                        </div>
+
+                        <div class="rr-category-title-wrap">
+                            <span>REBEL MENU FILE</span>
+                            <h3>@group.Key</h3>
+                        </div>
+
+                        <div class="rr-category-count">
+                            @group.Count()
+                            @(group.Count() == 1 ? "ITEM" : "ITEMS")
+                        </div>
+                    </div>
 
                     <div class="row g-4">
+
                         @foreach (var product in group)
                         {
-                            <div class="col-md-6 col-lg-4">
-                                <div class="menu-card h-100">
-                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                                    {
-                                        <img src="@product.ImageUrl" alt="@product.Name" class="menu-card-image" />
-                                    }
-                                    else
-                                    {
-                                        <div class="menu-card-image-placeholder">No Image</div>
-                                    }
+                            <div class="col-md-6 col-xl-4">
 
-                                    <div class="menu-card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h5 class="menu-card-title">@product.Name</h5>
-                                            <span class="menu-card-price">@product.Price ден</span>
-                                        </div>
+                                <article class="rr-menu-card h-100 @(!product.IsAvailable ? "is-unavailable" : "")">
 
-                                        <p class="menu-card-description">
-                                            @product.Description
-                                        </p>
+                                    <div class="rr-menu-card-image-wrap">
 
-                                        @if (product.IsAvailable)
+                                        @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
                                         {
-                                            <span class="menu-status available">Available</span>
+                                            <img src="@product.ImageUrl"
+                                                 alt="@product.Name"
+                                                 class="rr-menu-card-image"
+                                                 loading="lazy" />
                                         }
                                         else
                                         {
-                                            <span class="menu-status unavailable">Unavailable</span>
+                                            <div class="rr-menu-card-placeholder">
+                                                <span>RR</span>
+                                                <small>NO PHOTO.<br />STILL TASTES GOOD.</small>
+                                            </div>
                                         }
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </section>
-            }
-        </section>
-    }
 
-    @if (selectedSection == "beer")
-    {
-        <section id="beer-menu" class="mb-5">
-            <h2 class="menu-category-title text-warning mb-4">Beer Menu</h2>
+                                        <div class="rr-menu-card-shade"></div>
 
-            @foreach (var group in Model
-                    .Where(p => p.Category != null && p.Category.Type == CategoryType.Beer)
-                    .GroupBy(p => p.Category!.Name))
-            {
-                <section class="menu-category-section mb-5">
-                    <h3 class="menu-category-title">@group.Key</h3>
-
-                    <div class="row g-4">
-                        @foreach (var product in group)
-                        {
-                            <div class="col-md-6 col-lg-4">
-                                <div class="menu-card h-100">
-                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                                    {
-                                        <img src="@product.ImageUrl" alt="@product.Name" class="menu-card-image" />
-                                    }
-                                    else
-                                    {
-                                        <div class="menu-card-image-placeholder">No Image</div>
-                                    }
-
-                                    <div class="menu-card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h5 class="menu-card-title">@product.Name</h5>
-                                            <span class="menu-card-price">@product.Price ден</span>
+                                        <div class="rr-menu-price">
+                                            <strong>@product.Price.ToString("0.##")</strong>
+                                            <span>ДЕН</span>
                                         </div>
 
-                                        <p class="menu-card-description">
+                                        @if (!product.IsAvailable)
+                                        {
+                                            <div class="rr-sold-out">
+                                                SOLD OUT
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="rr-menu-card-body">
+
+                                        <div class="rr-menu-card-topline">
+                                            <span>@group.Key</span>
+
+                                            @if (product.IsAvailable)
+                                            {
+                                                <span class="rr-availability-dot">
+                                                    AVAILABLE
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="rr-availability-dot unavailable">
+                                                    UNAVAILABLE
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <h4 class="rr-menu-card-title">
+                                            @product.Name
+                                        </h4>
+
+                                        <p class="rr-menu-card-description">
                                             @product.Description
                                         </p>
 
-                                        @if (product.IsAvailable)
-                                        {
-                                            <span class="menu-status available">Available</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="menu-status unavailable">Unavailable</span>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </section>
-            }
-        </section>
-    }
-
-    @if (selectedSection == "drink")
-    {
-        <section id="drink-menu" class="mb-5">
-            <h2 class="menu-category-title text-warning mb-4">Drink Menu</h2>
-
-            @foreach (var group in Model
-                    .Where(p => p.Category != null && p.Category.Type == CategoryType.Drink)
-                    .GroupBy(p => p.Category!.Name))
-            {
-                <section class="menu-category-section mb-5">
-                    <h3 class="menu-category-title">@group.Key</h3>
-
-                    <div class="row g-4">
-                        @foreach (var product in group)
-                        {
-                            <div class="col-md-6 col-lg-4">
-                                <div class="menu-card h-100">
-                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                                    {
-                                        <img src="@product.ImageUrl" alt="@product.Name" class="menu-card-image" />
-                                    }
-                                    else
-                                    {
-                                        <div class="menu-card-image-placeholder">No Image</div>
-                                    }
-
-                                    <div class="menu-card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h5 class="menu-card-title">@product.Name</h5>
-                                            <span class="menu-card-price">@product.Price ден</span>
+                                        <div class="rr-menu-card-footer">
+                                            <span>REBEL REBEL PUB</span>
+                                            <span>✦</span>
                                         </div>
-
-                                        <p class="menu-card-description">
-                                            @product.Description
-                                        </p>
-
-                                        @if (product.IsAvailable)
-                                        {
-                                            <span class="menu-status available">Available</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="menu-status unavailable">Unavailable</span>
-                                        }
                                     </div>
-                                </div>
+
+                                </article>
+
                             </div>
                         }
+
                     </div>
                 </section>
+
+                categoryNumber++;
             }
-        </section>
-    }
-    
+        }
+
+    </main>
 </div>

@@ -1,0 +1,197 @@
+﻿@model List<Rebel.Domain.Entities.Reservation>
+
+@using Rebel.Domain.Enums
+
+@{
+    ViewData["Title"] = "Reservations";
+
+    ReservationStatus? selectedStatus = null;
+
+    if (ViewBag.SelectedStatus is ReservationStatus status)
+    {
+        selectedStatus = status;
+    }
+}
+
+<section class="py-5 text-white">
+    <div class="container">
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+
+            <div>
+                <p class="text-warning fw-bold text-uppercase mb-2">
+                    Rebel Control Room
+                </p>
+
+                <h1 class="display-5 fw-bold text-uppercase mb-0">
+                    Reservations
+                </h1>
+            </div>
+
+            <form asp-controller="AdminReservations"
+                  asp-action="Index"
+                  method="get"
+                  style="min-width: 220px;">
+
+                <label class="form-label small text-secondary fw-bold text-uppercase">
+                    Filter by status
+                </label>
+
+                <select name="status"
+                        class="form-select"
+                        onchange="this.form.submit()">
+
+                    @if (!selectedStatus.HasValue)
+                    {
+                        <option value="" selected>All reservations</option>
+                    }
+                    else
+                    {
+                        <option value="">All reservations</option>
+                    }
+
+                    @if (selectedStatus == ReservationStatus.Pending)
+                    {
+                        <option value="Pending" selected>Pending</option>
+                    }
+                    else
+                    {
+                        <option value="Pending">Pending</option>
+                    }
+
+                    @if (selectedStatus == ReservationStatus.Approved)
+                    {
+                        <option value="Approved" selected>Approved</option>
+                    }
+                    else
+                    {
+                        <option value="Approved">Approved</option>
+                    }
+
+                    @if (selectedStatus == ReservationStatus.Rejected)
+                    {
+                        <option value="Rejected" selected>Rejected</option>
+                    }
+                    else
+                    {
+                        <option value="Rejected">Rejected</option>
+                    }
+
+                </select>
+            </form>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        @if (Model.Count == 0)
+        {
+            <div class="bg-dark border border-secondary rounded-4 p-5 text-center">
+
+                <h3 class="fw-bold">
+                    No reservations found.
+                </h3>
+
+                <p class="text-secondary mb-0">
+                    New reservation requests will appear here.
+                </p>
+
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive bg-dark border border-secondary rounded-4 overflow-hidden shadow">
+
+                <table class="table table-dark table-hover align-middle mb-0">
+
+                    <thead>
+                        <tr class="text-warning text-uppercase small">
+                            <th class="p-3">Guest</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Guests</th>
+                            <th>Status</th>
+                            <th class="text-end p-3">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var reservation in Model)
+                        {
+                            var reservationDateText =
+                            reservation.ReservationDate.ToString("dd MMM yyyy");
+
+                            var reservationTimeText =
+                            reservation.ReservationTime.ToString(@"hh\:mm");
+
+                            var statusClass = reservation.Status switch
+                            {
+                                ReservationStatus.Pending => "bg-warning text-dark",
+                                ReservationStatus.Approved => "bg-success",
+                                ReservationStatus.Rejected => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+
+                            <tr>
+
+                                <td class="p-3">
+                                    <strong>
+                                        @reservation.FullName
+                                    </strong>
+
+                                    <div class="small text-secondary">
+                                        @reservation.Email
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @reservationDateText
+                                </td>
+
+                                <td>
+                                    @reservationTimeText
+                                </td>
+
+                                <td>
+                                    @reservation.NumberOfGuests
+                                </td>
+
+                                <td>
+                                    <span class="badge @statusClass">
+                                        @reservation.Status
+                                    </span>
+                                </td>
+
+                                <td class="text-end p-3">
+                                    <a asp-controller="AdminReservations"
+                                       asp-action="Details"
+                                       asp-route-id="@reservation.Id"
+                                       class="btn btn-outline-warning btn-sm">
+                                        View
+                                    </a>
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+</section>
