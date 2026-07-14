@@ -2,78 +2,270 @@
 
 @{
     ViewData["Title"] = "Create Product";
-    var categories = ViewBag.Categories as List<Rebel.Domain.Entities.Category>;
-    var selectedCategory = categories?.FirstOrDefault(c => c.Id == Model.CategoryId);
+
+    var categories = ViewBag.Categories as List<Rebel.Domain.Entities.Category>
+                     ?? new List<Rebel.Domain.Entities.Category>();
+
+    var selectedCategory = categories
+        .FirstOrDefault(c => c.Id == Model.CategoryId);
 }
 
-<div class="container py-4">
-    <h1 class="fw-bold mb-4">Create Product</h1>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
 
-    <form asp-action="Create" method="post" autocomplete="off">
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                <div>
+                    <p class="text-warning text-uppercase fw-bold small mb-1">
+                        Rebel Rebel Admin
+                    </p>
 
-        <div class="mb-3">
-            <label asp-for="Name" class="form-label"></label>
-            <input asp-for="Name" class="form-control" autocomplete="off" />
-            <span asp-validation-for="Name" class="text-danger"></span>
-        </div>
+                    <h1 class="fw-bold text-light mb-1">
+                        Create Product
+                    </h1>
 
-        <div class="mb-3">
-            <label asp-for="Description" class="form-label"></label>
-            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
+                    <p class="text-secondary mb-0">
+                        Add a new food, beer or drink item to the menu.
+                    </p>
+                </div>
 
-        <div class="mb-3">
-            <label asp-for="Price" class="form-label"></label>
-            <input asp-for="Price" class="form-control" />
-            <span asp-validation-for="Price" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="ImageUrl" class="form-label"></label>
-            <input asp-for="ImageUrl" class="form-control" autocomplete="off" />
-            <span asp-validation-for="ImageUrl" class="text-danger"></span>
-        </div>
-
-        @if (Model.CategoryId != Guid.Empty && selectedCategory != null)
-        {
-            <div class="mb-3">
-                <label class="form-label">Category</label>
-                <input type="text" class="form-control" value="@selectedCategory.Name" readonly />
-                <input type="hidden" asp-for="CategoryId" />
+                <a asp-action="Index"
+                   class="btn btn-outline-light">
+                    Back to Products
+                </a>
             </div>
-        }
-        else
-        {
-            <div class="mb-3">
-                <label asp-for="CategoryId" class="form-label"></label>
-                <select asp-for="CategoryId" class="form-select">
-                    <option value="">-- Select category --</option>
-                    @if (categories != null)
-                    {
-                        foreach (var category in categories)
-                        {
-                            <option value="@category.Id">@category.Name</option>
-                        }
-                    }
-                </select>
-                <span asp-validation-for="CategoryId" class="text-danger"></span>
-            </div>
-        }
 
-        <div class="form-check mb-4">
-            <input asp-for="IsAvailable" class="form-check-input" />
-            <label asp-for="IsAvailable" class="form-check-label"></label>
+            <form asp-action="Create"
+                  method="post"
+                  autocomplete="off">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger mb-4">
+                </div>
+
+                <div class="row g-4">
+
+                    <div class="col-lg-7">
+                        <div class="bg-dark border border-secondary rounded-4 p-4 h-100">
+
+                            <div class="mb-4">
+                                <label asp-for="Name"
+                                       class="form-label fw-semibold text-light">
+                                </label>
+
+                                <input asp-for="Name"
+                                       class="form-control"
+                                       autocomplete="off"
+                                       placeholder="Enter product name" />
+
+                                <span asp-validation-for="Name"
+                                      class="text-danger small">
+                                </span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="Description"
+                                       class="form-label fw-semibold text-light">
+                                </label>
+
+                                <textarea asp-for="Description"
+                                          class="form-control"
+                                          rows="5"
+                                          placeholder="Enter a short product description"></textarea>
+
+                                <span asp-validation-for="Description"
+                                      class="text-danger small">
+                                </span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Price"
+                                           class="form-label fw-semibold text-light">
+                                    </label>
+
+                                    <div class="input-group">
+                                        <input asp-for="Price"
+                                               class="form-control"
+                                               min="0"
+                                               step="0.01"
+                                               placeholder="0.00" />
+
+                                        <span class="input-group-text">
+                                            MKD
+                                        </span>
+                                    </div>
+
+                                    <span asp-validation-for="Price"
+                                          class="text-danger small">
+                                    </span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    @if (Model.CategoryId != Guid.Empty &&
+                                                                        selectedCategory != null)
+                                    {
+                                        <label class="form-label fw-semibold text-light">
+                                            Category
+                                        </label>
+
+                                        <input type="text"
+                                               class="form-control"
+                                               value="@selectedCategory.Name"
+                                               readonly />
+
+                                        <input type="hidden"
+                                               asp-for="CategoryId" />
+                                    }
+                                    else
+                                    {
+                                        <label asp-for="CategoryId"
+                                               class="form-label fw-semibold text-light">
+                                        </label>
+
+                                        <select asp-for="CategoryId"
+                                                class="form-select">
+                                            <option value="">
+                                                -- Select category --
+                                            </option>
+
+                                            @foreach (var category in categories)
+                                            {
+                                                <option value="@category.Id">
+                                                    @category.Name
+                                                </option>
+                                            }
+                                        </select>
+
+                                        <span asp-validation-for="CategoryId"
+                                              class="text-danger small">
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mt-4">
+                                <input asp-for="IsAvailable"
+                                       class="form-check-input"
+                                       role="switch" />
+
+                                <label asp-for="IsAvailable"
+                                       class="form-check-label text-light">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="bg-dark border border-secondary rounded-4 p-4 h-100">
+
+                            <label asp-for="ImageUrl"
+                                   class="form-label fw-semibold text-light">
+                            </label>
+
+                            <input asp-for="ImageUrl"
+                                   class="form-control"
+                                   autocomplete="off"
+                                   placeholder="https://example.com/product.jpg"
+                                   id="imageUrlInput" />
+
+                            <span asp-validation-for="ImageUrl"
+                                  class="text-danger small">
+                            </span>
+
+                            <p class="text-secondary small mt-2 mb-3">
+                                Paste a direct image URL to preview the product.
+                            </p>
+
+                            <div class="rounded-4 overflow-hidden border border-secondary"
+                                 style="height: 300px; background: #161616;">
+
+                                <img id="imagePreview"
+                                     src="@(string.IsNullOrWhiteSpace(Model.ImageUrl)
+                                                                              ? ""
+                                                                              : Model.ImageUrl)"
+                                     alt="Product preview"
+                                     class="w-100 h-100"
+                                     style="object-fit: cover;
+                                            display: @(string.IsNullOrWhiteSpace(Model.ImageUrl)
+                                                                                     ? "none"
+                                                                                     : "block");" />
+
+                                <div id="imagePlaceholder"
+                                     class="h-100 d-flex flex-column align-items-center justify-content-center text-center p-4"
+                                     style="display: @(string.IsNullOrWhiteSpace(Model.ImageUrl)
+                                                                              ? "flex"
+                                                                              : "none") !important;">
+
+                                    <span class="display-5 mb-3">✦</span>
+
+                                    <p class="text-light fw-semibold mb-1">
+                                        Product image preview
+                                    </p>
+
+                                    <p class="text-secondary small mb-0">
+                                        The image will appear here after entering its URL.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <button type="submit"
+                            class="btn btn-warning px-4 fw-semibold">
+                        Save Product
+                    </button>
+
+                    <a asp-action="Index"
+                       class="btn btn-outline-light px-4">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
         </div>
-
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </form>
+    </div>
 </div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const imageInput = document.getElementById("imageUrlInput");
+            const imagePreview = document.getElementById("imagePreview");
+            const imagePlaceholder = document.getElementById("imagePlaceholder");
+
+            if (!imageInput || !imagePreview || !imagePlaceholder) {
+                return;
+            }
+
+            function showPlaceholder() {
+                imagePreview.removeAttribute("src");
+                imagePreview.style.display = "none";
+                imagePlaceholder.style.setProperty("display", "flex", "important");
+            }
+
+            function updatePreview() {
+                const imageUrl = imageInput.value.trim();
+
+                if (!imageUrl) {
+                    showPlaceholder();
+                    return;
+                }
+
+                imagePreview.src = imageUrl;
+                imagePreview.style.display = "block";
+                imagePlaceholder.style.setProperty("display", "none", "important");
+            }
+
+            imagePreview.addEventListener("error", showPlaceholder);
+            imageInput.addEventListener("input", updatePreview);
+        });
+    </script>
 }

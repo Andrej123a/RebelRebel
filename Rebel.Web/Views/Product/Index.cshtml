@@ -92,8 +92,9 @@
                 try {
                     tableContainer.style.opacity = "0.6";
 
-                    const response = await fetch(`/Product/FilterProducts?${query.toString()}`, {
-                        method: "GET",
+                        const filterUrl = '@Url.Action("FilterProducts", "Product")';
+
+                        const response = await fetch(`${filterUrl}?${query.toString()}`, {                        method: "GET",
                         headers: {
                             "X-Requested-With": "XMLHttpRequest"
                         }

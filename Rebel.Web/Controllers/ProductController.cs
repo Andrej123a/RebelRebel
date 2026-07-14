@@ -74,9 +74,14 @@ namespace Rebel.Web.Controllers
         // CREATE GET
         public async Task<IActionResult> Create(Guid? categoryId)
         {
-            ViewBag.Categories = await _context.Categories.ToListAsync();
+            ViewBag.Categories = await _context.Categories
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
-            var product = new Product();
+            var product = new Product
+            {
+                IsAvailable = true
+            };
 
             if (categoryId.HasValue)
             {
@@ -113,7 +118,9 @@ namespace Rebel.Web.Controllers
                 return NotFound();
             }
 
-            ViewBag.Categories = await _context.Categories.ToListAsync();
+            ViewBag.Categories = await _context.Categories
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
             return View(product);
         }
@@ -129,11 +136,27 @@ namespace Rebel.Web.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Categories = await _context.Categories.ToListAsync();
+                ViewBag.Categories = await _context.Categories
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+
                 return View(product);
             }
 
-            _context.Products.Update(product);
+            var existingProduct = await _context.Products.FindAsync(id);
+
+            if (existingProduct == null)
+            {
+                return NotFound();
+            }
+
+            existingProduct.Name = product.Name;
+            existingProduct.Description = product.Description;
+            existingProduct.Price = product.Price;
+            existingProduct.ImageUrl = product.ImageUrl;
+            existingProduct.CategoryId = product.CategoryId;
+            existingProduct.IsAvailable = product.IsAvailable;
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
