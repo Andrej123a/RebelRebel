@@ -16,7 +16,7 @@ namespace Rebel.Infrastructure.Data
         public DbSet<Event> Events { get; set; }
         public DbSet<ContactInfo> ContactInfos { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
-
+        public DbSet<Notification> Notifications { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -48,6 +48,34 @@ namespace Rebel.Infrastructure.Data
                     r.Status,
                     r.ReservationDate
                 });
+            });
+
+            builder.Entity<Notification>(entity =>
+            {
+                entity.Property(n => n.Title)
+                    .IsRequired()
+                    .HasMaxLength(150);
+
+                entity.Property(n => n.Message)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(n => n.Link)
+                    .HasMaxLength(300);
+
+                entity.Property(n => n.CreatedAt)
+                    .HasColumnType("timestamp with time zone");
+
+                entity.HasIndex(n => new
+                {
+                    n.IsRead,
+                    n.CreatedAt
+                });
+
+                entity.HasOne(n => n.Reservation)
+                    .WithMany()
+                    .HasForeignKey(n => n.ReservationId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }

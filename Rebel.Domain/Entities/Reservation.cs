@@ -47,5 +47,8 @@ namespace Rebel.Domain.Entities
 
         [StringLength(500)]
         public string? AdminNote { get; set; }
+        public Guid? EventId { get; set; }
+
+        public Event? Event { get; set; }
     }
 }

@@ -2,193 +2,1009 @@
 @using Rebel.Domain.Enums
 
 @{
-    ViewData["Title"] = "Categories";
+	ViewData["Title"] = "Categories";
 
-    var foodCategories = Model.Where(c => c.Type == CategoryType.Food).ToList();
-    var drinkCategories = Model.Where(c => c.Type == CategoryType.Drink).ToList();
-    var beerCategories = Model.Where(c => c.Type == CategoryType.Beer).ToList();
+	var categories = Model ?? new List<Rebel.Domain.Entities.Category>();
+
+	var foodCategories = categories
+		.Where(c => c.Type == CategoryType.Food)
+		.ToList();
+
+	var drinkCategories = categories
+		.Where(c => c.Type == CategoryType.Drink)
+		.ToList();
+
+	var beerCategories = categories
+		.Where(c => c.Type == CategoryType.Beer)
+		.ToList();
+
+	var totalProducts = categories.Sum(c => c.Products?.Count ?? 0);
+
+	var categorySections = new[]
+	{
+		new
+		{
+			Id = "food-categories",
+			Title = "Food Categories",
+			Subtitle = "Manage burgers, wings, pizzas, snacks and everything from the kitchen.",
+			Label = "FOOD",
+			Type = CategoryType.Food,
+			Tone = "food",
+			Letter = "F",
+			Categories = foodCategories
+		},
+		new
+		{
+			Id = "drink-categories",
+			Title = "Drink Categories",
+			Subtitle = "Organize cocktails, spirits, soft drinks and the rest of the bar selection.",
+			Label = "DRINKS",
+			Type = CategoryType.Drink,
+			Tone = "drink",
+			Letter = "D",
+			Categories = drinkCategories
+		},
+		new
+		{
+			Id = "beer-categories",
+			Title = "Beer Categories",
+			Subtitle = "Keep every lager, IPA, sour and craft pour exactly where it belongs.",
+			Label = "BEER",
+			Type = CategoryType.Beer,
+			Tone = "beer",
+			Letter = "B",
+			Categories = beerCategories
+		}
+	};
 }
 
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="fw-bold text-light mb-1">Categories</h1>
-            <p class="text-secondary mb-0">Choose a category to manage its products.</p>
-        </div>
+<style>
+	.rebel-categories-page {
+		--rebel-bg: #090a0c;
+		--rebel-surface: #111317;
+		--rebel-surface-soft: #171a1f;
+		--rebel-border: rgba(255, 255, 255, 0.09);
+		--rebel-text: #f4f4f2;
+		--rebel-muted: #959aa3;
+		--rebel-yellow: #f4b942;
+		--rebel-orange: #ef7d32;
+		--rebel-cyan: #57c8d9;
+		--rebel-green: #68ba78;
+		position: relative;
+		min-height: 100vh;
+		padding: 42px 0 80px;
+		background: radial-gradient( circle at 10% 0%, rgba(244, 185, 66, 0.11), transparent 30% ), radial-gradient( circle at 95% 15%, rgba(239, 125, 50, 0.08), transparent 27% ), var(--rebel-bg);
+		color: var(--rebel-text);
+		overflow: hidden;
+	}
 
-        <a asp-action="Create" class="btn btn-primary rounded-pill px-4">
-            + Add Category
-        </a>
-    </div>
+		.rebel-categories-page::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+			opacity: 0.13;
+			background-image: linear-gradient( rgba(255, 255, 255, 0.025) 1px, transparent 1px ), linear-gradient( 90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px );
+			background-size: 42px 42px;
+			mask-image: linear-gradient(to bottom, black, transparent 76%);
+		}
 
-    <!-- FOOD -->
-    <section class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="text-warning mb-0">Food Categories</h2>
-            <a asp-action="Create" asp-route-type="@CategoryType.Food" class="btn btn-outline-warning btn-sm rounded-pill">
-                + Add Food Category
-            </a>
-        </div>
+		.rebel-categories-page * {
+			box-sizing: border-box;
+		}
 
-        <div class="row g-4">
-            @foreach (var category in foodCategories)
-            {
-                <div class="col-md-6 col-xl-4">
-                    <div class="card h-100 bg-dark text-light border-secondary shadow-sm">
-                        <div class="card-body d-flex flex-column">
-                            <h4 class="fw-bold mb-2">@category.Name</h4>
+	.rebel-categories-content {
+		position: relative;
+		z-index: 1;
+	}
 
-                            <p class="text-secondary mb-3">
-                                @(string.IsNullOrWhiteSpace(category.Description)
-                                                            ? "No description available."
-                                                            : category.Description)
-                        </p>
+	/* HERO */
 
-                            <p class="mb-2">
-                                <span class="badge bg-warning text-dark">Food</span>
-                            </p>
+	.categories-hero {
+		position: relative;
+		padding: clamp(28px, 5vw, 55px);
+		margin-bottom: 26px;
+		border: 1px solid var(--rebel-border);
+		border-radius: 30px;
+		background: linear-gradient( 120deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015) ), #101216;
+		box-shadow: 0 26px 70px rgba(0, 0, 0, 0.34);
+		overflow: hidden;
+	}
 
-                            <p class="mb-4">
-                                <span class="badge bg-secondary">
-                                    @(category.Products?.Count ?? 0) products
-                                </span>
-                            </p>
+		.categories-hero::before {
+			content: "REBEL";
+			position: absolute;
+			top: 50%;
+			right: -18px;
+			transform: translateY(-52%);
+			font-size: clamp(88px, 14vw, 210px);
+			line-height: 1;
+			font-weight: 900;
+			letter-spacing: -0.09em;
+			color: rgba(255, 255, 255, 0.025);
+			pointer-events: none;
+			user-select: none;
+		}
 
-                            <div class="mt-auto d-flex flex-wrap gap-2">
-                                <a asp-controller="Product" asp-action="ByCategory" asp-route-id="@category.Id" class="btn btn-outline-light btn-sm">
-                                    View Products
-                                </a>
+		.categories-hero::after {
+			content: "";
+			position: absolute;
+			width: 280px;
+			height: 280px;
+			top: -150px;
+			right: 12%;
+			border-radius: 50%;
+			background: rgba(244, 185, 66, 0.14);
+			filter: blur(55px);
+			pointer-events: none;
+		}
 
-                                <a asp-controller="Product" asp-action="Create" asp-route-categoryId="@category.Id" class="btn btn-primary btn-sm">
-                                    Add Product
-                                </a>
+	.categories-hero-content {
+		position: relative;
+		z-index: 2;
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 28px;
+	}
 
-                                <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-outline-info btn-sm">
-                                    Edit
-                                </a>
+	.categories-eyebrow {
+		display: inline-flex;
+		align-items: center;
+		gap: 9px;
+		margin-bottom: 15px;
+		color: var(--rebel-yellow);
+		font-size: 0.73rem;
+		font-weight: 800;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
 
-                                <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-outline-danger btn-sm">
-                                    Delete
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                        }
-        </div>
-    </section>
+		.categories-eyebrow::before {
+			content: "";
+			width: 28px;
+			height: 2px;
+			background: currentColor;
+		}
 
-    <!-- DRINK -->
-    <section class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="text-warning mb-0">Drink Categories</h2>
-            <a asp-action="Create" asp-route-type="@CategoryType.Drink" class="btn btn-outline-warning btn-sm rounded-pill">
-                + Add Drink Category
-            </a>
-        </div>
+	.categories-title {
+		margin: 0;
+		max-width: 720px;
+		font-size: clamp(2.4rem, 6vw, 5rem);
+		line-height: 0.94;
+		font-weight: 900;
+		letter-spacing: -0.06em;
+		color: #ffffff;
+	}
 
-        <div class="row g-4">
-            @foreach (var category in drinkCategories)
-            {
-                <div class="col-md-6 col-xl-4">
-                    <div class="card h-100 bg-dark text-light border-secondary shadow-sm">
-                        <div class="card-body d-flex flex-column">
-                            <h4 class="fw-bold mb-2">@category.Name</h4>
+		.categories-title span {
+			color: var(--rebel-yellow);
+		}
 
-                            <p class="text-secondary mb-3">
-                                @(string.IsNullOrWhiteSpace(category.Description)
-                                                            ? "No description available."
-                                                            : category.Description)
-                        </p>
+	.categories-description {
+		max-width: 600px;
+		margin: 20px 0 0;
+		color: var(--rebel-muted);
+		font-size: 1rem;
+		line-height: 1.7;
+	}
 
-                            <p class="mb-2">
-                                <span class="badge bg-info text-dark">Drink</span>
-                            </p>
+	.categories-main-action {
+		position: relative;
+		z-index: 3;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		min-height: 52px;
+		padding: 0 24px;
+		border: 1px solid var(--rebel-yellow);
+		border-radius: 999px;
+		background: var(--rebel-yellow);
+		color: #17120a;
+		font-size: 0.88rem;
+		font-weight: 800;
+		text-decoration: none;
+		box-shadow: 0 13px 30px rgba(244, 185, 66, 0.18);
+		transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+	}
 
-                            <p class="mb-4">
-                                <span class="badge bg-secondary">
-                                    @(category.Products?.Count ?? 0) products
-                                </span>
-                            </p>
+		.categories-main-action:hover {
+			transform: translateY(-3px);
+			background: #ffd16d;
+			color: #17120a;
+			box-shadow: 0 18px 38px rgba(244, 185, 66, 0.28);
+		}
 
-                            <div class="mt-auto d-flex flex-wrap gap-2">
-                                <a asp-controller="Product" asp-action="ByCategory" asp-route-id="@category.Id" class="btn btn-outline-light btn-sm">
-                                    View Products
-                                </a>
+		.categories-main-action:focus-visible {
+			outline: 3px solid rgba(244, 185, 66, 0.28);
+			outline-offset: 4px;
+		}
 
-                                <a asp-controller="Product" asp-action="Create" asp-route-categoryId="@category.Id" class="btn btn-primary btn-sm">
-                                    Add Product
-                                </a>
+	/* STATS */
 
-                                <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-outline-info btn-sm">
-                                    Edit
-                                </a>
+	.categories-stats {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 14px;
+		margin-bottom: 28px;
+	}
 
-                                <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-outline-danger btn-sm">
-                                    Delete
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                        }
-        </div>
-    </section>
+	.category-stat {
+		position: relative;
+		min-height: 112px;
+		padding: 22px;
+		border: 1px solid var(--rebel-border);
+		border-radius: 20px;
+		background: rgba(18, 20, 24, 0.88);
+		overflow: hidden;
+	}
 
-    <!-- BEER -->
-    <section class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="text-warning mb-0">Beer Categories</h2>
-            <a asp-action="Create" asp-route-type="@CategoryType.Beer" class="btn btn-outline-warning btn-sm rounded-pill">
-                + Add Beer Category
-            </a>
-        </div>
+		.category-stat::after {
+			content: "";
+			position: absolute;
+			width: 80px;
+			height: 80px;
+			right: -35px;
+			bottom: -38px;
+			border-radius: 50%;
+			background: var(--stat-color, var(--rebel-yellow));
+			opacity: 0.13;
+		}
 
-        <div class="row g-4">
-            @foreach (var category in beerCategories)
-            {
-                <div class="col-md-6 col-xl-4">
-                    <div class="card h-100 bg-dark text-light border-secondary shadow-sm">
-                        <div class="card-body d-flex flex-column">
-                            <h4 class="fw-bold mb-2">@category.Name</h4>
+	.category-stat-label {
+		display: block;
+		margin-bottom: 10px;
+		color: var(--rebel-muted);
+		font-size: 0.7rem;
+		font-weight: 800;
+		letter-spacing: 0.13em;
+		text-transform: uppercase;
+	}
 
-                            <p class="text-secondary mb-3">
-                                @(string.IsNullOrWhiteSpace(category.Description)
-                                                            ? "No description available."
-                                                            : category.Description)
-                        </p>
+	.category-stat-value {
+		display: block;
+		color: #ffffff;
+		font-size: 2rem;
+		line-height: 1;
+		font-weight: 900;
+		letter-spacing: -0.04em;
+	}
 
-                            <p class="mb-2">
-                                <span class="badge bg-success">Beer</span>
-                            </p>
+	.category-stat--food {
+		--stat-color: var(--rebel-orange);
+	}
 
-                            <p class="mb-4">
-                                <span class="badge bg-secondary">
-                                    @(category.Products?.Count ?? 0) products
-                                </span>
-                            </p>
+	.category-stat--drink {
+		--stat-color: var(--rebel-cyan);
+	}
 
-                            <div class="mt-auto d-flex flex-wrap gap-2">
-                                <a asp-controller="Product" asp-action="ByCategory" asp-route-id="@category.Id" class="btn btn-outline-light btn-sm">
-                                    View Products
-                                </a>
+	.category-stat--beer {
+		--stat-color: var(--rebel-green);
+	}
 
-                                <a asp-controller="Product" asp-action="Create" asp-route-categoryId="@category.Id" class="btn btn-primary btn-sm">
-                                    Add Product
-                                </a>
+	/* QUICK NAVIGATION */
 
-                                <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-outline-info btn-sm">
-                                    Edit
-                                </a>
+	.categories-navigation {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		padding: 12px;
+		margin-bottom: 42px;
+		border: 1px solid var(--rebel-border);
+		border-radius: 18px;
+		background: rgba(17, 19, 23, 0.82);
+		backdrop-filter: blur(12px);
+	}
 
-                                <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-outline-danger btn-sm">
-                                    Delete
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                        }
-        </div>
-    </section>
+		.categories-navigation a {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 39px;
+			padding: 0 17px;
+			border: 1px solid transparent;
+			border-radius: 999px;
+			color: #a7abb2;
+			font-size: 0.78rem;
+			font-weight: 800;
+			letter-spacing: 0.05em;
+			text-decoration: none;
+			text-transform: uppercase;
+			transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+		}
+
+			.categories-navigation a:hover {
+				border-color: rgba(244, 185, 66, 0.26);
+				background: rgba(244, 185, 66, 0.08);
+				color: var(--rebel-yellow);
+			}
+
+	/* SECTIONS */
+
+	.category-section {
+		margin-bottom: 64px;
+		scroll-margin-top: 30px;
+	}
+
+	.category-section-header {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 24px;
+		margin-bottom: 23px;
+	}
+
+	.category-section-heading {
+		display: flex;
+		align-items: center;
+		gap: 15px;
+	}
+
+	.category-section-letter {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 52px;
+		height: 52px;
+		flex-shrink: 0;
+		border: 1px solid rgba(255, 255, 255, 0.11);
+		border-radius: 16px;
+		background: var(--section-soft-color);
+		color: var(--section-color);
+		font-size: 1.1rem;
+		font-weight: 900;
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+	}
+
+	.category-section-label {
+		display: block;
+		margin-bottom: 4px;
+		color: var(--section-color);
+		font-size: 0.66rem;
+		font-weight: 900;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.category-section-title {
+		margin: 0;
+		color: #ffffff;
+		font-size: clamp(1.45rem, 3vw, 2rem);
+		font-weight: 850;
+		letter-spacing: -0.035em;
+	}
+
+	.category-section-subtitle {
+		max-width: 620px;
+		margin: 8px 0 0;
+		color: var(--rebel-muted);
+		font-size: 0.88rem;
+		line-height: 1.6;
+	}
+
+	.category-section-add {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		min-height: 42px;
+		padding: 0 18px;
+		border: 1px solid var(--section-color);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--section-color);
+		font-size: 0.77rem;
+		font-weight: 800;
+		text-decoration: none;
+		transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+	}
+
+		.category-section-add:hover {
+			transform: translateY(-2px);
+			background: var(--section-color);
+			color: #0c0d0f;
+		}
+
+	.category-section--food {
+		--section-color: var(--rebel-orange);
+		--section-soft-color: rgba(239, 125, 50, 0.1);
+	}
+
+	.category-section--drink {
+		--section-color: var(--rebel-cyan);
+		--section-soft-color: rgba(87, 200, 217, 0.1);
+	}
+
+	.category-section--beer {
+		--section-color: var(--rebel-green);
+		--section-soft-color: rgba(104, 186, 120, 0.1);
+	}
+
+	/* CATEGORY CARDS */
+
+	.categories-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 19px;
+	}
+
+	.rebel-category-card {
+		position: relative;
+		display: flex;
+		min-height: 310px;
+		border: 1px solid var(--rebel-border);
+		border-radius: 23px;
+		background: linear-gradient( 145deg, rgba(255, 255, 255, 0.035), transparent 42% ), var(--rebel-surface);
+		box-shadow: 0 15px 38px rgba(0, 0, 0, 0.2);
+		overflow: hidden;
+		transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+	}
+
+		.rebel-category-card::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 22px;
+			right: 22px;
+			height: 3px;
+			border-radius: 0 0 999px 999px;
+			background: var(--card-color);
+		}
+
+		.rebel-category-card::after {
+			content: "";
+			position: absolute;
+			width: 150px;
+			height: 150px;
+			right: -85px;
+			top: -90px;
+			border-radius: 50%;
+			background: var(--card-color);
+			opacity: 0.09;
+			filter: blur(8px);
+			pointer-events: none;
+		}
+
+		.rebel-category-card:hover {
+			transform: translateY(-7px);
+			border-color: color-mix( in srgb, var(--card-color) 38%, transparent );
+			box-shadow: 0 25px 56px rgba(0, 0, 0, 0.35);
+		}
+
+	.rebel-category-card--food {
+		--card-color: var(--rebel-orange);
+	}
+
+	.rebel-category-card--drink {
+		--card-color: var(--rebel-cyan);
+	}
+
+	.rebel-category-card--beer {
+		--card-color: var(--rebel-green);
+	}
+
+	.rebel-category-card-body {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		padding: 27px;
+	}
+
+	.category-card-top {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 18px;
+		margin-bottom: 22px;
+	}
+
+	.category-type-badge {
+		display: inline-flex;
+		align-items: center;
+		min-height: 29px;
+		padding: 0 11px;
+		border: 1px solid color-mix( in srgb, var(--card-color) 32%, transparent );
+		border-radius: 999px;
+		background: color-mix( in srgb, var(--card-color) 9%, transparent );
+		color: var(--card-color);
+		font-size: 0.63rem;
+		font-weight: 900;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.category-product-count {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		line-height: 1;
+	}
+
+		.category-product-count strong {
+			color: #ffffff;
+			font-size: 1.45rem;
+			font-weight: 900;
+			letter-spacing: -0.04em;
+		}
+
+		.category-product-count span {
+			margin-top: 5px;
+			color: var(--rebel-muted);
+			font-size: 0.63rem;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+		}
+
+	.category-card-name {
+		margin: 0 0 11px;
+		color: #ffffff;
+		font-size: 1.42rem;
+		line-height: 1.2;
+		font-weight: 850;
+		letter-spacing: -0.035em;
+	}
+
+	.category-card-description {
+		display: -webkit-box;
+		margin: 0 0 26px;
+		color: #9a9fa8;
+		font-size: 0.88rem;
+		line-height: 1.65;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+	}
+
+	.category-card-actions {
+		display: grid;
+		grid-template-columns: 1fr 1fr auto auto;
+		gap: 8px;
+		margin-top: auto;
+	}
+
+	.category-action {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 39px;
+		padding: 0 13px;
+		border: 1px solid transparent;
+		border-radius: 11px;
+		font-size: 0.72rem;
+		font-weight: 800;
+		text-align: center;
+		text-decoration: none;
+		white-space: nowrap;
+		transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+	}
+
+		.category-action:hover {
+			transform: translateY(-2px);
+		}
+
+	.category-action--view {
+		border-color: rgba(255, 255, 255, 0.14);
+		background: rgba(255, 255, 255, 0.055);
+		color: #ffffff;
+	}
+
+		.category-action--view:hover {
+			border-color: rgba(255, 255, 255, 0.28);
+			background: rgba(255, 255, 255, 0.1);
+			color: #ffffff;
+		}
+
+	.category-action--add {
+		border-color: var(--card-color);
+		background: var(--card-color);
+		color: #0b0c0e;
+	}
+
+		.category-action--add:hover {
+			color: #0b0c0e;
+			filter: brightness(1.08);
+		}
+
+	.category-action--edit,
+	.category-action--delete {
+		width: 42px;
+		padding: 0;
+	}
+
+	.category-action--edit {
+		border-color: rgba(87, 200, 217, 0.22);
+		background: rgba(87, 200, 217, 0.07);
+		color: #73d7e5;
+	}
+
+		.category-action--edit:hover {
+			border-color: rgba(87, 200, 217, 0.45);
+			background: rgba(87, 200, 217, 0.14);
+			color: #9de8f2;
+		}
+
+	.category-action--delete {
+		border-color: rgba(237, 89, 89, 0.2);
+		background: rgba(237, 89, 89, 0.07);
+		color: #ef7b7b;
+	}
+
+		.category-action--delete:hover {
+			border-color: rgba(237, 89, 89, 0.44);
+			background: rgba(237, 89, 89, 0.14);
+			color: #ff9a9a;
+		}
+
+	/* EMPTY STATE */
+
+	.category-empty-state {
+		grid-column: 1 / -1;
+		padding: 44px 28px;
+		border: 1px dashed rgba(255, 255, 255, 0.13);
+		border-radius: 23px;
+		background: rgba(255, 255, 255, 0.018);
+		text-align: center;
+	}
+
+	.category-empty-letter {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 54px;
+		height: 54px;
+		margin-bottom: 16px;
+		border-radius: 17px;
+		background: var(--section-soft-color);
+		color: var(--section-color);
+		font-size: 1.2rem;
+		font-weight: 900;
+	}
+
+	.category-empty-state h3 {
+		margin: 0 0 8px;
+		color: #ffffff;
+		font-size: 1.25rem;
+		font-weight: 800;
+	}
+
+	.category-empty-state p {
+		margin: 0 0 19px;
+		color: var(--rebel-muted);
+		font-size: 0.88rem;
+	}
+
+	.category-empty-state a {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 40px;
+		padding: 0 17px;
+		border-radius: 999px;
+		background: var(--section-color);
+		color: #0b0c0e;
+		font-size: 0.76rem;
+		font-weight: 850;
+		text-decoration: none;
+	}
+
+	/* RESPONSIVE */
+
+	@@media (max-width: 1199.98px) {
+		.categories-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.category-card-actions {
+			grid-template-columns: 1fr 1fr;
+		}
+
+		.category-action--edit,
+		.category-action--delete {
+			width: auto;
+		}
+	}
+
+	@@media (max-width: 991.98px) {
+		.categories-hero-content {
+			align-items: flex-start;
+			flex-direction: column;
+		}
+
+		.categories-stats {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.categories-main-action {
+			width: 100%;
+		}
+	}
+
+	@@media (max-width: 767.98px) {
+		.rebel-categories-page {
+			padding-top: 22px;
+		}
+
+		.categories-hero {
+			border-radius: 23px;
+		}
+
+			.categories-hero::before {
+				display: none;
+			}
+
+		.categories-navigation {
+			display: grid;
+			grid-template-columns: 1fr;
+		}
+
+			.categories-navigation a {
+				width: 100%;
+			}
+
+		.category-section-header {
+			align-items: flex-start;
+			flex-direction: column;
+		}
+
+		.category-section-add {
+			width: 100%;
+		}
+
+		.categories-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@@media (max-width: 479.98px) {
+		.categories-stats {
+			grid-template-columns: 1fr;
+		}
+
+		.categories-title {
+			font-size: 2.55rem;
+		}
+
+		.rebel-category-card-body {
+			padding: 22px;
+		}
+
+		.category-card-actions {
+			grid-template-columns: 1fr;
+		}
+
+		.category-action,
+		.category-action--edit,
+		.category-action--delete {
+			width: 100%;
+		}
+	}
+</style>
+
+<div class="rebel-categories-page">
+	<div class="container rebel-categories-content">
+
+		<!-- HERO -->
+		<header class="categories-hero">
+			<div class="categories-hero-content">
+				<div>
+					<span class="categories-eyebrow">
+						Menu control
+					</span>
+
+					<h1 class="categories-title">
+						Categories<span>.</span>
+					</h1>
+
+					<p class="categories-description">
+						Organize the full Rebel menu, manage every category
+						and jump directly into its products.
+					</p>
+				</div>
+
+				<a asp-action="Create"
+				   class="categories-main-action">
+					+ Add New Category
+				</a>
+			</div>
+		</header>
+
+		<!-- STATISTICS -->
+		<div class="categories-stats">
+			<div class="category-stat">
+				<span class="category-stat-label">
+					Total Categories
+				</span>
+
+				<strong class="category-stat-value">
+					@categories.Count
+				</strong>
+			</div>
+
+			<div class="category-stat category-stat--food">
+				<span class="category-stat-label">
+					Food Categories
+				</span>
+
+				<strong class="category-stat-value">
+					@foodCategories.Count
+				</strong>
+			</div>
+
+			<div class="category-stat category-stat--drink">
+				<span class="category-stat-label">
+					Drink &amp; Beer Categories
+				</span>
+
+				<strong class="category-stat-value">
+					@(drinkCategories.Count + beerCategories.Count)
+				</strong>
+			</div>
+
+			<div class="category-stat category-stat--beer">
+				<span class="category-stat-label">
+					Total Products
+				</span>
+
+				<strong class="category-stat-value">
+					@totalProducts
+				</strong>
+			</div>
+		</div>
+
+		<!-- QUICK NAVIGATION -->
+		<nav class="categories-navigation"
+			 aria-label="Category sections">
+
+			<a href="#food-categories">
+				Food
+			</a>
+
+			<a href="#drink-categories">
+				Drinks
+			</a>
+
+			<a href="#beer-categories">
+				Beer
+			</a>
+		</nav>
+
+		<!-- CATEGORY SECTIONS -->
+		<!-- CATEGORY SECTIONS -->
+		@foreach (var categorySection in categorySections)
+		{
+			<section id="@categorySection.Id"
+					 class="category-section category-section--@categorySection.Tone">
+
+				<div class="category-section-header">
+					<div>
+						<div class="category-section-heading">
+							<span class="category-section-letter">
+								@categorySection.Letter
+							</span>
+
+							<div>
+								<span class="category-section-label">
+									@categorySection.Label
+								</span>
+
+								<h2 class="category-section-title">
+									@categorySection.Title
+								</h2>
+							</div>
+						</div>
+
+						<p class="category-section-subtitle">
+							@categorySection.Subtitle
+						</p>
+					</div>
+
+					<a asp-action="Create"
+					   asp-route-type="@categorySection.Type"
+					   class="category-section-add">
+						+ Add @categorySection.Label Category
+					</a>
+				</div>
+
+				<div class="categories-grid">
+					@if (categorySection.Categories.Any())
+					{
+						@foreach (var category in categorySection.Categories)
+						{
+							var productCount = category.Products?.Count ?? 0;
+
+							<article class="rebel-category-card rebel-category-card--@categorySection.Tone">
+								<div class="rebel-category-card-body">
+
+									<div class="category-card-top">
+										<span class="category-type-badge">
+											@categorySection.Label
+										</span>
+
+										<div class="category-product-count">
+											<strong>
+												@productCount
+											</strong>
+
+											<span>
+												@(productCount == 1
+																					? "Product"
+																					: "Products")
+															 								</span>
+															 							</div>
+															 						</div>
+
+									<h3 class="category-card-name">
+										@category.Name
+									</h3>
+
+									<p class="category-card-description">
+										@(string.IsNullOrWhiteSpace(category.Description)
+																	? "No description available."
+																	: category.Description)
+						</p>
+
+									<div class="category-card-actions">
+										<a asp-controller="Product"
+										   asp-action="ByCategory"
+										   asp-route-id="@category.Id"
+										   class="category-action category-action--view">
+											View Products
+										</a>
+
+										<a asp-controller="Product"
+										   asp-action="Create"
+										   asp-route-categoryId="@category.Id"
+										   class="category-action category-action--add">
+											+ Add Product
+										</a>
+
+										<a asp-action="Edit"
+										   asp-route-id="@category.Id"
+										   class="category-action category-action--edit"
+										   title="Edit category"
+										   aria-label="Edit @category.Name">
+											Edit
+										</a>
+
+										<a asp-action="Delete"
+										   asp-route-id="@category.Id"
+										   class="category-action category-action--delete"
+										   title="Delete category"
+										   aria-label="Delete @category.Name">
+											Delete
+										</a>
+									</div>
+								</div>
+							</article>
+								}
+					}
+					else
+					{
+						<div class="category-empty-state">
+							<span class="category-empty-letter">
+								@categorySection.Letter
+							</span>
+
+							<h3>
+								No @categorySection.Label.ToLower() categories yet
+							</h3>
+
+							<p>
+								Create the first category and start adding products.
+							</p>
+
+							<a asp-action="Create"
+							   asp-route-type="@categorySection.Type">
+								+ Create Category
+							</a>
+						</div>
+					}
+				</div>
+			</section>
+		}
+	</div>
 </div>

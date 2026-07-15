@@ -44,5 +44,8 @@ namespace Rebel.Web.Models
         )]
         [Display(Name = "Special requests")]
         public string? Note { get; set; }
+        public Guid? EventId { get; set; }
+
+        public string? EventTitle { get; set; }
     }
 }

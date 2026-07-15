@@ -239,6 +239,164 @@ a {
     color: #76a95b;
 }
 
+
+/* ADMIN RESERVATION SIGNAL */
+
+.admin-topline-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.admin-reservation-signal {
+    position: relative;
+    display: inline-flex;
+    min-height: 38px;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px 6px 7px;
+    color: #8f8f8f;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    text-decoration: none;
+    overflow: hidden;
+    transition: 0.2s ease;
+}
+
+    .admin-reservation-signal::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 3px;
+        height: 100%;
+        background: #363636;
+        transition: 0.2s ease;
+    }
+
+    .admin-reservation-signal:hover {
+        color: var(--rebel-white);
+        background: rgba(255, 255, 255, 0.055);
+        border-color: rgba(244, 196, 0, 0.52);
+    }
+
+        .admin-reservation-signal:hover::after {
+            background: var(--rebel-yellow);
+        }
+
+    .admin-reservation-signal.has-notifications {
+        color: var(--rebel-white);
+        background: linear-gradient( 105deg, rgba(200, 32, 45, 0.17), transparent 72% ), #111111;
+        border-color: rgba(200, 32, 45, 0.68);
+        box-shadow: 4px 4px 0 rgba(200, 32, 45, 0.24);
+    }
+
+        .admin-reservation-signal.has-notifications::after {
+            background: var(--rebel-red);
+        }
+
+.admin-signal-icon {
+    position: relative;
+    display: inline-flex;
+    width: 27px;
+    height: 27px;
+    flex: 0 0 27px;
+    align-items: center;
+    justify-content: center;
+    color: var(--rebel-yellow);
+    border: 1px solid rgba(244, 196, 0, 0.42);
+    transform: rotate(-2deg);
+}
+
+    .admin-signal-icon svg {
+        width: 15px;
+        height: 15px;
+        stroke: currentColor;
+    }
+
+.has-notifications .admin-signal-icon::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 8px;
+    height: 8px;
+    background: var(--rebel-red);
+    border: 2px solid #111111;
+    animation: rebel-signal-pulse 1.7s ease-in-out infinite;
+}
+
+.admin-signal-copy {
+    display: flex;
+    min-width: 82px;
+    flex-direction: column;
+    line-height: 1;
+}
+
+.admin-signal-label {
+    color: #666666;
+    font-size: 0.48rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.admin-signal-state {
+    margin-top: 4px;
+    color: inherit;
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 1.2px;
+}
+
+.admin-signal-count {
+    display: inline-flex;
+    min-width: 26px;
+    height: 25px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    color: #111111;
+    background: var(--rebel-yellow);
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    clip-path: polygon( 0 0, 82% 0, 100% 30%, 100% 100%, 18% 100%, 0 70% );
+}
+
+.admin-nav-alert {
+    display: inline-flex;
+    min-width: 26px;
+    height: 22px;
+    margin-left: auto;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    color: #111111;
+    background: var(--rebel-yellow);
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 0.92rem;
+    letter-spacing: 0.5px;
+    clip-path: polygon( 0 0, 80% 0, 100% 32%, 100% 100%, 20% 100%, 0 68% );
+}
+
+.admin-nav-link.active .admin-nav-alert {
+    color: #ffffff;
+    background: var(--rebel-red);
+}
+
+@keyframes rebel-signal-pulse {
+    0%, 100% {
+        transform: scale(0.82);
+        opacity: 0.72;
+    }
+
+    50% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+}
+
 .admin-page-frame {
     width: 100%;
     max-width: 1450px;

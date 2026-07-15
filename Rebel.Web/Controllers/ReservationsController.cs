@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Rebel.Domain.Entities;
 using Rebel.Domain.Enums;
 using Rebel.Infrastructure.Data;
@@ -20,7 +21,7 @@ namespace Rebel.Web.Controllers
 
         // CREATE GET
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(Guid? eventId)
         {
             var nowInSkopje = GetCurrentSkopjeTime();
 
@@ -33,6 +34,32 @@ namespace Rebel.Web.Controllers
                 NumberOfGuests = 2
             };
 
+            // Ако резервацијата доаѓа од конкретен event
+            if (eventId.HasValue)
+            {
+                var selectedEvent = await _context.Events
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(e =>
+                        e.Id == eventId.Value &&
+                        e.IsActive
+                    );
+
+                if (selectedEvent == null)
+                {
+                    return NotFound();
+                }
+
+                model.EventId = selectedEvent.Id;
+                model.EventTitle = selectedEvent.Title;
+                model.ReservationDate = selectedEvent.Date.Date;
+
+                if (selectedEvent.StartTime.HasValue)
+                {
+                    model.ReservationTime =
+                        selectedEvent.StartTime.Value;
+                }
+            }
+
             return View(model);
         }
 
@@ -44,6 +71,35 @@ namespace Rebel.Web.Controllers
         )
         {
             var nowInSkopje = GetCurrentSkopjeTime();
+
+            // Повторна проверка на event-от.
+            // Не се потпираме само на EventId испратено од формата.
+            if (model.EventId.HasValue)
+            {
+                var selectedEvent = await _context.Events
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(e =>
+                        e.Id == model.EventId.Value &&
+                        e.IsActive
+                    );
+
+                if (selectedEvent == null)
+                {
+                    ModelState.AddModelError(
+                        nameof(model.EventId),
+                        "The selected event is no longer available."
+                    );
+                }
+                else
+                {
+                    model.EventTitle = selectedEvent.Title;
+
+                    // Резервацијата мора да остане на датумот
+                    // на избраниот event.
+                    model.ReservationDate =
+                        selectedEvent.Date.Date;
+                }
+            }
 
             ValidateReservationDateTime(model, nowInSkopje);
 
@@ -69,11 +125,42 @@ namespace Rebel.Web.Controllers
                     ? null
                     : model.Note.Trim(),
 
+                EventId = model.EventId,
+
                 Status = ReservationStatus.Pending,
                 CreatedAtUtc = DateTime.UtcNow
             };
 
+            var reservationDate =
+                reservation.ReservationDate.ToString("dd MMM yyyy");
+
+            var reservationTime =
+                reservation.ReservationTime.ToString(@"hh\:mm");
+
+            var eventText = string.IsNullOrWhiteSpace(model.EventTitle)
+                ? string.Empty
+                : $" for {model.EventTitle}";
+
+            var notification = new Notification
+            {
+                Title = "New table reservation",
+
+                Message =
+                    $"{reservation.FullName} requested a table for " +
+                    $"{reservation.NumberOfGuests} guests on " +
+                    $"{reservationDate} at {reservationTime}{eventText}.",
+
+                Link = "/AdminReservations",
+
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+
+                ReservationId = reservation.Id
+            };
+
             _context.Reservations.Add(reservation);
+            _context.Notifications.Add(notification);
+
             await _context.SaveChangesAsync();
 
             TempData["ReservationSubmitted"] = true;
@@ -117,7 +204,7 @@ namespace Rebel.Web.Controllers
 
             var requestedDateTime =
                 model.ReservationDate.Date
-                .Add(model.ReservationTime);
+                    .Add(model.ReservationTime);
 
             if (requestedDateTime <= nowInSkopje)
             {
