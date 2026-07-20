@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Rebel.Infrastructure.Data;
 using Rebel.Web.Services;
+using Rebel.Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
@@ -61,9 +63,15 @@ using (var scope = app.Services.CreateScope())
     var roleManager =
         services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    string adminEmail = "admin@rebel.com";
-    string adminPassword = "Admin123!";
-    string adminRole = "Admin";
+    var adminEmail = app.Configuration["AdminUser:Email"]
+    ?? throw new InvalidOperationException(
+        "AdminUser:Email is missing from configuration.");
+
+    var adminPassword = app.Configuration["AdminUser:Password"]
+        ?? throw new InvalidOperationException(
+            "AdminUser:Password is missing from configuration.");
+
+    const string adminRole = "Admin";
 
     if (!await roleManager.RoleExistsAsync(adminRole))
     {
@@ -98,5 +106,6 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();

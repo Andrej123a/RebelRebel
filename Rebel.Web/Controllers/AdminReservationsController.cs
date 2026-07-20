@@ -1,8 +1,6 @@
-﻿using System.Net;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Rebel.Domain.Entities;
 using Rebel.Domain.Enums;
 using Rebel.Infrastructure.Data;
 using Rebel.Web.Services;
@@ -16,6 +14,9 @@ namespace Rebel.Web.Controllers
         private readonly IEmailService _emailService;
         private readonly ILogger<AdminReservationsController> _logger;
 
+        private static readonly TimeZoneInfo SkopjeTimeZone =
+            TimeZoneInfo.FindSystemTimeZoneById("Europe/Skopje");
+
         public AdminReservationsController(
             AppDbContext context,
             IEmailService emailService,
@@ -26,7 +27,7 @@ namespace Rebel.Web.Controllers
             _logger = logger;
         }
 
-        // LIST
+        // ALL RESERVATIONS
         [HttpGet]
         public async Task<IActionResult> Index(
             ReservationStatus? status,
@@ -38,18 +39,73 @@ namespace Rebel.Web.Controllers
 
             if (status.HasValue)
             {
-                query = query.Where(r => r.Status == status.Value);
+                query = query.Where(r =>
+                    r.Status == status.Value);
             }
 
             var reservations = await query
-                .OrderBy(r =>
+                .OrderBy(r => r.ReservationDate)
+                .ThenBy(r =>
                     r.Status == ReservationStatus.Pending ? 0 :
-                    r.Status == ReservationStatus.Approved ? 1 : 2)
-                .ThenBy(r => r.ReservationDate)
+                    r.Status == ReservationStatus.Approved ? 1 :
+                    r.Status == ReservationStatus.Arrived ? 2 :
+                    r.Status == ReservationStatus.NoShow ? 3 : 4)
                 .ThenBy(r => r.ReservationTime)
                 .ToListAsync(cancellationToken);
 
             ViewBag.SelectedStatus = status;
+
+            return View(reservations);
+        }
+
+        // TONIGHT VIEW
+        [HttpGet]
+        public async Task<IActionResult> Tonight(
+            CancellationToken cancellationToken)
+        {
+            var nowInSkopje = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                SkopjeTimeZone);
+
+            var today = nowInSkopje.Date;
+            var tomorrow = today.AddDays(1);
+
+            var reservations = await _context.Reservations
+                .AsNoTracking()
+                .Where(r =>
+                    r.ReservationDate >= today &&
+                    r.ReservationDate < tomorrow &&
+                    r.Status != ReservationStatus.Rejected)
+                .OrderBy(r => r.ReservationTime)
+                .ThenBy(r =>
+                    r.Status == ReservationStatus.Pending ? 0 :
+                    r.Status == ReservationStatus.Approved ? 1 :
+                    r.Status == ReservationStatus.Arrived ? 2 : 3)
+                .ToListAsync(cancellationToken);
+
+            ViewBag.TonightDate = today;
+
+            ViewBag.TotalReservations =
+                reservations.Count;
+
+            ViewBag.TotalGuests =
+                reservations.Sum(r => r.NumberOfGuests);
+
+            ViewBag.PendingReservations =
+                reservations.Count(r =>
+                    r.Status == ReservationStatus.Pending);
+
+            ViewBag.ApprovedReservations =
+                reservations.Count(r =>
+                    r.Status == ReservationStatus.Approved);
+
+            ViewBag.ArrivedReservations =
+                reservations.Count(r =>
+                    r.Status == ReservationStatus.Arrived);
+
+            ViewBag.NoShowReservations =
+                reservations.Count(r =>
+                    r.Status == ReservationStatus.NoShow);
 
             return View(reservations);
         }
@@ -82,7 +138,7 @@ namespace Rebel.Web.Controllers
             string? adminNote,
             CancellationToken cancellationToken)
         {
-            return await UpdateStatus(
+            return await UpdateReservationStatus(
                 id,
                 ReservationStatus.Approved,
                 adminNote,
@@ -97,14 +153,80 @@ namespace Rebel.Web.Controllers
             string? adminNote,
             CancellationToken cancellationToken)
         {
-            return await UpdateStatus(
+            return await UpdateReservationStatus(
                 id,
                 ReservationStatus.Rejected,
                 adminNote,
                 cancellationToken);
         }
 
-        private async Task<IActionResult> UpdateStatus(
+        // MARK AS ARRIVED
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkArrived(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            return await UpdateAttendanceStatus(
+                id,
+                ReservationStatus.Arrived,
+                cancellationToken);
+        }
+
+        // MARK AS NO-SHOW
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkNoShow(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            return await UpdateAttendanceStatus(
+                id,
+                ReservationStatus.NoShow,
+                cancellationToken);
+        }
+
+        // DELETE
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            var reservation = await _context.Reservations
+                .FirstOrDefaultAsync(
+                    r => r.Id == id,
+                    cancellationToken);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            var reservationNotifications =
+                await _context.Notifications
+                    .Where(n =>
+                        n.ReservationId == reservation.Id)
+                    .ToListAsync(cancellationToken);
+
+            if (reservationNotifications.Count > 0)
+            {
+                _context.Notifications.RemoveRange(
+                    reservationNotifications);
+            }
+
+            _context.Reservations.Remove(reservation);
+
+            await _context.SaveChangesAsync(
+                cancellationToken);
+
+            TempData["SuccessMessage"] =
+                "The reservation has been deleted.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        private async Task<IActionResult> UpdateReservationStatus(
             Guid id,
             ReservationStatus newStatus,
             string? adminNote,
@@ -120,7 +242,8 @@ namespace Rebel.Web.Controllers
                 return NotFound();
             }
 
-            if (reservation.Status != ReservationStatus.Pending)
+            if (reservation.Status !=
+                ReservationStatus.Pending)
             {
                 TempData["ErrorMessage"] =
                     "This reservation has already been processed.";
@@ -130,9 +253,10 @@ namespace Rebel.Web.Controllers
                     new { id });
             }
 
-            var normalizedAdminNote = string.IsNullOrWhiteSpace(adminNote)
-                ? null
-                : adminNote.Trim();
+            var normalizedAdminNote =
+                string.IsNullOrWhiteSpace(adminNote)
+                    ? null
+                    : adminNote.Trim();
 
             if (normalizedAdminNote?.Length > 500)
             {
@@ -148,17 +272,44 @@ namespace Rebel.Web.Controllers
             reservation.RespondedAtUtc = DateTime.UtcNow;
             reservation.AdminNote = normalizedAdminNote;
 
-            await _context.SaveChangesAsync(cancellationToken);
+            var reservationNotifications =
+                await _context.Notifications
+                    .Where(n =>
+                        n.ReservationId == reservation.Id)
+                    .ToListAsync(cancellationToken);
+
+            if (reservationNotifications.Count > 0)
+            {
+                _context.Notifications.RemoveRange(
+                    reservationNotifications);
+            }
+
+            await _context.SaveChangesAsync(
+                cancellationToken);
 
             try
             {
-                var subject = newStatus == ReservationStatus.Approved
-                    ? "Your Rebel Rebel reservation is confirmed"
-                    : "Update regarding your Rebel Rebel reservation";
+                var isApproved =
+                    newStatus ==
+                    ReservationStatus.Approved;
 
-                var htmlBody = BuildReservationEmail(
-                    reservation,
-                    newStatus);
+                var subject = isApproved
+                    ? "Your table is locked in 🍻 | Rebel Rebel by Fat Kitchen"
+                    : "Not this round | Rebel Rebel by Fat Kitchen";
+
+                var htmlBody = isApproved
+                    ? ReservationEmailTemplate.BuildApproved(
+                        reservation.FullName,
+                        reservation.ReservationDate,
+                        reservation.ReservationTime,
+                        reservation.NumberOfGuests,
+                        "cid:rebel-logo")
+                    : ReservationEmailTemplate.BuildDeclined(
+                        reservation.FullName,
+                        reservation.ReservationDate,
+                        reservation.ReservationTime,
+                        reservation.NumberOfGuests,
+                        "cid:rebel-logo");
 
                 await _emailService.SendEmailAsync(
                     reservation.Email,
@@ -166,10 +317,9 @@ namespace Rebel.Web.Controllers
                     htmlBody,
                     cancellationToken);
 
-                TempData["SuccessMessage"] =
-                    newStatus == ReservationStatus.Approved
-                        ? "Reservation approved and confirmation email sent."
-                        : "Reservation rejected and notification email sent.";
+                TempData["SuccessMessage"] = isApproved
+                    ? "Reservation approved and confirmation email sent."
+                    : "Reservation rejected and notification email sent.";
             }
             catch (Exception ex)
             {
@@ -179,7 +329,8 @@ namespace Rebel.Web.Controllers
                     reservation.Id);
 
                 TempData["ErrorMessage"] =
-                    newStatus == ReservationStatus.Approved
+                    newStatus ==
+                    ReservationStatus.Approved
                         ? "Reservation was approved, but the email could not be sent."
                         : "Reservation was rejected, but the email could not be sent.";
             }
@@ -189,168 +340,43 @@ namespace Rebel.Web.Controllers
                 new { id });
         }
 
-        private static string BuildReservationEmail(
-            Reservation reservation,
-            ReservationStatus status)
+        private async Task<IActionResult> UpdateAttendanceStatus(
+            Guid id,
+            ReservationStatus newStatus,
+            CancellationToken cancellationToken)
         {
-            var fullName = WebUtility.HtmlEncode(reservation.FullName);
-            var reservationDate =
-                reservation.ReservationDate.ToString("dd MMMM yyyy");
+            var reservation = await _context.Reservations
+                .FirstOrDefaultAsync(
+                    r => r.Id == id,
+                    cancellationToken);
 
-            var reservationTime =
-                reservation.ReservationTime.ToString(@"hh\:mm");
+            if (reservation == null)
+            {
+                return NotFound();
+            }
 
-            var numberOfGuests = reservation.NumberOfGuests;
+            if (reservation.Status ==
+                    ReservationStatus.Pending ||
+                reservation.Status ==
+                    ReservationStatus.Rejected)
+            {
+                TempData["ErrorMessage"] =
+                    "Only approved reservations can receive an attendance status.";
 
-            var adminNote = string.IsNullOrWhiteSpace(reservation.AdminNote)
-                ? null
-                : WebUtility.HtmlEncode(reservation.AdminNote);
+                return RedirectToAction(nameof(Tonight));
+            }
 
-            var isApproved =
-                status == ReservationStatus.Approved;
+            reservation.Status = newStatus;
 
-            var accentColor = isApproved
-                ? "#f4bd00"
-                : "#c62828";
+            await _context.SaveChangesAsync(
+                cancellationToken);
 
-            var heading = isApproved
-                ? "YOUR TABLE IS CONFIRMED"
-                : "RESERVATION UPDATE";
+            TempData["SuccessMessage"] =
+                newStatus == ReservationStatus.Arrived
+                    ? $"{reservation.FullName} marked as arrived."
+                    : $"{reservation.FullName} marked as no-show.";
 
-            var mainMessage = isApproved
-                ? "Your reservation request has been approved. We are looking forward to seeing you at Rebel Rebel!"
-                : "Unfortunately, we are unable to confirm your reservation request for the selected date and time.";
-
-            var adminNoteSection = adminNote == null
-                ? string.Empty
-                : $"""
-                   <div style="margin-top:24px;padding:18px;background:#171717;border-left:4px solid {accentColor};">
-                       <div style="color:#888888;font-size:12px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">
-                           Message from Rebel Rebel
-                       </div>
-
-                       <div style="color:#ffffff;font-size:15px;line-height:1.6;">
-                           {adminNote}
-                       </div>
-                   </div>
-                   """;
-
-            return $"""
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Rebel Rebel Reservation</title>
-                </head>
-
-                <body style="margin:0;padding:0;background:#080808;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
-
-                    <table role="presentation"
-                           width="100%"
-                           cellspacing="0"
-                           cellpadding="0"
-                           style="background:#080808;padding:35px 15px;">
-
-                        <tr>
-                            <td align="center">
-
-                                <table role="presentation"
-                                       width="100%"
-                                       cellspacing="0"
-                                       cellpadding="0"
-                                       style="max-width:650px;background:#111111;border:1px solid #333333;">
-
-                                    <tr>
-                                        <td style="padding:35px 40px;background:#000000;border-bottom:3px solid {accentColor};">
-                                            <div style="color:{accentColor};font-size:13px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;">
-                                                Rebel Rebel
-                                            </div>
-
-                                            <div style="margin-top:10px;font-size:30px;font-weight:900;line-height:1.1;">
-                                                {heading}
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td style="padding:40px;">
-
-                                            <p style="margin:0 0 18px;font-size:18px;line-height:1.6;">
-                                                Hi <strong>{fullName}</strong>,
-                                            </p>
-
-                                            <p style="margin:0 0 30px;color:#bbbbbb;font-size:16px;line-height:1.7;">
-                                                {mainMessage}
-                                            </p>
-
-                                            <table role="presentation"
-                                                   width="100%"
-                                                   cellspacing="0"
-                                                   cellpadding="0"
-                                                   style="background:#191919;border-collapse:collapse;">
-
-                                                <tr>
-                                                    <td style="padding:14px 18px;border-bottom:1px solid #333333;color:#888888;font-size:12px;font-weight:bold;text-transform:uppercase;">
-                                                        Date
-                                                    </td>
-
-                                                    <td align="right"
-                                                        style="padding:14px 18px;border-bottom:1px solid #333333;color:#ffffff;font-weight:bold;">
-                                                        {reservationDate}
-                                                    </td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td style="padding:14px 18px;border-bottom:1px solid #333333;color:#888888;font-size:12px;font-weight:bold;text-transform:uppercase;">
-                                                        Time
-                                                    </td>
-
-                                                    <td align="right"
-                                                        style="padding:14px 18px;border-bottom:1px solid #333333;color:#ffffff;font-weight:bold;">
-                                                        {reservationTime}
-                                                    </td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td style="padding:14px 18px;color:#888888;font-size:12px;font-weight:bold;text-transform:uppercase;">
-                                                        Guests
-                                                    </td>
-
-                                                    <td align="right"
-                                                        style="padding:14px 18px;color:#ffffff;font-weight:bold;">
-                                                        {numberOfGuests}
-                                                    </td>
-                                                </tr>
-
-                                            </table>
-
-                                            {adminNoteSection}
-
-                                            <p style="margin:30px 0 0;color:#777777;font-size:13px;line-height:1.6;">
-                                                This is an automated message regarding your Rebel Rebel reservation request.
-                                            </p>
-
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td align="center"
-                                            style="padding:22px;background:#000000;color:#666666;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
-                                            Rebel Rebel · No boring nights
-                                        </td>
-                                    </tr>
-
-                                </table>
-
-                            </td>
-                        </tr>
-
-                    </table>
-
-                </body>
-                </html>
-                """;
+            return RedirectToAction(nameof(Tonight));
         }
     }
 }

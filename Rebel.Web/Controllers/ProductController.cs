@@ -42,6 +42,33 @@ namespace Rebel.Web.Controllers
             return PartialView("_ProductsTablePartial", products);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleAvailability(Guid id)
+        {
+            var product = await _context.Products.FindAsync(id);
+
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            product.IsAvailable = !product.IsAvailable;
+
+            await _context.SaveChangesAsync();
+
+            if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+            {
+                return Ok(new
+                {
+                    product.Id,
+                    product.IsAvailable
+                });
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private async Task<List<Rebel.Domain.Entities.Product>> GetFilteredProducts(
             string? searchTerm,
             Guid? categoryId,

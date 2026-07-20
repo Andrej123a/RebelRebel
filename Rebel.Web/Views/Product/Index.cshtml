@@ -4,136 +4,251 @@
     ViewData["Title"] = "Products";
 }
 
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold">Products</h1>
+<div class="product-admin-page">
 
-        <a asp-action="Create" class="btn btn-primary">
-            + Add Product
+    <section class="product-admin-hero">
+        <div>
+            <p class="product-admin-eyebrow">
+                Rebel menu inventory
+            </p>
+
+            <h1>Products</h1>
+
+            <p class="product-admin-description">
+                Search, filter and manage every item from one place.
+            </p>
+        </div>
+
+        <a asp-controller="Product"
+           asp-action="Create"
+           class="product-add-button">
+            <span>+</span>
+            Add Product
         </a>
-    </div>
+    </section>
 
-    <form id="productFilterForm" class="mb-4" onsubmit="return false;">
-        <div class="row g-2">
-            <div class="col-md-5">
+    <form id="productFilterForm"
+          class="product-filter-panel">
+
+        <div class="product-filter-field product-filter-search">
+            <label for="searchTermInput">Search</label>
+
+            <div class="product-search-control">
+                <span class="product-search-symbol">⌕</span>
+
                 <input type="text"
                        name="searchTerm"
                        value="@ViewBag.SearchTerm"
-                       class="form-control"
                        placeholder="Search products by name..."
-                       id="searchTermInput" />
+                       id="searchTermInput"
+                       autocomplete="off" />
             </div>
+        </div>
 
-            <div class="col-md-3">
-                <select name="categoryId"
-                        class="form-select"
-                        asp-items="ViewBag.Categories"
-                        id="categorySelect">
-                    <option value="">All categories</option>
-                </select>
-            </div>
+        <div class="product-filter-field">
+            <label for="categorySelect">Category</label>
 
-            <div class="col-md-2">
-                <select name="isAvailable" class="form-select" id="statusSelect">
-                    <option value="">All status</option>
+            <select name="categoryId"
+                    asp-items="ViewBag.Categories"
+                    id="categorySelect">
+                <option value="">All categories</option>
+            </select>
+        </div>
 
-                    @if (ViewBag.IsAvailable == true)
-                    {
-                        <option value="true" selected>Available</option>
-                    }
-                    else
-                    {
-                        <option value="true">Available</option>
-                    }
+        <div class="product-filter-field">
+            <label for="statusSelect">Status</label>
 
-                    @if (ViewBag.IsAvailable == false)
-                    {
-                        <option value="false" selected>Unavailable</option>
-                    }
-                    else
-                    {
-                        <option value="false">Unavailable</option>
-                    }
-                </select>
-            </div>
+            <select name="isAvailable"
+                    id="statusSelect">
 
-            <div class="col-md-2">
-                <a asp-action="Index" class="btn btn-outline-light w-100">Reset</a>
-            </div>
+                <option value="">All statuses</option>
+
+                @if (ViewBag.IsAvailable == true)
+                {
+                    <option value="true" selected>Available</option>
+                }
+                else
+                {
+                    <option value="true">Available</option>
+                }
+
+                @if (ViewBag.IsAvailable == false)
+                {
+                    <option value="false" selected>Unavailable</option>
+                }
+                else
+                {
+                    <option value="false">Unavailable</option>
+                }
+            </select>
+        </div>
+
+        <div class="product-filter-reset">
+            <a asp-controller="Product"
+               asp-action="Index">
+                Reset filters
+            </a>
         </div>
     </form>
 
-    <div id="productsTableContainer">
-        <partial name="_ProductsTablePartial" model="Model" />
+    <div id="productsTableContainer"
+         class="product-results"
+         aria-live="polite">
+
+        <partial name="_ProductsTablePartial"
+                 model="Model" />
     </div>
 </div>
 
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const filterForm = document.getElementById("productFilterForm");
             const searchInput = document.getElementById("searchTermInput");
             const categorySelect = document.getElementById("categorySelect");
             const statusSelect = document.getElementById("statusSelect");
-            const tableContainer = document.getElementById("productsTableContainer");
+            const productsContainer = document.getElementById("productsTableContainer");
+
+            const filterUrl = '@Url.Action("FilterProducts", "Product")';
 
             let debounceTimer;
 
-            async function loadProducts() {
-                const searchTerm = searchInput.value;
-                const categoryId = categorySelect.value;
-                const isAvailable = statusSelect.value;
+            function bindProductGroups() {
+                const groups = Array.from(
+                    productsContainer.querySelectorAll("[data-product-group]")
+                );
 
+                if (groups.length > 0 && !groups.some(group => group.open)) {
+                    groups[0].open = true;
+                }
+
+                groups.forEach(function (group) {
+                    if (group.dataset.accordionBound === "true") {
+                        return;
+                    }
+
+                    group.dataset.accordionBound = "true";
+
+                    group.addEventListener("toggle", function () {
+                        if (!group.open) {
+                            return;
+                        }
+
+                        groups.forEach(function (otherGroup) {
+                            if (otherGroup !== group) {
+                                otherGroup.open = false;
+                            }
+                        });
+                    });
+                });
+
+                productsContainer
+                    .querySelectorAll(".product-status-form")
+                    .forEach(function (form) {
+                        if (form.dataset.toggleBound === "true") {
+                            return;
+                        }
+
+                        form.dataset.toggleBound = "true";
+
+                        form.addEventListener("submit", async function (event) {
+                            event.preventDefault();
+
+                            const button = form.querySelector("button");
+
+                            try {
+                                button?.setAttribute("disabled", "disabled");
+
+                                const response = await fetch(form.action, {
+                                    method: "POST",
+                                    body: new FormData(form),
+                                    headers: {
+                                        "X-Requested-With": "XMLHttpRequest"
+                                    }
+                                });
+
+                                if (!response.ok) {
+                                    throw new Error("Failed to update product status.");
+                                }
+
+                                await loadProducts();
+                            }
+                            catch (error) {
+                                console.error(error);
+                                button?.removeAttribute("disabled");
+                            }
+                        });
+                    });
+            }
+
+            async function loadProducts() {
                 const query = new URLSearchParams({
-                    searchTerm: searchTerm,
-                    categoryId: categoryId,
-                    isAvailable: isAvailable
+                    searchTerm: searchInput.value.trim(),
+                    categoryId: categorySelect.value,
+                    isAvailable: statusSelect.value
                 });
 
                 try {
-                    tableContainer.style.opacity = "0.6";
+                    productsContainer.classList.add("is-loading");
+                    productsContainer.setAttribute("aria-busy", "true");
 
-                        const filterUrl = '@Url.Action("FilterProducts", "Product")';
-
-                        const response = await fetch(`${filterUrl}?${query.toString()}`, {                        method: "GET",
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest"
+                    const response = await fetch(
+                        `${filterUrl}?${query.toString()}`,
+                        {
+                            method: "GET",
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest"
+                            }
                         }
-                    });
+                    );
 
                     if (!response.ok) {
                         throw new Error("Failed to load products.");
                     }
 
-                    const html = await response.text();
-                    tableContainer.innerHTML = html;
-                } catch (error) {
+                    productsContainer.innerHTML = await response.text();
+
+                    bindProductGroups();
+                }
+                catch (error) {
                     console.error(error);
-                } finally {
-                    tableContainer.style.opacity = "1";
+
+                    productsContainer.innerHTML = `
+                        <div class="product-load-error">
+                            <strong>Products could not be loaded.</strong>
+                            <span>Please refresh the page and try again.</span>
+                        </div>
+                    `;
+                }
+                finally {
+                    productsContainer.classList.remove("is-loading");
+                    productsContainer.removeAttribute("aria-busy");
                 }
             }
 
-            if (searchInput) {
-                searchInput.addEventListener("input", function () {
-                    clearTimeout(debounceTimer);
+            filterForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                loadProducts();
+            });
 
-                    debounceTimer = setTimeout(function () {
-                        if (searchInput.value.trim().length === 1) {
-                            return;
-                        }
+            searchInput.addEventListener("input", function () {
+                clearTimeout(debounceTimer);
 
-                        loadProducts();
-                    }, 350);
-                });
-            }
+                debounceTimer = setTimeout(function () {
+                    const searchLength = searchInput.value.trim().length;
 
-            if (categorySelect) {
-                categorySelect.addEventListener("change", loadProducts);
-            }
+                    if (searchLength === 1) {
+                        return;
+                    }
 
-            if (statusSelect) {
-                statusSelect.addEventListener("change", loadProducts);
-            }
+                    loadProducts();
+                }, 350);
+            });
+
+            categorySelect.addEventListener("change", loadProducts);
+            statusSelect.addEventListener("change", loadProducts);
+
+            bindProductGroups();
         });
     </script>
 }

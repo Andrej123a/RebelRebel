@@ -111,86 +111,139 @@
         }
         else
         {
-            <div class="table-responsive bg-dark border border-secondary rounded-4 overflow-hidden shadow">
+            var reservationGroups = Model
+            .GroupBy(r => r.ReservationDate.Date)
+            .OrderBy(group => group.Key);
 
-                <table class="table table-dark table-hover align-middle mb-0">
+            @foreach (var reservationGroup in reservationGroups)
+            {
+                var reservationCount = reservationGroup.Count();
 
-                    <thead>
-                        <tr class="text-warning text-uppercase small">
-                            <th class="p-3">Guest</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Guests</th>
-                            <th>Status</th>
-                            <th class="text-end p-3">Action</th>
-                        </tr>
-                    </thead>
+                <div class="mb-5">
 
-                    <tbody>
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
 
-                        @foreach (var reservation in Model)
-                        {
-                            var reservationDateText =
-                            reservation.ReservationDate.ToString("dd MMM yyyy");
+                        <h2 class="h5 text-warning text-uppercase fw-bold mb-0">
+                            @reservationGroup.Key.ToString("dddd, dd MMM yyyy")
+                        </h2>
 
-                            var reservationTimeText =
-                            reservation.ReservationTime.ToString(@"hh\:mm");
+                        <span class="badge bg-secondary rounded-pill px-3 py-2">
+                            @reservationCount
+                            @(reservationCount == 1 ? "reservation" : "reservations")
+                        </span>
 
-                            var statusClass = reservation.Status switch
-                            {
-                                ReservationStatus.Pending => "bg-warning text-dark",
-                                ReservationStatus.Approved => "bg-success",
-                                ReservationStatus.Rejected => "bg-danger",
-                                _ => "bg-secondary"
-                            };
+                    </div>
 
-                            <tr>
+                    <div class="table-responsive bg-dark border border-secondary rounded-4 overflow-hidden shadow">
 
-                                <td class="p-3">
-                                    <strong>
-                                        @reservation.FullName
-                                    </strong>
+                        <table class="table table-dark table-hover align-middle mb-0">
 
-                                    <div class="small text-secondary">
-                                        @reservation.Email
-                                    </div>
-                                </td>
+                            <thead>
+                                <tr class="text-warning text-uppercase small">
+                                    <th class="p-3">Guest</th>
+                                    <th>Time</th>
+                                    <th>Guests</th>
+                                    <th>Status</th>
+                                    <th class="text-end p-3">Actions</th>
+                                </tr>
+                            </thead>
 
-                                <td>
-                                    @reservationDateText
-                                </td>
+                            <tbody>
 
-                                <td>
-                                    @reservationTimeText
-                                </td>
+                                @foreach (var reservation in reservationGroup)
+                                {
+                                    var reservationTimeText =
+                                    reservation.ReservationTime.ToString(@"hh\:mm");
 
-                                <td>
-                                    @reservation.NumberOfGuests
-                                </td>
+                                    var statusClass = reservation.Status switch
+                                    {
+                                        ReservationStatus.Pending =>
+                                        "bg-warning text-dark",
 
-                                <td>
-                                    <span class="badge @statusClass">
-                                        @reservation.Status
-                                    </span>
-                                </td>
+                                        ReservationStatus.Approved =>
+                                        "bg-success",
 
-                                <td class="text-end p-3">
-                                    <a asp-controller="AdminReservations"
-                                       asp-action="Details"
-                                       asp-route-id="@reservation.Id"
-                                       class="btn btn-outline-warning btn-sm">
-                                        View
-                                    </a>
-                                </td>
+                                        ReservationStatus.Rejected =>
+                                        "bg-danger",
 
-                            </tr>
-                        }
+                                        _ =>
+                                        "bg-secondary"
+                                    };
 
-                    </tbody>
+                                    <tr>
 
-                </table>
+                                        <td class="p-3">
 
-            </div>
+                                            <strong>
+                                                @reservation.FullName
+                                            </strong>
+
+                                            <div class="small text-secondary">
+                                                @reservation.Email
+                                            </div>
+
+                                            <div class="small text-secondary">
+                                                @reservation.PhoneNumber
+                                            </div>
+
+                                        </td>
+
+                                        <td>
+                                            @reservationTimeText
+                                        </td>
+
+                                        <td>
+                                            @reservation.NumberOfGuests
+                                        </td>
+
+                                        <td>
+                                            <span class="badge @statusClass">
+                                                @reservation.Status
+                                            </span>
+                                        </td>
+
+                                        <td class="text-end p-3">
+
+                                            <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+
+                                                <a asp-controller="AdminReservations"
+                                                   asp-action="Details"
+                                                   asp-route-id="@reservation.Id"
+                                                   class="btn btn-outline-warning btn-sm">
+                                                    View
+                                                </a>
+
+                                                <form asp-controller="AdminReservations"
+                                                      asp-action="Delete"
+                                                      asp-route-id="@reservation.Id"
+                                                      method="post"
+                                                      class="d-inline"
+                                                      onsubmit="return confirm('Are you sure you want to delete this reservation?');">
+
+                                                    @Html.AntiForgeryToken()
+
+                                                    <button type="submit"
+                                                            class="btn btn-outline-danger btn-sm">
+                                                        Delete
+                                                    </button>
+
+                                                </form>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+            }
         }
 
     </div>

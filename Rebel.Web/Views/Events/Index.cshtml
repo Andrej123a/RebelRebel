@@ -1540,8 +1540,12 @@
         }
 
         const stage = carousel.querySelector(".rebel-3d-stage");
-        const slides = Array.from(carousel.querySelectorAll(".rebel-3d-slide"));
-        const dots = Array.from(carousel.querySelectorAll("[data-rebel-dot]"));
+        const slides = Array.from(
+            carousel.querySelectorAll(".rebel-3d-slide")
+        );
+        const dots = Array.from(
+            carousel.querySelectorAll("[data-rebel-dot]")
+        );
         const previousButton = carousel.querySelector("[data-rebel-prev]");
         const nextButton = carousel.querySelector("[data-rebel-next]");
         const status = carousel.querySelector(".rebel-3d-status");
@@ -1558,6 +1562,9 @@
         let hasDragged = false;
         let suppressClick = false;
 
+        const interactiveSelector =
+            "a, button, input, select, textarea, label";
+
         const wrapIndex = (index) => {
             return (index + slides.length) % slides.length;
         };
@@ -1570,8 +1577,7 @@
 
                 if (offset > half) {
                     offset -= slides.length;
-                }
-                else if (offset < -half) {
+                } else if (offset < -half) {
                     offset += slides.length;
                 }
             }
@@ -1581,48 +1587,116 @@
 
         const render = (dragX = 0) => {
             const stageWidth = stage.clientWidth || window.innerWidth;
-            const desktop = window.matchMedia("(min-width: 768px)").matches;
+            const desktop = window.matchMedia(
+                "(min-width: 768px)"
+            ).matches;
+
             const spacing = desktop
                 ? Math.min(stageWidth * 0.48, 560)
                 : Math.min(stageWidth * 0.72, 330);
 
-            const dragPosition = spacing === 0 ? 0 : dragX / spacing;
+            const dragPosition =
+                spacing === 0 ? 0 : dragX / spacing;
 
             slides.forEach((slide, index) => {
                 const baseOffset = getCircularOffset(index);
                 const position = baseOffset + dragPosition;
                 const distance = Math.abs(position);
                 const translateX = position * spacing;
-                const translateZ = 85 - Math.min(distance, 3) * (desktop ? 250 : 190);
-                const rotateY = Math.max(-68, Math.min(68, position * -34));
-                const scale = Math.max(0.72, 1 - distance * (desktop ? 0.095 : 0.08));
-                const opacity = distance > 2.55 ? 0 : Math.max(0.18, 1 - distance * 0.24);
-                const blur = distance > 1.55 ? Math.min(2.2, (distance - 1.55) * 1.4) : 0;
+
+                const translateZ =
+                    85 -
+                    Math.min(distance, 3) *
+                    (desktop ? 250 : 190);
+
+                const rotateY = Math.max(
+                    -68,
+                    Math.min(68, position * -34)
+                );
+
+                const scale = Math.max(
+                    0.72,
+                    1 -
+                    distance *
+                    (desktop ? 0.095 : 0.08)
+                );
+
+                const opacity =
+                    distance > 2.55
+                        ? 0
+                        : Math.max(
+                            0.18,
+                            1 - distance * 0.24
+                        );
+
+                const blur =
+                    distance > 1.55
+                        ? Math.min(
+                            2.2,
+                            (distance - 1.55) * 1.4
+                        )
+                        : 0;
+
                 const isActive = index === activeIndex;
                 const isVisible = distance <= 2.55;
 
-                slide.style.transform = `translate3d(calc(-50% + ${translateX}px), -50%, ${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`;
+                slide.style.transform =
+                    `translate3d(calc(-50% + ${translateX}px), -50%, ${translateZ}px) ` +
+                    `rotateY(${rotateY}deg) scale(${scale})`;
+
                 slide.style.opacity = opacity.toString();
-                slide.style.filter = `brightness(${Math.max(0.52, 1 - distance * 0.17)}) blur(${blur}px)`;
-                slide.style.zIndex = String(120 - Math.round(distance * 20));
 
-                slide.classList.toggle("is-active", isActive);
-                slide.classList.toggle("is-visible", isVisible);
-                slide.setAttribute("aria-hidden", isActive ? "false" : "true");
+                slide.style.filter =
+                    `brightness(${Math.max(
+                        0.52,
+                        1 - distance * 0.17
+                    )}) blur(${blur}px)`;
 
-                slide.querySelectorAll("a, button").forEach((interactiveElement) => {
-                    interactiveElement.tabIndex = isActive ? 0 : -1;
-                });
+                slide.style.zIndex = String(
+                    120 - Math.round(distance * 20)
+                );
+
+                slide.classList.toggle(
+                    "is-active",
+                    isActive
+                );
+
+                slide.classList.toggle(
+                    "is-visible",
+                    isVisible
+                );
+
+                slide.setAttribute(
+                    "aria-hidden",
+                    isActive ? "false" : "true"
+                );
+
+                slide
+                    .querySelectorAll("a, button")
+                    .forEach((interactiveElement) => {
+                        interactiveElement.tabIndex =
+                            isActive ? 0 : -1;
+                    });
             });
 
             dots.forEach((dot, index) => {
                 const isActive = index === activeIndex;
-                dot.classList.toggle("is-active", isActive);
-                dot.setAttribute("aria-current", isActive ? "true" : "false");
+
+                dot.classList.toggle(
+                    "is-active",
+                    isActive
+                );
+
+                dot.setAttribute(
+                    "aria-current",
+                    isActive ? "true" : "false"
+                );
             });
 
             if (status) {
-                status.textContent = `${String(activeIndex + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`;
+                status.textContent =
+                    `${String(activeIndex + 1).padStart(2, "0")} / ` +
+                    `${String(slides.length).padStart(2, "0")}`;
             }
         };
 
@@ -1631,20 +1705,80 @@
             render();
         };
 
-        const goNext = () => goTo(activeIndex + 1);
-        const goPrevious = () => goTo(activeIndex - 1);
+        const goNext = () => {
+            goTo(activeIndex + 1);
+        };
 
-        previousButton?.addEventListener("click", goPrevious);
-        nextButton?.addEventListener("click", goNext);
+        const goPrevious = () => {
+            goTo(activeIndex - 1);
+        };
+
+        previousButton?.addEventListener(
+            "click",
+            (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                goPrevious();
+            }
+        );
+
+        nextButton?.addEventListener(
+            "click",
+            (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                goNext();
+            }
+        );
 
         dots.forEach((dot) => {
-            dot.addEventListener("click", () => {
-                goTo(Number(dot.dataset.rebelDot));
+            dot.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                goTo(
+                    Number(dot.dataset.rebelDot)
+                );
             });
         });
 
         slides.forEach((slide, index) => {
             slide.addEventListener("click", (event) => {
+                const interactiveElement =
+                    event.target.closest(
+                        interactiveSelector
+                    );
+
+                /*
+                 * Доколку е притиснато копче или линк
+                 * на активниот слајд, дозволи му нормално
+                 * да ја отвори неговата ASP.NET акција.
+                 */
+                if (
+                    interactiveElement &&
+                    index === activeIndex
+                ) {
+                    return;
+                }
+
+                /*
+                 * Копче на неактивен слајд прво
+                 * го активира слајдот.
+                 */
+                if (
+                    interactiveElement &&
+                    index !== activeIndex
+                ) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    goTo(index);
+                    return;
+                }
+
+                /*
+                 * По вистинско влечење спречува
+                 * случаен click.
+                 */
                 if (suppressClick) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -1653,117 +1787,208 @@
 
                 if (index !== activeIndex) {
                     event.preventDefault();
+                    event.stopPropagation();
                     goTo(index);
                 }
             });
         });
 
-        stage.addEventListener("pointerdown", (event) => {
-            if (slides.length < 2 || (event.pointerType === "mouse" && event.button !== 0)) {
-                return;
+        stage.addEventListener(
+            "pointerdown",
+            (event) => {
+                /*
+                 * Најважната корекција:
+                 * не започнувај drag кога корисникот
+                 * стиска линк или копче.
+                 */
+                if (
+                    event.target.closest(
+                        interactiveSelector
+                    )
+                ) {
+                    return;
+                }
+
+                if (
+                    slides.length < 2 ||
+                    (
+                        event.pointerType === "mouse" &&
+                        event.button !== 0
+                    )
+                ) {
+                    return;
+                }
+
+                pointerId = event.pointerId;
+                startX = event.clientX;
+                currentX = event.clientX;
+                startTime = performance.now();
+                hasDragged = false;
+
+                carousel.classList.add(
+                    "is-dragging"
+                );
+
+                stage.setPointerCapture(pointerId);
             }
+        );
 
-            pointerId = event.pointerId;
-            startX = event.clientX;
-            currentX = event.clientX;
-            startTime = performance.now();
-            hasDragged = false;
+        stage.addEventListener(
+            "pointermove",
+            (event) => {
+                if (
+                    pointerId === null ||
+                    pointerId !== event.pointerId
+                ) {
+                    return;
+                }
 
-            carousel.classList.add("is-dragging");
-            stage.setPointerCapture(pointerId);
-        });
+                currentX = event.clientX;
 
-        stage.addEventListener("pointermove", (event) => {
-            if (pointerId !== event.pointerId) {
-                return;
+                const deltaX =
+                    currentX - startX;
+
+                if (Math.abs(deltaX) > 8) {
+                    hasDragged = true;
+                }
+
+                render(deltaX * 0.92);
             }
-
-            currentX = event.clientX;
-            const deltaX = currentX - startX;
-
-            if (Math.abs(deltaX) > 6) {
-                hasDragged = true;
-            }
-
-            render(deltaX * 0.92);
-        });
+        );
 
         const finishDrag = (event) => {
-            if (pointerId === null || event.pointerId !== pointerId) {
+            if (
+                pointerId === null ||
+                event.pointerId !== pointerId
+            ) {
                 return;
             }
 
-            const deltaX = currentX - startX;
-            const elapsed = Math.max(1, performance.now() - startTime);
-            const velocity = deltaX / elapsed;
-            const threshold = Math.min(105, stage.clientWidth * 0.13);
+            const deltaX =
+                currentX - startX;
 
-            if (hasDragged && (deltaX < -threshold || velocity < -0.55)) {
+            const elapsed = Math.max(
+                1,
+                performance.now() - startTime
+            );
+
+            const velocity =
+                deltaX / elapsed;
+
+            const threshold = Math.min(
+                105,
+                stage.clientWidth * 0.13
+            );
+
+            if (
+                hasDragged &&
+                (
+                    deltaX < -threshold ||
+                    velocity < -0.55
+                )
+            ) {
                 goNext();
-            }
-            else if (hasDragged && (deltaX > threshold || velocity > 0.55)) {
+            } else if (
+                hasDragged &&
+                (
+                    deltaX > threshold ||
+                    velocity > 0.55
+                )
+            ) {
                 goPrevious();
-            }
-            else {
+            } else {
                 render();
             }
 
             if (hasDragged) {
                 suppressClick = true;
+
                 window.setTimeout(() => {
                     suppressClick = false;
-                }, 80);
+                }, 120);
             }
 
-            carousel.classList.remove("is-dragging");
+            carousel.classList.remove(
+                "is-dragging"
+            );
 
-            if (stage.hasPointerCapture(pointerId)) {
-                stage.releasePointerCapture(pointerId);
+            if (
+                stage.hasPointerCapture(pointerId)
+            ) {
+                stage.releasePointerCapture(
+                    pointerId
+                );
             }
 
             pointerId = null;
         };
 
-        stage.addEventListener("pointerup", finishDrag);
-        stage.addEventListener("pointercancel", finishDrag);
+        stage.addEventListener(
+            "pointerup",
+            finishDrag
+        );
 
-        carousel.addEventListener("keydown", (event) => {
-            if (event.key === "ArrowRight") {
-                event.preventDefault();
-                goNext();
+        stage.addEventListener(
+            "pointercancel",
+            finishDrag
+        );
+
+        carousel.addEventListener(
+            "keydown",
+            (event) => {
+                if (event.key === "ArrowRight") {
+                    event.preventDefault();
+                    goNext();
+                } else if (
+                    event.key === "ArrowLeft"
+                ) {
+                    event.preventDefault();
+                    goPrevious();
+                }
             }
-            else if (event.key === "ArrowLeft") {
-                event.preventDefault();
-                goPrevious();
-            }
-        });
+        );
 
         let wheelLocked = false;
 
-        stage.addEventListener("wheel", (event) => {
-            const horizontalIntent = Math.abs(event.deltaX) > Math.abs(event.deltaY) || event.shiftKey;
+        stage.addEventListener(
+            "wheel",
+            (event) => {
+                const horizontalIntent =
+                    Math.abs(event.deltaX) >
+                        Math.abs(event.deltaY) ||
+                    event.shiftKey;
 
-            if (!horizontalIntent || wheelLocked || slides.length < 2) {
-                return;
-            }
+                if (
+                    !horizontalIntent ||
+                    wheelLocked ||
+                    slides.length < 2
+                ) {
+                    return;
+                }
 
-            event.preventDefault();
-            wheelLocked = true;
+                event.preventDefault();
+                wheelLocked = true;
 
-            if ((event.deltaX || event.deltaY) > 0) {
-                goNext();
-            }
-            else {
-                goPrevious();
-            }
+                if (
+                    (event.deltaX || event.deltaY) > 0
+                ) {
+                    goNext();
+                } else {
+                    goPrevious();
+                }
 
-            window.setTimeout(() => {
-                wheelLocked = false;
-            }, 420);
-        }, { passive: false });
+                window.setTimeout(() => {
+                    wheelLocked = false;
+                }, 420);
+            },
+            { passive: false }
+        );
 
-        window.addEventListener("resize", () => render());
+        window.addEventListener(
+            "resize",
+            () => render()
+        );
+
         render();
     })();
 </script>
-

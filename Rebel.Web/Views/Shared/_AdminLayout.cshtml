@@ -99,13 +99,12 @@
                         <span class="admin-nav-number">02</span>
                         <span>Reservations</span>
 
-                        @if (unreadNotificationsCount > 0)
-                        {
-                            <span class="admin-nav-alert"
-                                  aria-label="@unreadNotificationsCount unread reservation notifications">
-                                @displayedNotificationCount
-                            </span>
-                        }
+                        <span id="reservationNavBadge"
+                              class="admin-nav-alert @(unreadNotificationsCount > 0 ? string.Empty : "d-none")"
+                              aria-label="@unreadNotificationsCount unread reservation notifications">
+                            @displayedNotificationCount
+                        </span>
+
                     </a>
 
                     <a asp-controller="AdminEvents"
@@ -183,44 +182,55 @@
 
                 <div class="admin-topline-actions">
 
-                    <a asp-controller="AdminReservations"
+                    <a id="reservationSignal"
+                       asp-controller="AdminReservations"
                        asp-action="Index"
                        class="admin-reservation-signal @(unreadNotificationsCount > 0 ? "has-notifications" : string.Empty)"
                        aria-label="Open reservation notifications">
 
                         <span class="admin-signal-icon"
                               aria-hidden="true">
+
                             <svg viewBox="0 0 24 24"
                                  fill="none"
                                  xmlns="http://www.w3.org/2000/svg">
+
                                 <path d="M18 8A6 6 0 0 0 6 8C6 15 3 15 3 17H21C21 15 18 15 18 8Z"
                                       stroke-width="1.8"
                                       stroke-linecap="square"
                                       stroke-linejoin="miter" />
+
                                 <path d="M9.75 20H14.25"
                                       stroke-width="1.8"
                                       stroke-linecap="square" />
+
                             </svg>
+
                         </span>
 
                         <span class="admin-signal-copy">
+
                             <span class="admin-signal-label">
                                 TABLE SIGNAL
                             </span>
 
-                            <span class="admin-signal-state">
+                            <span id="reservationSignalState"
+                                  class="admin-signal-state">
+
                                 @(unreadNotificationsCount > 0
                                                                 ? "NEW REQUEST"
                                                                 : "ALL CLEAR")
+
                             </span>
+
                         </span>
 
-                        @if (unreadNotificationsCount > 0)
-                        {
-                            <span class="admin-signal-count">
-                                @displayedNotificationCount
-                            </span>
-                        }
+                        <span id="notificationBadge"
+                              class="admin-signal-count @(unreadNotificationsCount > 0 ? string.Empty : "d-none")">
+
+                            @displayedNotificationCount
+
+                        </span>
 
                     </a>
 
@@ -243,6 +253,11 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+    <script src="~/js/admin-notifications.js"
+            asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 

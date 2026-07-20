@@ -1,5 +1,6 @@
 ﻿using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
@@ -8,10 +9,14 @@ namespace Rebel.Web.Services
     public class EmailService : IEmailService
     {
         private readonly EmailSettings _settings;
+        private readonly IWebHostEnvironment _environment;
 
-        public EmailService(IOptions<EmailSettings> options)
+        public EmailService(
+            IOptions<EmailSettings> options,
+            IWebHostEnvironment environment)
         {
             _settings = options.Value;
+            _environment = environment;
         }
 
         public async Task SendEmailAsync(
@@ -56,6 +61,23 @@ namespace Rebel.Web.Services
             {
                 HtmlBody = htmlBody
             };
+
+            var logoPath = Path.Combine(
+                _environment.WebRootPath,
+                "images",
+                "email",
+                "rebel-logo.png"
+            );
+
+            if (File.Exists(logoPath))
+            {
+                var logo = bodyBuilder.LinkedResources.Add(logoPath);
+
+                logo.ContentId = "rebel-logo";
+                logo.ContentDisposition = new ContentDisposition(
+                    ContentDisposition.Inline
+                );
+            }
 
             message.Body = bodyBuilder.ToMessageBody();
 

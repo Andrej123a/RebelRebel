@@ -85,7 +85,6 @@ namespace Rebel.Web.Controllers
             var products = await _context.Products
                 .AsNoTracking()
                 .Include(product => product.Category)
-                .Where(product => product.IsAvailable)
                 .ToListAsync(cancellationToken);
 
             ViewBag.Section = section;

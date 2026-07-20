@@ -5,6 +5,28 @@
     ViewData["Title"] = "Manage Events";
 
     var today = DateTime.UtcNow.Date;
+
+    var events = Model ?? new List<Rebel.Domain.Entities.Event>();
+
+    var tonightEvents = events
+        .Where(ev => ev.Date.Date == today)
+        .OrderBy(ev => ev.StartTime)
+        .ToList();
+
+    var upcomingEvents = events
+        .Where(ev => ev.Date.Date > today)
+        .OrderBy(ev => ev.Date)
+        .ThenBy(ev => ev.StartTime)
+        .ToList();
+
+    var pastEvents = events
+        .Where(ev => ev.Date.Date < today)
+        .OrderByDescending(ev => ev.Date)
+        .ThenByDescending(ev => ev.StartTime)
+        .ToList();
+
+    var activeEventsCount = events.Count(ev => ev.IsActive);
+    var hiddenEventsCount = events.Count(ev => !ev.IsActive);
 }
 
 @functions {
@@ -40,224 +62,614 @@
 
         return $"Ends at {endTime!.Value:hh\\:mm}";
     }
+
+    public string GetEventTypeClass(EventType eventType)
+    {
+        return eventType switch
+        {
+            EventType.DJNight => "event-type-dj",
+            EventType.BeerTasting => "event-type-beer",
+            EventType.LiveMusic => "event-type-live",
+            EventType.SpecialEvent => "event-type-special",
+            EventType.AcousticNight => "event-type-acoustic",
+            _ => "event-type-default"
+        };
+    }
 }
 
-<div class="container py-5">
+<div class="events-admin-page">
 
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-5">
+    <section class="events-admin-hero">
         <div>
-            <p class="text-warning text-uppercase fw-bold small mb-1">
+            <p class="events-admin-eyebrow">
                 Rebel Rebel Admin
             </p>
 
-            <h1 class="fw-bold text-light mb-2">
-                Manage Events
-            </h1>
+            <h1>Manage Events</h1>
 
-            <p class="text-secondary mb-0">
+            <p class="events-admin-description">
                 Create, update and manage upcoming Rebel Rebel nights.
             </p>
         </div>
 
         <a asp-controller="AdminEvents"
            asp-action="Create"
-           class="btn btn-warning px-4 fw-semibold">
-            + Add Event
+           class="events-add-button">
+            <span>+</span>
+            Add Event
         </a>
-    </div>
+    </section>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show mb-4"
+        <div class="events-success-message"
              role="alert">
 
-            @TempData["SuccessMessage"]
+            <div>
+                <small>Control room signal</small>
+                <strong>@TempData["SuccessMessage"]</strong>
+            </div>
 
             <button type="button"
-                    class="btn-close"
                     data-bs-dismiss="alert"
                     aria-label="Close">
+                ×
             </button>
         </div>
     }
 
-    @if (Model?.Any() == true)
+    @if (events.Any())
     {
-        <div class="table-responsive border border-secondary rounded-4 overflow-hidden">
-            <table class="table table-dark table-hover align-middle mb-0">
+        <section class="events-inventory-stats">
 
-                <thead>
-                    <tr>
-                        <th>Event</th>
-                        <th>Type</th>
-                        <th>Date and time</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
+            <div class="events-stat events-stat-main">
+                <span>Total events</span>
+                <strong>@events.Count</strong>
+                <small>Complete event archive</small>
+            </div>
 
-                <tbody>
-                    @foreach (var ev in Model)
-                    {
-                        var isPast = ev.Date.Date < today;
-                        var isToday = ev.Date.Date == today;
+            <div class="events-stat events-stat-tonight">
+                <span>Tonight</span>
+                <strong>@tonightEvents.Count</strong>
+                <small>Happening today</small>
+            </div>
 
-                        <tr>
-                            <td style="min-width: 260px;">
-                                <div class="d-flex align-items-center gap-3">
+            <div class="events-stat events-stat-upcoming">
+                <span>Upcoming</span>
+                <strong>@upcomingEvents.Count</strong>
+                <small>Scheduled nights</small>
+            </div>
 
-                                    @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
-                                    {
-                                        <img src="@Url.Content(ev.ImageUrl)"
-                                             alt="@ev.Title"
-                                             loading="lazy"
-                                             class="rounded"
-                                             style="width: 75px;
-                                                                height: 75px;
-                                                                object-fit: cover;
-                                                                border: 1px solid rgba(255,255,255,0.16);" />
-                                    }
-                                    else
-                                    {
-                                        <div class="d-flex align-items-center justify-content-center rounded text-warning"
-                                             style="width: 75px;
-                                                                height: 75px;
-                                                                flex: 0 0 75px;
-                                                                background: #191919;
-                                                                border: 1px solid rgba(255,255,255,0.16);
-                                                                font-size: 24px;">
-                                            ✦
-                                        </div>
-                                    }
+            <div class="events-stat events-stat-hidden">
+                <span>Hidden</span>
+                <strong>@hiddenEventsCount</strong>
+                <small>@activeEventsCount active events</small>
+            </div>
 
-                                <div>
-                                    <h6 class="text-light fw-bold mb-1">
-                                        @ev.Title
-                                    </h6>
+        </section>
 
-                                    <p class="text-secondary small mb-0"
-                                       style="max-width: 310px;">
+        <section class="events-groups">
+
+            @if (tonightEvents.Any())
+            {
+                <details class="events-group events-group-tonight"
+                         data-event-group
+                         open>
+
+                    <summary class="events-group-summary">
+                        <span class="events-group-number">01</span>
+
+                        <span class="events-group-copy">
+                            <small>Live schedule</small>
+                            <strong>Tonight</strong>
+                        </span>
+
+                        <span class="events-group-count">
+                            @tonightEvents.Count
+                            @(tonightEvents.Count == 1 ? "event" : "events")
+                        </span>
+
+                        <span class="events-group-toggle">
+                            <span class="events-group-open">Open</span>
+                            <span class="events-group-close">Close</span>
+                            <i></i>
+                        </span>
+                    </summary>
+
+                    <div class="events-group-content">
+
+                        <div class="events-list-heading">
+                            <span>Event</span>
+                            <span>Date and time</span>
+                            <span>Status</span>
+                            <span>Actions</span>
+                        </div>
+
+                        @foreach (var ev in tonightEvents)
+                        {
+                            <article class="events-list-row">
+
+                                <div class="events-row-main">
+                                    <div class="events-row-image">
+                                        @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
+                                        {
+                                            <img src="@Url.Content(ev.ImageUrl)"
+                                                 alt="@ev.Title"
+                                                 loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="events-row-placeholder">
+                                                <span>✦</span>
+                                                <small>Event</small>
+                                            </div>
+                                        }
+                                </div>
+
+                                <div class="events-row-copy">
+                                    <span class="events-type @GetEventTypeClass(ev.EventType)">
+                                        @FormatEventType(ev.EventType)
+                                    </span>
+
+                                    <strong>@ev.Title</strong>
+
+                                    <p>
                                         @(string.IsNullOrWhiteSpace(ev.Description)
-                                                                            ? "No description available."
-                                                                            : ev.Description)
-                                </p>
-                            </div>
+                                                                        ? "No description available."
+                                                                        : ev.Description)
+                            </p>
+                        </div>
+                    </div>
 
+                                <div class="events-row-date">
+                                    <small>Date and time</small>
+
+                                    <strong>
+                                        @ev.Date.ToString("dd MMM yyyy")
+                                    </strong>
+
+                                    <span>
+                                        @FormatTimeRange(ev.StartTime, ev.EndTime)
+                                    </span>
                                 </div>
-                            </td>
 
-                            <td>
-                                <span class="badge bg-warning text-dark">
-                                    @FormatEventType(ev.EventType)
-                                </span>
-                            </td>
+                                <div class="events-row-status">
+                                    <small>Status</small>
 
-                            <td style="min-width: 170px;">
-                                <div class="text-light fw-semibold">
-                                    @ev.Date.ToString("dd MMM yyyy")
-                                </div>
-
-                                <div class="text-secondary small mt-1">
-                                    @FormatTimeRange(ev.StartTime, ev.EndTime)
-                                </div>
-                            </td>
-
-                            <td>
-                                <div class="d-flex flex-column align-items-start gap-2">
-
-                            @if (ev.IsActive)
+                        @if (ev.IsActive)
                                     {
-                                        <span class="badge bg-success">
+                                        <span class="events-status active">
+                                            <i></i>
                                             Active
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">
+                                        <span class="events-status hidden">
+                                            <i></i>
                                             Hidden
                                         </span>
                                     }
 
-                                    @if (isPast)
+                                    <span class="events-period tonight">
+                                        Tonight
+                                    </span>
+                                </div>
+
+                                <div class="events-row-actions-wrap">
+                                    <details class="events-row-actions">
+                                        <summary aria-label="Actions for @ev.Title">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </summary>
+
+                                        <div class="events-row-actions-menu">
+
+                                            @if (ev.IsActive)
+                                            {
+                                                <a asp-controller="Events"
+                                                   asp-action="Details"
+                                                   asp-route-id="@ev.Id">
+                                                    <strong>View</strong>
+                                                    <small>Open public event</small>
+                                                </a>
+                                            }
+
+                                            <a asp-controller="AdminEvents"
+                                               asp-action="Edit"
+                                               asp-route-id="@ev.Id">
+                                                <strong>Edit</strong>
+                                                <small>Update event</small>
+                                            </a>
+
+                                            <a asp-controller="AdminEvents"
+                                               asp-action="Delete"
+                                               asp-route-id="@ev.Id"
+                                               class="danger">
+                                                <strong>Delete</strong>
+                                                <small>Remove event</small>
+                                            </a>
+
+                                        </div>
+                                    </details>
+                                </div>
+
+                            </article>
+                        }
+
+                    </div>
+                </details>
+            }
+
+            @if (upcomingEvents.Any())
+            {
+                <details class="events-group"
+                         data-event-group
+                         @(tonightEvents.Any() ? null : "open")>
+
+                    <summary class="events-group-summary">
+                        <span class="events-group-number">
+                            @(tonightEvents.Any() ? "02" : "01")
+                        </span>
+
+                        <span class="events-group-copy">
+                            <small>Future schedule</small>
+                            <strong>Upcoming</strong>
+                        </span>
+
+                        <span class="events-group-count">
+                            @upcomingEvents.Count
+                            @(upcomingEvents.Count == 1 ? "event" : "events")
+                        </span>
+
+                        <span class="events-group-toggle">
+                            <span class="events-group-open">Open</span>
+                            <span class="events-group-close">Close</span>
+                            <i></i>
+                        </span>
+                    </summary>
+
+                    <div class="events-group-content">
+
+                        <div class="events-list-heading">
+                            <span>Event</span>
+                            <span>Date and time</span>
+                            <span>Status</span>
+                            <span>Actions</span>
+                        </div>
+
+                        @foreach (var ev in upcomingEvents)
+                        {
+                            <article class="events-list-row">
+
+                                <div class="events-row-main">
+                                    <div class="events-row-image">
+                                        @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
+                                        {
+                                            <img src="@Url.Content(ev.ImageUrl)"
+                                                 alt="@ev.Title"
+                                                 loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="events-row-placeholder">
+                                                <span>✦</span>
+                                                <small>Event</small>
+                                            </div>
+                                        }
+                                </div>
+
+                                <div class="events-row-copy">
+                                    <span class="events-type @GetEventTypeClass(ev.EventType)">
+                                        @FormatEventType(ev.EventType)
+                                    </span>
+
+                                    <strong>@ev.Title</strong>
+
+                                    <p>
+                                        @(string.IsNullOrWhiteSpace(ev.Description)
+                                                                        ? "No description available."
+                                                                        : ev.Description)
+                            </p>
+                        </div>
+                    </div>
+
+                                <div class="events-row-date">
+                                    <small>Date and time</small>
+
+                                    <strong>
+                                        @ev.Date.ToString("dd MMM yyyy")
+                                    </strong>
+
+                                    <span>
+                                        @FormatTimeRange(ev.StartTime, ev.EndTime)
+                                    </span>
+                                </div>
+
+                                <div class="events-row-status">
+                                    <small>Status</small>
+
+                        @if (ev.IsActive)
                                     {
-                                        <span class="badge bg-dark border border-secondary text-secondary">
-                                            Past event
-                                        </span>
-                                    }
-                                    else if (isToday)
-                                    {
-                                        <span class="badge bg-danger">
-                                            Tonight
+                                        <span class="events-status active">
+                                            <i></i>
+                                            Active
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-info text-dark">
-                                            Upcoming
+                                        <span class="events-status hidden">
+                                            <i></i>
+                                            Hidden
                                         </span>
                                     }
 
+                                    <span class="events-period upcoming">
+                                        Upcoming
+                                    </span>
                                 </div>
-                            </td>
 
-                            <td class="text-end" style="min-width: 220px;">
-                                <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                <div class="events-row-actions-wrap">
+                                    <details class="events-row-actions">
+                                        <summary aria-label="Actions for @ev.Title">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </summary>
 
-                                    @if (ev.IsActive && !isPast)
+                                        <div class="events-row-actions-menu">
+
+                                            @if (ev.IsActive)
+                                            {
+                                                <a asp-controller="Events"
+                                                   asp-action="Details"
+                                                   asp-route-id="@ev.Id">
+                                                    <strong>View</strong>
+                                                    <small>Open public event</small>
+                                                </a>
+                                            }
+
+                                            <a asp-controller="AdminEvents"
+                                               asp-action="Edit"
+                                               asp-route-id="@ev.Id">
+                                                <strong>Edit</strong>
+                                                <small>Update event</small>
+                                            </a>
+
+                                            <a asp-controller="AdminEvents"
+                                               asp-action="Delete"
+                                               asp-route-id="@ev.Id"
+                                               class="danger">
+                                                <strong>Delete</strong>
+                                                <small>Remove event</small>
+                                            </a>
+
+                                        </div>
+                                    </details>
+                                </div>
+
+                            </article>
+                        }
+
+                    </div>
+                </details>
+            }
+
+            @if (pastEvents.Any())
+            {
+                var pastGroupNumber = 1;
+
+                if (tonightEvents.Any())
+                {
+                    pastGroupNumber++;
+                }
+
+                if (upcomingEvents.Any())
+                {
+                    pastGroupNumber++;
+                }
+
+                <details class="events-group events-group-past"
+                         data-event-group>
+
+                    <summary class="events-group-summary">
+                        <span class="events-group-number">
+                            @pastGroupNumber.ToString("00")
+                        </span>
+
+                        <span class="events-group-copy">
+                            <small>Event archive</small>
+                            <strong>Past Events</strong>
+                        </span>
+
+                        <span class="events-group-count">
+                            @pastEvents.Count
+                            @(pastEvents.Count == 1 ? "event" : "events")
+                        </span>
+
+                        <span class="events-group-toggle">
+                            <span class="events-group-open">Open</span>
+                            <span class="events-group-close">Close</span>
+                            <i></i>
+                        </span>
+                    </summary>
+
+                    <div class="events-group-content">
+
+                        <div class="events-list-heading">
+                            <span>Event</span>
+                            <span>Date and time</span>
+                            <span>Status</span>
+                            <span>Actions</span>
+                        </div>
+
+                        @foreach (var ev in pastEvents)
+                        {
+                            <article class="events-list-row is-past">
+
+                                <div class="events-row-main">
+                                    <div class="events-row-image">
+                                        @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
+                                        {
+                                            <img src="@Url.Content(ev.ImageUrl)"
+                                                 alt="@ev.Title"
+                                                 loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="events-row-placeholder">
+                                                <span>✦</span>
+                                                <small>Event</small>
+                                            </div>
+                                        }
+                                </div>
+
+                                <div class="events-row-copy">
+                                    <span class="events-type @GetEventTypeClass(ev.EventType)">
+                                        @FormatEventType(ev.EventType)
+                                    </span>
+
+                                    <strong>@ev.Title</strong>
+
+                                    <p>
+                                        @(string.IsNullOrWhiteSpace(ev.Description)
+                                                                        ? "No description available."
+                                                                        : ev.Description)
+                            </p>
+                        </div>
+                    </div>
+
+                                <div class="events-row-date">
+                                    <small>Date and time</small>
+
+                                    <strong>
+                                        @ev.Date.ToString("dd MMM yyyy")
+                                    </strong>
+
+                                    <span>
+                                        @FormatTimeRange(ev.StartTime, ev.EndTime)
+                                    </span>
+                                </div>
+
+                                <div class="events-row-status">
+                                    <small>Status</small>
+
+                        @if (ev.IsActive)
                                     {
-                                        <a asp-controller="Events"
-                                           asp-action="Details"
-                                           asp-route-id="@ev.Id"
-                                           class="btn btn-sm btn-outline-warning">
-                                            View
-                                        </a>
+                                        <span class="events-status active">
+                                            <i></i>
+                                            Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="events-status hidden">
+                                            <i></i>
+                                            Hidden
+                                        </span>
                                     }
 
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Edit"
-                                       asp-route-id="@ev.Id"
-                                       class="btn btn-sm btn-outline-light">
-                                        Edit
-                                    </a>
-
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Delete"
-                                       asp-route-id="@ev.Id"
-                                       class="btn btn-sm btn-outline-danger">
-                                        Delete
-                                    </a>
-
+                                    <span class="events-period past">
+                                        Past event
+                                    </span>
                                 </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
 
-            </table>
-        </div>
+                                <div class="events-row-actions-wrap">
+                                    <details class="events-row-actions">
+                                        <summary aria-label="Actions for @ev.Title">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </summary>
+
+                                        <div class="events-row-actions-menu">
+
+                                            <a asp-controller="AdminEvents"
+                                               asp-action="Edit"
+                                               asp-route-id="@ev.Id">
+                                                <strong>Edit</strong>
+                                                <small>Update event</small>
+                                            </a>
+
+                                            <a asp-controller="AdminEvents"
+                                               asp-action="Delete"
+                                               asp-route-id="@ev.Id"
+                                               class="danger">
+                                                <strong>Delete</strong>
+                                                <small>Remove event</small>
+                                            </a>
+
+                                        </div>
+                                    </details>
+                                </div>
+
+                            </article>
+                        }
+
+                    </div>
+                </details>
+            }
+
+        </section>
     }
     else
     {
-        <div class="bg-dark border border-secondary rounded-4 text-center p-5">
+        <section class="events-empty-state">
+            <span class="events-empty-symbol">✦</span>
 
-            <span class="display-4 d-block mb-3">
-                ✦
-            </span>
+            <div>
+                <p>No event signal</p>
 
-            <h4 class="fw-bold text-light mb-2">
-                No events created yet
-            </h4>
+                <h2>No events created yet</h2>
 
-            <p class="text-secondary mb-4">
-                Create the first Rebel Rebel night and it will appear on the public Events page.
-            </p>
+                <span>
+                    Create the first Rebel Rebel night and it will appear on the public Events page.
+                </span>
 
-            <a asp-controller="AdminEvents"
-               asp-action="Create"
-               class="btn btn-warning px-4 fw-semibold">
-                + Create First Event
-            </a>
-
-        </div>
+                <a asp-controller="AdminEvents"
+                   asp-action="Create">
+                    + Create First Event
+                </a>
+            </div>
+        </section>
     }
+
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const eventGroups = Array.from(
+                document.querySelectorAll("[data-event-group]")
+            );
+
+            eventGroups.forEach(function (group) {
+                group.addEventListener("toggle", function () {
+                    if (!group.open) {
+                        return;
+                    }
+
+                    eventGroups.forEach(function (otherGroup) {
+                        if (otherGroup !== group) {
+                            otherGroup.open = false;
+                        }
+                    });
+                });
+            });
+
+            document.addEventListener("click", function (event) {
+                const clickedActionMenu =
+                    event.target.closest(".events-row-actions");
+
+                document
+                    .querySelectorAll(".events-row-actions[open]")
+                    .forEach(function (menu) {
+                        if (menu !== clickedActionMenu) {
+                            menu.removeAttribute("open");
+                        }
+                    });
+            });
+        });
+    </script>
+}

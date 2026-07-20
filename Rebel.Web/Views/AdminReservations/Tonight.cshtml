@@ -1,0 +1,778 @@
+﻿@model List<Rebel.Domain.Entities.Reservation>
+@using Rebel.Domain.Enums
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Tonight";
+
+    var tonightDate = (DateTime)(ViewBag.TonightDate ?? DateTime.Today);
+
+    var totalReservations = (int)(ViewBag.TotalReservations ?? Model.Count);
+    var totalGuests = (int)(ViewBag.TotalGuests ?? Model.Sum(r => r.NumberOfGuests));
+    var pendingReservations = (int)(ViewBag.PendingReservations ?? 0);
+    var approvedReservations = (int)(ViewBag.ApprovedReservations ?? 0);
+    var arrivedReservations = (int)(ViewBag.ArrivedReservations ?? 0);
+    var noShowReservations = (int)(ViewBag.NoShowReservations ?? 0);
+
+    var arrivedGuests = Model
+        .Where(r => r.Status == ReservationStatus.Arrived)
+        .Sum(r => r.NumberOfGuests);
+
+    string GetStatusClass(ReservationStatus status)
+    {
+        return status switch
+        {
+            ReservationStatus.Pending => "is-pending",
+            ReservationStatus.Approved => "is-approved",
+            ReservationStatus.Arrived => "is-arrived",
+            ReservationStatus.NoShow => "is-no-show",
+            ReservationStatus.Rejected => "is-rejected",
+            _ => string.Empty
+        };
+    }
+
+    string GetStatusLabel(ReservationStatus status)
+    {
+        return status switch
+        {
+            ReservationStatus.Pending => "Pending",
+            ReservationStatus.Approved => "Approved",
+            ReservationStatus.Arrived => "Arrived",
+            ReservationStatus.NoShow => "No-show",
+            ReservationStatus.Rejected => "Rejected",
+            _ => status.ToString()
+        };
+    }
+}
+
+<style>
+    .tonight-page {
+        --tonight-yellow: #f4c400;
+        --tonight-red: #e62b39;
+        --tonight-green: #55c875;
+        --tonight-blue: #55a8ff;
+        --tonight-muted: #8d9299;
+        --tonight-surface: #17191c;
+        --tonight-surface-light: #212429;
+        color: #fff;
+    }
+
+    .tonight-hero {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 26px;
+        padding: 30px;
+        border: 1px solid rgba(244, 196, 0, 0.32);
+        background: linear-gradient( 120deg, rgba(244, 196, 0, 0.12), transparent 45% ), #111214;
+    }
+
+        .tonight-hero::after {
+            content: "TONIGHT";
+            position: absolute;
+            right: -10px;
+            bottom: -42px;
+            color: rgba(255, 255, 255, 0.035);
+            font-family: "Bebas Neue", sans-serif;
+            font-size: clamp(110px, 15vw, 220px);
+            line-height: 1;
+            pointer-events: none;
+        }
+
+    .tonight-hero-top {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 22px;
+    }
+
+    .tonight-kicker {
+        margin-bottom: 7px;
+        color: var(--tonight-yellow);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    .tonight-title {
+        margin: 0;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(52px, 7vw, 90px);
+        line-height: 0.9;
+        letter-spacing: 0.02em;
+    }
+
+    .tonight-date {
+        margin: 13px 0 0;
+        color: #b4b7bc;
+        font-size: 15px;
+    }
+
+    .tonight-actions {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .tonight-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 18px;
+        border: 1px solid #4b4f55;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-decoration: none;
+        text-transform: uppercase;
+        transition: 0.2s ease;
+    }
+
+        .tonight-link:hover {
+            border-color: var(--tonight-yellow);
+            color: var(--tonight-yellow);
+        }
+
+    .tonight-summary {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .tonight-stat {
+        min-height: 112px;
+        padding: 18px;
+        border: 1px solid #383c42;
+        background: var(--tonight-surface);
+    }
+
+    .tonight-stat-label {
+        display: block;
+        margin-bottom: 12px;
+        color: var(--tonight-muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+    }
+
+    .tonight-stat-value {
+        display: block;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 40px;
+        line-height: 1;
+    }
+
+    .tonight-stat.pending {
+        border-bottom: 3px solid var(--tonight-yellow);
+    }
+
+    .tonight-stat.approved {
+        border-bottom: 3px solid var(--tonight-blue);
+    }
+
+    .tonight-stat.arrived {
+        border-bottom: 3px solid var(--tonight-green);
+    }
+
+    .tonight-stat.no-show {
+        border-bottom: 3px solid var(--tonight-red);
+    }
+
+    .tonight-section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+        .tonight-section-heading h2 {
+            margin: 0;
+            font-family: "Bebas Neue", sans-serif;
+            font-size: 32px;
+            letter-spacing: 0.04em;
+        }
+
+    .tonight-live-label {
+        color: var(--tonight-green);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+    }
+
+    .tonight-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .tonight-reservation {
+        display: grid;
+        grid-template-columns: 110px minmax(180px, 1.4fr) minmax(160px, 1fr) auto;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+        border: 1px solid #3a3e44;
+        border-left: 5px solid #767b83;
+        background: var(--tonight-surface);
+    }
+
+        .tonight-reservation.is-pending {
+            border-left-color: var(--tonight-yellow);
+        }
+
+        .tonight-reservation.is-approved {
+            border-left-color: var(--tonight-blue);
+        }
+
+        .tonight-reservation.is-arrived {
+            border-left-color: var(--tonight-green);
+            background: linear-gradient( 90deg, rgba(85, 200, 117, 0.08), transparent 35% ), var(--tonight-surface);
+        }
+
+        .tonight-reservation.is-no-show {
+            border-left-color: var(--tonight-red);
+            opacity: 0.72;
+        }
+
+    .tonight-time {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 38px;
+        line-height: 1;
+        color: var(--tonight-yellow);
+    }
+
+    .tonight-name {
+        margin: 0 0 7px;
+        font-size: 19px;
+        font-weight: 800;
+    }
+
+    .tonight-contact {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+        .tonight-contact a {
+            color: #9da2a9;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+            .tonight-contact a:hover {
+                color: #fff;
+            }
+
+    .tonight-guests {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+    }
+
+    .tonight-guests-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        border: 1px solid #565b62;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 27px;
+    }
+
+    .tonight-guests-copy strong,
+    .tonight-guests-copy span {
+        display: block;
+    }
+
+    .tonight-guests-copy strong {
+        font-size: 13px;
+    }
+
+    .tonight-guests-copy span {
+        margin-top: 3px;
+        color: #858a91;
+        font-size: 11px;
+    }
+
+    .tonight-card-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .tonight-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 0 11px;
+        border: 1px solid currentColor;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+        .tonight-status.is-pending {
+            color: var(--tonight-yellow);
+        }
+
+        .tonight-status.is-approved {
+            color: var(--tonight-blue);
+        }
+
+        .tonight-status.is-arrived {
+            color: var(--tonight-green);
+        }
+
+        .tonight-status.is-no-show,
+        .tonight-status.is-rejected {
+            color: var(--tonight-red);
+        }
+
+    .tonight-button {
+        min-height: 38px;
+        padding: 0 13px;
+        border: 1px solid #52565c;
+        background: transparent;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-decoration: none;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+        .tonight-button:hover {
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .tonight-button.arrived {
+            border-color: var(--tonight-green);
+            color: var(--tonight-green);
+        }
+
+            .tonight-button.arrived:hover {
+                background: var(--tonight-green);
+                color: #101311;
+            }
+
+        .tonight-button.no-show {
+            border-color: var(--tonight-red);
+            color: var(--tonight-red);
+        }
+
+            .tonight-button.no-show:hover {
+                background: var(--tonight-red);
+                color: #fff;
+            }
+
+        .tonight-button.review {
+            border-color: var(--tonight-yellow);
+            color: var(--tonight-yellow);
+        }
+
+            .tonight-button.review:hover {
+                background: var(--tonight-yellow);
+                color: #101010;
+            }
+
+    .tonight-note {
+        grid-column: 2 / -1;
+        margin-top: -8px;
+        padding-top: 13px;
+        border-top: 1px dashed #3c4045;
+        color: #a5a9af;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+        .tonight-note strong {
+            color: var(--tonight-yellow);
+        }
+
+    .tonight-empty {
+        padding: 70px 25px;
+        border: 1px solid #3a3e44;
+        background: var(--tonight-surface);
+        text-align: center;
+    }
+
+        .tonight-empty h3 {
+            margin: 0 0 8px;
+            font-size: 25px;
+        }
+
+        .tonight-empty p {
+            margin: 0;
+            color: #858a91;
+        }
+
+    @@media (max-width: 1200px) {
+        .tonight-summary {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .tonight-reservation {
+            grid-template-columns: 90px minmax(180px, 1fr) auto;
+        }
+
+        .tonight-guests {
+            grid-column: 2;
+        }
+
+        .tonight-card-actions {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+        }
+
+        .tonight-note {
+            grid-column: 2 / -1;
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .tonight-hero {
+            padding: 23px 18px;
+        }
+
+        .tonight-hero-top {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .tonight-summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .tonight-reservation {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .tonight-time,
+        .tonight-guests,
+        .tonight-card-actions,
+        .tonight-note {
+            grid-column: 1;
+            grid-row: auto;
+        }
+
+        .tonight-card-actions {
+            justify-content: flex-start;
+        }
+
+        .tonight-note {
+            margin-top: 0;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .tonight-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .tonight-button {
+            flex: 1;
+        }
+    }
+</style>
+
+<div class="tonight-page">
+
+    <section class="tonight-hero">
+
+        <div class="tonight-hero-top">
+
+            <div>
+                <div class="tonight-kicker">
+                    Rebel Rebel by Fat Kitchen
+                </div>
+
+                <h1 class="tonight-title">
+                    Tonight View
+                </h1>
+
+                <p class="tonight-date">
+                    @tonightDate.ToString(
+                    "dddd, dd MMMM yyyy",
+                                        CultureInfo.InvariantCulture)
+                </p>
+            </div>
+
+            <div class="tonight-actions">
+                <a asp-controller="AdminReservations"
+                   asp-action="Index"
+                   class="tonight-link">
+                    All reservations
+                </a>
+            </div>
+
+        </div>
+
+    </section>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success mb-4">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger mb-4">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <section class="tonight-summary">
+
+        <div class="tonight-stat">
+            <span class="tonight-stat-label">
+                Reservations
+            </span>
+
+            <strong class="tonight-stat-value">
+                @totalReservations
+            </strong>
+        </div>
+
+        <div class="tonight-stat">
+            <span class="tonight-stat-label">
+                Requested guests
+            </span>
+
+            <strong class="tonight-stat-value">
+                @totalGuests
+            </strong>
+        </div>
+
+        <div class="tonight-stat pending">
+            <span class="tonight-stat-label">
+                Pending
+            </span>
+
+            <strong class="tonight-stat-value">
+                @pendingReservations
+            </strong>
+        </div>
+
+        <div class="tonight-stat approved">
+            <span class="tonight-stat-label">
+                Approved
+            </span>
+
+            <strong class="tonight-stat-value">
+                @approvedReservations
+            </strong>
+        </div>
+
+        <div class="tonight-stat arrived">
+            <span class="tonight-stat-label">
+                Arrived / guests
+            </span>
+
+            <strong class="tonight-stat-value">
+                @arrivedReservations / @arrivedGuests
+            </strong>
+        </div>
+
+        <div class="tonight-stat no-show">
+            <span class="tonight-stat-label">
+                No-show
+            </span>
+
+            <strong class="tonight-stat-value">
+                @noShowReservations
+            </strong>
+        </div>
+
+    </section>
+
+    <section>
+
+        <div class="tonight-section-heading">
+            <h2>Tonight's timeline</h2>
+
+            <span class="tonight-live-label">
+                ● Live floor list
+            </span>
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <div class="tonight-empty">
+                <h3>No reservations for tonight.</h3>
+
+                <p>
+                    New reservation requests will appear here.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="tonight-list">
+
+                @foreach (var reservation in Model)
+                {
+                    var statusClass =
+                    GetStatusClass(reservation.Status);
+
+                    <article class="tonight-reservation @statusClass">
+
+                        <div class="tonight-time">
+                            @reservation.ReservationTime.ToString(@"hh\:mm")
+                        </div>
+
+                        <div>
+                            <h3 class="tonight-name">
+                                @reservation.FullName
+                            </h3>
+
+                            <div class="tonight-contact">
+
+                                <a href="tel:@reservation.PhoneNumber">
+                                    @reservation.PhoneNumber
+                                </a>
+
+                                <a href="mailto:@reservation.Email">
+                                    @reservation.Email
+                                </a>
+
+                            </div>
+                        </div>
+
+                        <div class="tonight-guests">
+
+                            <span class="tonight-guests-number">
+                                @reservation.NumberOfGuests
+                            </span>
+
+                            <span class="tonight-guests-copy">
+                                <strong>
+                                    @(reservation.NumberOfGuests == 1
+                                                                ? "guest"
+                                                                : "guests")
+                        </strong>
+
+                                <span>
+                                    Table request
+                                </span>
+                            </span>
+
+                        </div>
+
+                        <div class="tonight-card-actions">
+
+                            <span class="tonight-status @statusClass">
+                                @GetStatusLabel(reservation.Status)
+                            </span>
+
+                    @if (reservation.Status ==
+                                        ReservationStatus.Pending)
+                            {
+                                <a asp-controller="AdminReservations"
+                                   asp-action="Details"
+                                   asp-route-id="@reservation.Id"
+                                   class="tonight-button review">
+                                    Review
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="AdminReservations"
+                                   asp-action="Details"
+                                   asp-route-id="@reservation.Id"
+                                   class="tonight-button">
+                                    Details
+                                </a>
+                            }
+
+                            @if (reservation.Status ==
+                                                ReservationStatus.Approved)
+                            {
+                                <form asp-controller="AdminReservations"
+                                      asp-action="MarkArrived"
+                                      asp-route-id="@reservation.Id"
+                                      method="post">
+                                    <button type="submit"
+                                            class="tonight-button arrived">
+                                        Arrived
+                                    </button>
+                                </form>
+
+                                <form asp-controller="AdminReservations"
+                                      asp-action="MarkNoShow"
+                                      asp-route-id="@reservation.Id"
+                                      method="post">
+                                    <button type="submit"
+                                            class="tonight-button no-show">
+                                        No-show
+                                    </button>
+                                </form>
+                            }
+
+                            @if (reservation.Status ==
+                                                ReservationStatus.Arrived)
+                            {
+                                <form asp-controller="AdminReservations"
+                                      asp-action="MarkNoShow"
+                                      asp-route-id="@reservation.Id"
+                                      method="post">
+                                    <button type="submit"
+                                            class="tonight-button no-show">
+                                        Mark no-show
+                                    </button>
+                                </form>
+                            }
+
+                            @if (reservation.Status ==
+                                                ReservationStatus.NoShow)
+                            {
+                                <form asp-controller="AdminReservations"
+                                      asp-action="MarkArrived"
+                                      asp-route-id="@reservation.Id"
+                                      method="post">
+                                    <button type="submit"
+                                            class="tonight-button arrived">
+                                        Mark arrived
+                                    </button>
+                                </form>
+                            }
+
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(
+                                        reservation.AdminNote))
+                        {
+                            <div class="tonight-note">
+                                <strong>Staff note:</strong>
+                                @reservation.AdminNote
+                            </div>
+                        }
+
+                    </article>
+                }
+
+            </div>
+        }
+
+    </section>
+
+</div>

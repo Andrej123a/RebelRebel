@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Rebel.Domain.Entities;
 using Rebel.Domain.Enums;
 using Rebel.Infrastructure.Data;
+using Rebel.Web.Hubs;
 using Rebel.Web.Models;
 
 namespace Rebel.Web.Controllers
@@ -10,13 +12,17 @@ namespace Rebel.Web.Controllers
     public class ReservationsController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<NotificationHub> _notificationHub;
 
         private static readonly TimeZoneInfo SkopjeTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById("Europe/Skopje");
 
-        public ReservationsController(AppDbContext context)
+        public ReservationsController(
+            AppDbContext context,
+            IHubContext<NotificationHub> notificationHub)
         {
             _context = context;
+            _notificationHub = notificationHub;
         }
 
         // CREATE GET
@@ -67,8 +73,7 @@ namespace Rebel.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-            ReservationCreateViewModel model
-        )
+            ReservationCreateViewModel model)
         {
             var nowInSkopje = GetCurrentSkopjeTime();
 
@@ -101,11 +106,15 @@ namespace Rebel.Web.Controllers
                 }
             }
 
-            ValidateReservationDateTime(model, nowInSkopje);
+            ValidateReservationDateTime(
+                model,
+                nowInSkopje
+            );
 
             if (!ModelState.IsValid)
             {
                 PrepareForm(nowInSkopje);
+
                 return View(model);
             }
 
@@ -132,14 +141,19 @@ namespace Rebel.Web.Controllers
             };
 
             var reservationDate =
-                reservation.ReservationDate.ToString("dd MMM yyyy");
+                reservation.ReservationDate.ToString(
+                    "dd MMM yyyy"
+                );
 
             var reservationTime =
-                reservation.ReservationTime.ToString(@"hh\:mm");
+                reservation.ReservationTime.ToString(
+                    @"hh\:mm"
+                );
 
-            var eventText = string.IsNullOrWhiteSpace(model.EventTitle)
-                ? string.Empty
-                : $" for {model.EventTitle}";
+            var eventText =
+                string.IsNullOrWhiteSpace(model.EventTitle)
+                    ? string.Empty
+                    : $" for {model.EventTitle}";
 
             var notification = new Notification
             {
@@ -163,10 +177,26 @@ namespace Rebel.Web.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["ReservationSubmitted"] = true;
-            TempData["ReservationName"] = reservation.FullName;
+            await _notificationHub.Clients.All.SendAsync(
+                "ReceiveNotification",
+                new
+                {
+                    id = notification.Id,
+                    title = notification.Title,
+                    message = notification.Message,
+                    link = notification.Link,
+                    createdAt = notification.CreatedAt
+                },
+                HttpContext.RequestAborted
+            );
 
-            return RedirectToAction(nameof(Confirmation));
+            TempData["ReservationSubmitted"] = true;
+            TempData["ReservationName"] =
+                reservation.FullName;
+
+            return RedirectToAction(
+                nameof(Confirmation)
+            );
         }
 
         // CONFIRMATION
@@ -175,7 +205,9 @@ namespace Rebel.Web.Controllers
         {
             if (TempData["ReservationSubmitted"] == null)
             {
-                return RedirectToAction(nameof(Create));
+                return RedirectToAction(
+                    nameof(Create)
+                );
             }
 
             ViewBag.ReservationName =
@@ -194,8 +226,7 @@ namespace Rebel.Web.Controllers
 
         private void ValidateReservationDateTime(
             ReservationCreateViewModel model,
-            DateTime nowInSkopje
-        )
+            DateTime nowInSkopje)
         {
             if (model.ReservationDate == default)
             {
@@ -215,7 +246,8 @@ namespace Rebel.Web.Controllers
             }
         }
 
-        private void PrepareForm(DateTime nowInSkopje)
+        private void PrepareForm(
+            DateTime nowInSkopje)
         {
             ViewBag.MinimumReservationDate =
                 nowInSkopje.ToString("yyyy-MM-dd");

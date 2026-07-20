@@ -4,6 +4,8 @@
     {
         Pending = 0,
         Approved = 1,
-        Rejected = 2
+        Rejected = 2,
+        Arrived = 3,
+        NoShow = 4
     }
 }
