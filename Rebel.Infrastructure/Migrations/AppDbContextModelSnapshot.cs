@@ -412,6 +412,10 @@ namespace _03.Rebel.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("InternalNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -437,6 +441,10 @@ namespace _03.Rebel.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("TableLabel")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.HasKey("Id");
 

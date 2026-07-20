@@ -43,6 +43,12 @@ namespace Rebel.Infrastructure.Data
                     .HasConversion<string>()
                     .HasMaxLength(20);
 
+                entity.Property(r => r.TableLabel)
+                    .HasMaxLength(40);
+
+                entity.Property(r => r.InternalNote)
+                    .HasMaxLength(500);
+
                 entity.HasIndex(r => new
                 {
                     r.Status,

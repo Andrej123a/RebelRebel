@@ -731,7 +731,9 @@
                         </strong>
 
                                 <span>
-                                    Table request
+                                    @(string.IsNullOrWhiteSpace(reservation.TableLabel)
+                                                                        ? "Table not assigned"
+                                                                        : $"Table {reservation.TableLabel}")
                                 </span>
                             </span>
 
@@ -831,6 +833,15 @@
                             <div class="tonight-note">
                                 <strong>Staff note:</strong>
                                 @reservation.AdminNote
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                                        reservation.InternalNote))
+                        {
+                            <div class="tonight-note">
+                                <strong>Internal note:</strong>
+                                @reservation.InternalNote
                             </div>
                         }
 

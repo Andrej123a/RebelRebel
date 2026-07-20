@@ -150,12 +150,16 @@ namespace Rebel.Web.Controllers
         public async Task<IActionResult> Approve(
             Guid id,
             string? adminNote,
+            string? tableLabel,
+            string? internalNote,
             CancellationToken cancellationToken)
         {
             return await UpdateReservationStatus(
                 id,
                 ReservationStatus.Approved,
                 adminNote,
+                tableLabel,
+                internalNote,
                 cancellationToken);
         }
 
@@ -171,6 +175,8 @@ namespace Rebel.Web.Controllers
                 id,
                 ReservationStatus.Rejected,
                 adminNote,
+                null,
+                null,
                 cancellationToken);
         }
 
@@ -244,6 +250,8 @@ namespace Rebel.Web.Controllers
             Guid id,
             ReservationStatus newStatus,
             string? adminNote,
+            string? tableLabel,
+            string? internalNote,
             CancellationToken cancellationToken)
         {
             var reservation = await _context.Reservations
@@ -285,6 +293,15 @@ namespace Rebel.Web.Controllers
             reservation.Status = newStatus;
             reservation.RespondedAtUtc = DateTime.UtcNow;
             reservation.AdminNote = normalizedAdminNote;
+
+            if (newStatus == ReservationStatus.Approved)
+            {
+                reservation.TableLabel =
+                    NormalizeOptionalText(tableLabel, 40);
+
+                reservation.InternalNote =
+                    NormalizeOptionalText(internalNote, 500);
+            }
 
             var reservationNotifications =
                 await _context.Notifications
@@ -352,6 +369,57 @@ namespace Rebel.Web.Controllers
             return RedirectToAction(
                 nameof(Details),
                 new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateFloorDetails(
+            Guid id,
+            string? tableLabel,
+            string? internalNote,
+            CancellationToken cancellationToken)
+        {
+            var reservation = await _context.Reservations
+                .FirstOrDefaultAsync(
+                    r => r.Id == id,
+                    cancellationToken);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            reservation.TableLabel =
+                NormalizeOptionalText(tableLabel, 40);
+
+            reservation.InternalNote =
+                NormalizeOptionalText(internalNote, 500);
+
+            await _context.SaveChangesAsync(
+                cancellationToken);
+
+            TempData["SuccessMessage"] =
+                "Floor details updated.";
+
+            return RedirectToAction(
+                nameof(Details),
+                new { id });
+        }
+
+        private static string? NormalizeOptionalText(
+            string? value,
+            int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var normalized = value.Trim();
+
+            return normalized.Length <= maxLength
+                ? normalized
+                : normalized[..maxLength];
         }
 
         private async Task<IActionResult> UpdateAttendanceStatus(

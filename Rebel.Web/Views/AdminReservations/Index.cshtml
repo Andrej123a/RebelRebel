@@ -143,6 +143,7 @@
                                     <th class="p-3">Guest</th>
                                     <th>Time</th>
                                     <th>Guests</th>
+                                    <th>Table</th>
                                     <th>Status</th>
                                     <th class="text-end p-3">Actions</th>
                                 </tr>
@@ -194,6 +195,22 @@
 
                                         <td>
                                             @reservation.NumberOfGuests
+                                        </td>
+
+                                        <td>
+                                            @if (string.IsNullOrWhiteSpace(
+                                                                                reservation.TableLabel))
+                                            {
+                                                <span class="text-secondary">
+                                                    Not assigned
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <strong>
+                                                    @reservation.TableLabel
+                                                </strong>
+                                            }
                                         </td>
 
                                         <td>

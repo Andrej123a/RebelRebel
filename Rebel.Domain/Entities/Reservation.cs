@@ -47,6 +47,13 @@ namespace Rebel.Domain.Entities
 
         [StringLength(500)]
         public string? AdminNote { get; set; }
+
+        [StringLength(40)]
+        public string? TableLabel { get; set; }
+
+        [StringLength(500)]
+        public string? InternalNote { get; set; }
+
         public Guid? EventId { get; set; }
 
         public Event? Event { get; set; }

@@ -60,6 +60,14 @@
     var adminResponse = string.IsNullOrWhiteSpace(Model.AdminNote)
         ? "No additional message was added."
         : Model.AdminNote;
+
+    var tableLabel = string.IsNullOrWhiteSpace(Model.TableLabel)
+        ? "Not assigned"
+        : Model.TableLabel;
+
+    var internalNote = string.IsNullOrWhiteSpace(Model.InternalNote)
+        ? "No staff note."
+        : Model.InternalNote;
 }
 
 <section class="py-5 text-white">
@@ -214,6 +222,79 @@
 
             </div>
 
+            <div class="border border-warning rounded-4 p-4 mb-5">
+
+                <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
+                    <div>
+                        <div class="small text-warning text-uppercase fw-bold mb-1">
+                            Floor management
+                        </div>
+
+                        <h2 class="h4 fw-bold mb-0">
+                            Table: @tableLabel
+                        </h2>
+                    </div>
+
+                    <span class="text-secondary small">
+                        Staff-only details
+                    </span>
+                </div>
+
+                <p class="text-secondary mb-4">
+                    @internalNote
+                </p>
+
+                @if (Model.Status != ReservationStatus.Rejected)
+                {
+                    <form asp-controller="AdminReservations"
+                          asp-action="UpdateFloorDetails"
+                          method="post"
+                          class="row g-3">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="id"
+                               value="@Model.Id" />
+
+                        <div class="col-md-4">
+                            <label for="tableLabel"
+                                   class="form-label small text-secondary text-uppercase fw-bold">
+                                Table / area
+                            </label>
+
+                            <input id="tableLabel"
+                                   name="tableLabel"
+                                   value="@Model.TableLabel"
+                                   maxlength="40"
+                                   class="form-control"
+                                   placeholder="T4, Bar, Patio..." />
+                        </div>
+
+                        <div class="col-md-8">
+                            <label for="internalNote"
+                                   class="form-label small text-secondary text-uppercase fw-bold">
+                                Internal staff note
+                            </label>
+
+                            <input id="internalNote"
+                                   name="internalNote"
+                                   value="@Model.InternalNote"
+                                   maxlength="500"
+                                   class="form-control"
+                                   placeholder="Regular, birthday, avoid bar seats..." />
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit"
+                                    class="btn btn-outline-warning fw-bold">
+                                Save Floor Details
+                            </button>
+                        </div>
+                    </form>
+                }
+            </div>
+
             @if (Model.Status == ReservationStatus.Pending)
             {
                 <div class="row g-4">
@@ -244,6 +325,17 @@
                                   maxlength="500"
                                   class="form-control mb-3"
                                   placeholder="Optional message for the guest..."></textarea>
+
+                            <input name="tableLabel"
+                                   maxlength="40"
+                                   class="form-control mb-3"
+                                   placeholder="Table / area, e.g. T4 or Bar" />
+
+                            <textarea name="internalNote"
+                                      rows="2"
+                                      maxlength="500"
+                                      class="form-control mb-3"
+                                      placeholder="Internal staff note, not sent to guest..."></textarea>
 
                             <button type="submit"
                                     class="btn btn-success fw-bold w-100">
