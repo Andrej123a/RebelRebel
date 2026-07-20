@@ -57,6 +57,11 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
+    var dbContext =
+        services.GetRequiredService<AppDbContext>();
+
+    await dbContext.Database.MigrateAsync();
+
     var userManager =
         services.GetRequiredService<UserManager<IdentityUser>>();
 
