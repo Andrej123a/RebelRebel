@@ -6,6 +6,7 @@ using Rebel.Domain.Enums;
 using Rebel.Infrastructure.Data;
 using Rebel.Web.Hubs;
 using Rebel.Web.Models;
+using Rebel.Web.Services;
 
 namespace Rebel.Web.Controllers
 {
@@ -36,7 +37,7 @@ namespace Rebel.Web.Controllers
             var model = new ReservationCreateViewModel
             {
                 ReservationDate = nowInSkopje.Date,
-                ReservationTime = new TimeSpan(20, 0, 0),
+                ReservationTime = ReservationPolicy.FirstOnlineSlot,
                 NumberOfGuests = 2
             };
 
@@ -59,7 +60,9 @@ namespace Rebel.Web.Controllers
                 model.EventTitle = selectedEvent.Title;
                 model.ReservationDate = selectedEvent.Date.Date;
 
-                if (selectedEvent.StartTime.HasValue)
+                if (selectedEvent.StartTime.HasValue &&
+                    ReservationPolicy.IsOnlineSlot(
+                        selectedEvent.StartTime.Value))
                 {
                     model.ReservationTime =
                         selectedEvent.StartTime.Value;
@@ -106,10 +109,9 @@ namespace Rebel.Web.Controllers
                 }
             }
 
-            ValidateReservationDateTime(
+            await ValidateReservationDateTime(
                 model,
-                nowInSkopje
-            );
+                nowInSkopje);
 
             if (!ModelState.IsValid)
             {
@@ -224,7 +226,7 @@ namespace Rebel.Web.Controllers
             );
         }
 
-        private void ValidateReservationDateTime(
+        private async Task ValidateReservationDateTime(
             ReservationCreateViewModel model,
             DateTime nowInSkopje)
         {
@@ -237,11 +239,52 @@ namespace Rebel.Web.Controllers
                 model.ReservationDate.Date
                     .Add(model.ReservationTime);
 
-            if (requestedDateTime <= nowInSkopje)
+            if (requestedDateTime <=
+                nowInSkopje.Add(
+                    ReservationPolicy.MinimumLeadTime))
             {
                 ModelState.AddModelError(
                     nameof(model.ReservationDate),
-                    "Please select a future date and time."
+                    "Please choose a time at least 2 hours from now."
+                );
+            }
+
+            if (!ReservationPolicy.IsOnlineSlot(
+                    model.ReservationTime))
+            {
+                ModelState.AddModelError(
+                    nameof(model.ReservationTime),
+                    "Please choose one of the available reservation times."
+                );
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return;
+            }
+
+            var reservedCoversForSlot =
+                await _context.Reservations
+                    .AsNoTracking()
+                    .Where(reservation =>
+                        reservation.ReservationDate ==
+                            model.ReservationDate.Date &&
+                        reservation.ReservationTime ==
+                            model.ReservationTime &&
+                        reservation.Status !=
+                            ReservationStatus.Rejected &&
+                        reservation.Status !=
+                            ReservationStatus.NoShow)
+                    .SumAsync(reservation =>
+                        reservation.NumberOfGuests);
+
+            if (reservedCoversForSlot +
+                model.NumberOfGuests >
+                ReservationPolicy.MaxOnlineCoversPerSlot)
+            {
+                ModelState.AddModelError(
+                    nameof(model.ReservationTime),
+                    "That time is fully booked. Please choose another slot."
                 );
             }
         }
@@ -251,6 +294,9 @@ namespace Rebel.Web.Controllers
         {
             ViewBag.MinimumReservationDate =
                 nowInSkopje.ToString("yyyy-MM-dd");
+
+            ViewBag.ReservationSlots =
+                ReservationPolicy.GetOnlineSlots();
         }
     }
 }

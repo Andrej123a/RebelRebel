@@ -107,6 +107,20 @@ namespace Rebel.Web.Controllers
                 reservations.Count(r =>
                     r.Status == ReservationStatus.NoShow);
 
+            ViewBag.SlotCapacity =
+                ReservationPolicy.MaxOnlineCoversPerSlot;
+
+            ViewBag.SlotLoads =
+                reservations
+                    .Where(r =>
+                        r.Status != ReservationStatus.Rejected &&
+                        r.Status != ReservationStatus.NoShow)
+                    .GroupBy(r => r.ReservationTime)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => group.Sum(r =>
+                            r.NumberOfGuests));
+
             return View(reservations);
         }
 

@@ -13,6 +13,10 @@
     var approvedReservations = (int)(ViewBag.ApprovedReservations ?? 0);
     var arrivedReservations = (int)(ViewBag.ArrivedReservations ?? 0);
     var noShowReservations = (int)(ViewBag.NoShowReservations ?? 0);
+    var slotCapacity = (int)(ViewBag.SlotCapacity ?? 40);
+    var slotLoads =
+        ViewBag.SlotLoads as Dictionary<TimeSpan, int>
+        ?? new Dictionary<TimeSpan, int>();
 
     var arrivedGuests = Model
         .Where(r => r.Status == ReservationStatus.Arrived)
@@ -182,8 +186,42 @@
         border-bottom: 3px solid var(--tonight-green);
     }
 
-    .tonight-stat.no-show {
-        border-bottom: 3px solid var(--tonight-red);
+        .tonight-stat.no-show {
+            border-bottom: 3px solid var(--tonight-red);
+        }
+
+    .tonight-service-load {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+
+    .tonight-slot-load {
+        padding: 14px;
+        border: 1px solid #34383d;
+        background: #121416;
+    }
+
+    .tonight-slot-load strong,
+    .tonight-slot-load span {
+        display: block;
+    }
+
+    .tonight-slot-load strong {
+        color: var(--tonight-yellow);
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 26px;
+        line-height: 1;
+    }
+
+    .tonight-slot-load span {
+        margin-top: 7px;
+        color: #9da2a9;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
     }
 
     .tonight-section-heading {
@@ -605,6 +643,27 @@
 
     </section>
 
+    @if (slotLoads.Count > 0)
+    {
+        <section class="tonight-service-load"
+                 aria-label="Tonight service load by reservation time">
+
+            @foreach (var slot in slotLoads.OrderBy(slot => slot.Key))
+            {
+                <div class="tonight-slot-load">
+                    <strong>
+                        @slot.Key.ToString(@"hh\:mm")
+                    </strong>
+
+                    <span>
+                        @slot.Value / @slotCapacity covers
+                    </span>
+                </div>
+            }
+
+        </section>
+    }
+
     <section>
 
         <div class="tonight-section-heading">
@@ -711,6 +770,8 @@
                                       asp-action="MarkArrived"
                                       asp-route-id="@reservation.Id"
                                       method="post">
+                                    @Html.AntiForgeryToken()
+
                                     <button type="submit"
                                             class="tonight-button arrived">
                                         Arrived
@@ -721,6 +782,8 @@
                                       asp-action="MarkNoShow"
                                       asp-route-id="@reservation.Id"
                                       method="post">
+                                    @Html.AntiForgeryToken()
+
                                     <button type="submit"
                                             class="tonight-button no-show">
                                         No-show
@@ -735,6 +798,8 @@
                                       asp-action="MarkNoShow"
                                       asp-route-id="@reservation.Id"
                                       method="post">
+                                    @Html.AntiForgeryToken()
+
                                     <button type="submit"
                                             class="tonight-button no-show">
                                         Mark no-show
@@ -749,6 +814,8 @@
                                       asp-action="MarkArrived"
                                       asp-route-id="@reservation.Id"
                                       method="post">
+                                    @Html.AntiForgeryToken()
+
                                     <button type="submit"
                                             class="tonight-button arrived">
                                         Mark arrived

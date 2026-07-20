@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Book a Table";
+
+    var reservationSlots =
+        ViewBag.ReservationSlots as IReadOnlyList<TimeSpan>
+        ?? Array.Empty<TimeSpan>();
 }
 
 <section class="py-5 text-white">
@@ -111,10 +115,15 @@
                                class="form-label fw-bold">
                         </label>
 
-                        <input asp-for="ReservationTime"
-                               type="time"
-                               step="900"
-                               class="form-control form-control-lg" />
+                        <select asp-for="ReservationTime"
+                                class="form-select form-select-lg">
+                            @foreach (var slot in reservationSlots)
+                            {
+                                <option value="@slot.ToString(@"hh\:mm")">
+                                    @slot.ToString(@"hh\:mm")
+                                </option>
+                            }
+                        </select>
 
                         <span asp-validation-for="ReservationTime"
                               class="text-danger small">
