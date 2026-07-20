@@ -62,6 +62,18 @@ using (var scope = app.Services.CreateScope())
 
     await dbContext.Database.MigrateAsync();
 
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        ALTER TABLE "Reservations"
+        ADD COLUMN IF NOT EXISTS "InternalNote"
+            character varying(500);
+
+        ALTER TABLE "Reservations"
+        ADD COLUMN IF NOT EXISTS "TableLabel"
+            character varying(40);
+        """
+    );
+
     var userManager =
         services.GetRequiredService<UserManager<IdentityUser>>();
 
