@@ -5,6 +5,11 @@
 
     var pendingReservationsText =
         Model.PendingReservationsCount.ToString("00");
+
+    var needsAttention =
+        Model.TonightPendingReservationsCount +
+        Model.TonightUnassignedTablesCount +
+        Model.UnavailableProductsCount;
 }
 
 <section class="control-room">
@@ -33,6 +38,200 @@
         </div>
 
     </header>
+
+    <section class="ops-snapshot">
+
+        <a asp-controller="AdminReservations"
+           asp-action="Tonight"
+           class="ops-card ops-primary">
+            <span class="ops-label">
+                Tonight
+            </span>
+
+            <strong>
+                @Model.TonightGuestsCount
+            </strong>
+
+            <small>
+                guests across @Model.TonightReservationsCount reservations
+            </small>
+        </a>
+
+        <a asp-controller="AdminReservations"
+           asp-action="Index"
+           asp-route-status="Pending"
+           class="ops-card">
+            <span class="ops-label">
+                Needs approval
+            </span>
+
+            <strong>
+                @Model.TonightPendingReservationsCount
+            </strong>
+
+            <small>
+                pending for tonight
+            </small>
+        </a>
+
+        <a asp-controller="AdminReservations"
+           asp-action="Tonight"
+           class="ops-card">
+            <span class="ops-label">
+                Floor gaps
+            </span>
+
+            <strong>
+                @Model.TonightUnassignedTablesCount
+            </strong>
+
+            <small>
+                approved without table
+            </small>
+        </a>
+
+        <a asp-controller="Product"
+           asp-action="Index"
+           asp-route-isAvailable="false"
+           class="ops-card">
+            <span class="ops-label">
+                Sold out
+            </span>
+
+            <strong>
+                @Model.UnavailableProductsCount
+            </strong>
+
+            <small>
+                unavailable menu items
+            </small>
+        </a>
+
+        <div class="ops-card ops-alert @(needsAttention > 0 ? "has-work" : "")">
+            <span class="ops-label">
+                Attention
+            </span>
+
+            <strong>
+                @needsAttention
+            </strong>
+
+            <small>
+                live items to handle
+            </small>
+        </div>
+
+    </section>
+
+    <section class="attention-board">
+
+        <div class="attention-panel">
+            <div class="attention-panel-header">
+                <div>
+                    <span class="attention-kicker">
+                        Front door
+                    </span>
+
+                    <h2>
+                        Pending Requests
+                    </h2>
+                </div>
+
+                <a asp-controller="AdminReservations"
+                   asp-action="Index"
+                   asp-route-status="Pending">
+                    View all
+                </a>
+            </div>
+
+            @if (Model.LatestPendingReservations.Any())
+            {
+                <div class="attention-list">
+                    @foreach (var reservation in Model.LatestPendingReservations)
+                    {
+                        <a asp-controller="AdminReservations"
+                           asp-action="Details"
+                           asp-route-id="@reservation.Id"
+                           class="attention-row">
+
+                            <span class="attention-time">
+                                @reservation.ReservationDate.ToString("dd MMM")
+                                @reservation.ReservationTime.ToString(@"hh\:mm")
+                            </span>
+
+                            <strong>
+                                @reservation.FullName
+                            </strong>
+
+                            <small>
+                                @reservation.NumberOfGuests
+                                @(reservation.NumberOfGuests == 1 ? "guest" : "guests")
+                            </small>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="attention-empty">
+                    No pending reservation requests right now.
+                </p>
+            }
+        </div>
+
+        <div class="attention-panel">
+            <div class="attention-panel-header">
+                <div>
+                    <span class="attention-kicker">
+                        Menu board
+                    </span>
+
+                    <h2>
+                        Unavailable Items
+                    </h2>
+                </div>
+
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-isAvailable="false">
+                    Manage
+                </a>
+            </div>
+
+            @if (Model.UnavailableProducts.Any())
+            {
+                <div class="attention-list">
+                    @foreach (var product in Model.UnavailableProducts)
+                    {
+                        <a asp-controller="Product"
+                           asp-action="Edit"
+                           asp-route-id="@product.Id"
+                           class="attention-row">
+
+                            <span class="attention-time">
+                                @(product.Category?.Name ?? "Uncategorized")
+                            </span>
+
+                            <strong>
+                                @product.Name
+                            </strong>
+
+                            <small>
+                                @product.Price.ToString("0.##") MKD
+                            </small>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="attention-empty">
+                    Everything on the menu is currently available.
+                </p>
+            }
+        </div>
+
+    </section>
 
     <div class="chaos-grid">
 

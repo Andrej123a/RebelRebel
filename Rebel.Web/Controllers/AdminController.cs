@@ -39,6 +39,18 @@ namespace Rebel.Web.Controllers
                 SkopjeTimeZone
             );
 
+            var today = skopjeNow.Date;
+            var tomorrow = today.AddDays(1);
+
+            var tonightReservations = await _context.Reservations
+                .AsNoTracking()
+                .Where(reservation =>
+                    reservation.ReservationDate >= today &&
+                    reservation.ReservationDate < tomorrow &&
+                    reservation.Status != ReservationStatus.Rejected)
+                .OrderBy(reservation => reservation.ReservationTime)
+                .ToListAsync(cancellationToken);
+
             var model = new DashboardViewModel
             {
                 CategoriesCount = await _context.Categories
@@ -59,6 +71,49 @@ namespace Rebel.Web.Controllers
                             reservation.Status == ReservationStatus.Pending,
                         cancellationToken
                     ),
+
+                TonightReservationsCount =
+                    tonightReservations.Count,
+
+                TonightGuestsCount =
+                    tonightReservations.Sum(reservation =>
+                        reservation.NumberOfGuests),
+
+                TonightPendingReservationsCount =
+                    tonightReservations.Count(reservation =>
+                        reservation.Status == ReservationStatus.Pending),
+
+                TonightUnassignedTablesCount =
+                    tonightReservations.Count(reservation =>
+                        reservation.Status != ReservationStatus.Pending &&
+                        reservation.Status != ReservationStatus.NoShow &&
+                        string.IsNullOrWhiteSpace(
+                            reservation.TableLabel)),
+
+                UnavailableProductsCount = await _context.Products
+                    .CountAsync(
+                        product => !product.IsAvailable,
+                        cancellationToken),
+
+                LatestPendingReservations = await _context.Reservations
+                    .AsNoTracking()
+                    .Where(reservation =>
+                        reservation.Status == ReservationStatus.Pending)
+                    .OrderBy(reservation =>
+                        reservation.ReservationDate)
+                    .ThenBy(reservation =>
+                        reservation.ReservationTime)
+                    .Take(5)
+                    .ToListAsync(cancellationToken),
+
+                UnavailableProducts = await _context.Products
+                    .AsNoTracking()
+                    .Include(product => product.Category)
+                    .Where(product => !product.IsAvailable)
+                    .OrderBy(product => product.Category!.Name)
+                    .ThenBy(product => product.Name)
+                    .Take(5)
+                    .ToListAsync(cancellationToken),
 
                 UpcomingEvents = await _context.Events
                     .AsNoTracking()
