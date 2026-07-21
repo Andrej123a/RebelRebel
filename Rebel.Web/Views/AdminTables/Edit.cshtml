@@ -1,0 +1,88 @@
+@model Rebel.Domain.Entities.PubTable
+
+@{
+    ViewData["Title"] = "Edit Table";
+}
+
+<section class="table-admin-page">
+
+    <div class="table-form-shell">
+        <aside class="table-form-guide">
+            <a asp-controller="AdminTables"
+               asp-action="Index"
+               class="table-admin-back">
+                Back to floor setup
+            </a>
+
+            <p class="table-admin-kicker">
+                Floor maintenance
+            </p>
+
+            <h1>Edit @Model.Label</h1>
+
+            <p>
+                Update this seating spot when the floor changes. Inactive tables
+                stay saved, but staff cannot assign reservations to them.
+            </p>
+
+            <div class="table-form-steps">
+                <div>
+                    <strong>1</strong>
+                    <span>Keep labels stable if staff already recognise them.</span>
+                </div>
+
+                <div>
+                    <strong>2</strong>
+                    <span>Change capacity only when the physical setup changes.</span>
+                </div>
+
+                <div>
+                    <strong>3</strong>
+                    <span>Turn off active status for closed or blocked tables.</span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="table-admin-form-panel">
+            <div class="table-form-heading">
+                <div>
+                    <span class="table-admin-area">
+                        Reservation assignment setup
+                    </span>
+
+                    <h2>Update seating spot</h2>
+                </div>
+            </div>
+
+            <form asp-controller="AdminTables"
+                  asp-action="Edit"
+                  asp-route-id="@Model.Id"
+                  method="post">
+                @Html.AntiForgeryToken()
+
+                <input asp-for="Id"
+                       type="hidden" />
+
+                <partial name="_Form"
+                         model="Model" />
+
+                <div class="table-form-actions">
+                    <button type="submit"
+                            class="table-admin-button">
+                        Save Table
+                    </button>
+
+                    <a asp-controller="AdminTables"
+                       asp-action="Index"
+                       class="table-form-cancel">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

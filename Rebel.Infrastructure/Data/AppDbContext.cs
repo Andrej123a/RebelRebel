@@ -17,9 +17,24 @@ namespace Rebel.Infrastructure.Data
         public DbSet<ContactInfo> ContactInfos { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<PubTable> PubTables { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<PubTable>(entity =>
+            {
+                entity.Property(table => table.Label)
+                    .IsRequired()
+                    .HasMaxLength(40);
+
+                entity.Property(table => table.Area)
+                    .HasMaxLength(80);
+
+                entity.HasIndex(table => table.Label)
+                    .IsUnique();
+            });
 
             builder.Entity<Reservation>(entity =>
             {

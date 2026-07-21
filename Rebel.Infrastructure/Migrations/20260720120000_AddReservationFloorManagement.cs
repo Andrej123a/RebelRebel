@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace _03.Rebel.Infrastructure.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260720120000_AddReservationFloorManagement")]
     public partial class AddReservationFloorManagement : Migration
     {
         /// <inheritdoc />

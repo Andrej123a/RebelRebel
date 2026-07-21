@@ -121,6 +121,22 @@
             </small>
         </div>
 
+        <a asp-controller="AdminTables"
+           asp-action="Index"
+           class="ops-card">
+            <span class="ops-label">
+                Floor capacity
+            </span>
+
+            <strong>
+                @Model.ActiveTableCapacity
+            </strong>
+
+            <small>
+                seats across @Model.ActiveTablesCount active tables
+            </small>
+        </a>
+
     </section>
 
     <section class="attention-board">

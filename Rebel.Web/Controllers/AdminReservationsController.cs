@@ -141,6 +141,10 @@ namespace Rebel.Web.Controllers
                 return NotFound();
             }
 
+            await LoadActiveTables(
+                reservation,
+                cancellationToken);
+
             return View(reservation);
         }
 
@@ -296,6 +300,25 @@ namespace Rebel.Web.Controllers
 
             if (newStatus == ReservationStatus.Approved)
             {
+                var tableValidationError =
+                    await ValidateTableAssignment(
+                        reservation.Id,
+                        tableLabel,
+                        reservation.NumberOfGuests,
+                        reservation.ReservationDate,
+                        reservation.ReservationTime,
+                        cancellationToken);
+
+                if (!string.IsNullOrWhiteSpace(tableValidationError))
+                {
+                    TempData["ErrorMessage"] =
+                        tableValidationError;
+
+                    return RedirectToAction(
+                        nameof(Details),
+                        new { id });
+                }
+
                 reservation.TableLabel =
                     NormalizeOptionalText(tableLabel, 40);
 
@@ -389,6 +412,25 @@ namespace Rebel.Web.Controllers
                 return NotFound();
             }
 
+            var tableValidationError =
+                await ValidateTableAssignment(
+                    reservation.Id,
+                    tableLabel,
+                    reservation.NumberOfGuests,
+                    reservation.ReservationDate,
+                    reservation.ReservationTime,
+                    cancellationToken);
+
+            if (!string.IsNullOrWhiteSpace(tableValidationError))
+            {
+                TempData["ErrorMessage"] =
+                    tableValidationError;
+
+                return RedirectToAction(
+                    nameof(Details),
+                    new { id });
+            }
+
             reservation.TableLabel =
                 NormalizeOptionalText(tableLabel, 40);
 
@@ -404,6 +446,94 @@ namespace Rebel.Web.Controllers
             return RedirectToAction(
                 nameof(Details),
                 new { id });
+        }
+
+        private async Task LoadActiveTables(
+            Rebel.Domain.Entities.Reservation reservation,
+            CancellationToken cancellationToken)
+        {
+            ViewBag.ActiveTables = await _context.PubTables
+                .AsNoTracking()
+                .Where(table => table.IsActive)
+                .OrderBy(table => table.Area)
+                .ThenBy(table => table.Label)
+                .ToListAsync(cancellationToken);
+
+            ViewBag.BusyTables = await _context.Reservations
+                .AsNoTracking()
+                .Where(existingReservation =>
+                    existingReservation.Id != reservation.Id &&
+                    existingReservation.ReservationDate.Date ==
+                        reservation.ReservationDate.Date &&
+                    existingReservation.ReservationTime ==
+                        reservation.ReservationTime &&
+                    !string.IsNullOrWhiteSpace(
+                        existingReservation.TableLabel) &&
+                    (existingReservation.Status ==
+                        ReservationStatus.Approved ||
+                     existingReservation.Status ==
+                        ReservationStatus.Arrived))
+                .Select(existingReservation =>
+                    existingReservation.TableLabel!)
+                .ToListAsync(cancellationToken);
+        }
+
+        private async Task<string?> ValidateTableAssignment(
+            Guid reservationId,
+            string? tableLabel,
+            int guestCount,
+            DateTime reservationDate,
+            TimeSpan reservationTime,
+            CancellationToken cancellationToken)
+        {
+            var normalizedTableLabel =
+                NormalizeOptionalText(tableLabel, 40);
+
+            if (string.IsNullOrWhiteSpace(normalizedTableLabel))
+            {
+                return null;
+            }
+
+            var table = await _context.PubTables
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    activeTable =>
+                        activeTable.IsActive &&
+                        activeTable.Label == normalizedTableLabel,
+                    cancellationToken);
+
+            if (table == null)
+            {
+                return "Please choose an active configured table.";
+            }
+
+            if (guestCount > table.Capacity)
+            {
+                return
+                    $"{table.Label} seats {table.Capacity}, but this reservation is for {guestCount} guests.";
+            }
+
+            var existingReservation = await _context.Reservations
+                .AsNoTracking()
+                .Where(reservation =>
+                    reservation.Id != reservationId &&
+                    reservation.ReservationDate.Date ==
+                        reservationDate.Date &&
+                    reservation.ReservationTime ==
+                        reservationTime &&
+                    reservation.TableLabel == normalizedTableLabel &&
+                    (reservation.Status == ReservationStatus.Approved ||
+                     reservation.Status == ReservationStatus.Arrived))
+                .OrderBy(reservation => reservation.FullName)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (existingReservation != null)
+            {
+                return
+                    $"{table.Label} is already assigned to {existingReservation.FullName} at {reservationTime:hh\\:mm}. Choose another table or time.";
+            }
+
+            return null;
         }
 
         private static string? NormalizeOptionalText(

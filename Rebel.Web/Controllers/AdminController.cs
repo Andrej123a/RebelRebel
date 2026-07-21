@@ -51,6 +51,11 @@ namespace Rebel.Web.Controllers
                 .OrderBy(reservation => reservation.ReservationTime)
                 .ToListAsync(cancellationToken);
 
+            var activeTables = await _context.PubTables
+                .AsNoTracking()
+                .Where(table => table.IsActive)
+                .ToListAsync(cancellationToken);
+
             var model = new DashboardViewModel
             {
                 CategoriesCount = await _context.Categories
@@ -94,6 +99,11 @@ namespace Rebel.Web.Controllers
                     .CountAsync(
                         product => !product.IsAvailable,
                         cancellationToken),
+
+                ActiveTablesCount = activeTables.Count,
+
+                ActiveTableCapacity = activeTables.Sum(table =>
+                    table.Capacity),
 
                 LatestPendingReservations = await _context.Reservations
                     .AsNoTracking()

@@ -24,6 +24,10 @@ namespace Rebel.Web.Models
 
         public int UnavailableProductsCount { get; set; }
 
+        public int ActiveTablesCount { get; set; }
+
+        public int ActiveTableCapacity { get; set; }
+
         public List<Reservation> LatestPendingReservations { get; set; } = new();
 
         public List<Product> UnavailableProducts { get; set; } = new();

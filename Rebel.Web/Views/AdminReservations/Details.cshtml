@@ -68,6 +68,14 @@
     var internalNote = string.IsNullOrWhiteSpace(Model.InternalNote)
         ? "No staff note."
         : Model.InternalNote;
+
+    var activeTables =
+        ViewBag.ActiveTables as List<Rebel.Domain.Entities.PubTable>
+        ?? new List<Rebel.Domain.Entities.PubTable>();
+
+    var busyTables =
+        ViewBag.BusyTables as List<string>
+        ?? new List<string>();
 }
 
 <section class="py-5 text-white">
@@ -263,12 +271,46 @@
                                 Table / area
                             </label>
 
-                            <input id="tableLabel"
-                                   name="tableLabel"
-                                   value="@Model.TableLabel"
-                                   maxlength="40"
-                                   class="form-control"
-                                   placeholder="T4, Bar, Patio..." />
+                            <select id="tableLabel"
+                                    name="tableLabel"
+                                    class="form-select">
+                                <option value="">Not assigned</option>
+
+                                @foreach (var table in activeTables)
+                                {
+                                    var isBusy =
+                                        busyTables.Contains(table.Label);
+
+                                    var tableText =
+                                        $"{table.Label} · {table.Capacity} seats";
+
+                                    if (!string.IsNullOrWhiteSpace(table.Area))
+                                    {
+                                        tableText =
+                                            $"{table.Area} · {tableText}";
+                                    }
+
+                                    if (isBusy)
+                                    {
+                                        tableText =
+                                            $"{tableText} · busy at {Model.ReservationTime:hh\\:mm}";
+                                    }
+
+                                    if (Model.TableLabel == table.Label)
+                                    {
+                                        <option value="@table.Label" selected>
+                                            @tableText
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@table.Label"
+                                                disabled="@isBusy">
+                                            @tableText
+                                        </option>
+                                    }
+                                }
+                            </select>
                         </div>
 
                         <div class="col-md-8">
@@ -326,10 +368,36 @@
                                   class="form-control mb-3"
                                   placeholder="Optional message for the guest..."></textarea>
 
-                            <input name="tableLabel"
-                                   maxlength="40"
-                                   class="form-control mb-3"
-                                   placeholder="Table / area, e.g. T4 or Bar" />
+                            <select name="tableLabel"
+                                    class="form-select mb-3">
+                                <option value="">Approve without table</option>
+
+                                @foreach (var table in activeTables)
+                                {
+                                    var isBusy =
+                                        busyTables.Contains(table.Label);
+
+                                    var tableText =
+                                        $"{table.Label} · {table.Capacity} seats";
+
+                                    if (!string.IsNullOrWhiteSpace(table.Area))
+                                    {
+                                        tableText =
+                                            $"{table.Area} · {tableText}";
+                                    }
+
+                                    if (isBusy)
+                                    {
+                                        tableText =
+                                            $"{tableText} · busy at {Model.ReservationTime:hh\\:mm}";
+                                    }
+
+                                    <option value="@table.Label"
+                                            disabled="@isBusy">
+                                        @tableText
+                                    </option>
+                                }
+                            </select>
 
                             <textarea name="internalNote"
                                       rows="2"

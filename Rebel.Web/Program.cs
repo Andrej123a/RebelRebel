@@ -71,6 +71,18 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE "Reservations"
         ADD COLUMN IF NOT EXISTS "TableLabel"
             character varying(40);
+
+        CREATE TABLE IF NOT EXISTS "PubTables" (
+            "Id" uuid NOT NULL,
+            "Label" character varying(40) NOT NULL,
+            "Area" character varying(80) NULL,
+            "Capacity" integer NOT NULL,
+            "IsActive" boolean NOT NULL,
+            CONSTRAINT "PK_PubTables" PRIMARY KEY ("Id")
+        );
+
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_PubTables_Label"
+            ON "PubTables" ("Label");
         """
     );
 

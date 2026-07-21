@@ -1,0 +1,100 @@
+@model Rebel.Domain.Entities.PubTable
+
+<div asp-validation-summary="ModelOnly"
+     class="alert alert-danger">
+</div>
+
+<div class="table-form-grid">
+    <div class="table-form-field">
+        <label asp-for="Label"
+               class="table-form-label">
+            Table name staff will recognise
+        </label>
+
+        <input asp-for="Label"
+               class="form-control form-control-lg"
+               placeholder="T1, BAR2, PATIO 3" />
+
+        <p>
+            Use the exact short name staff say during service.
+        </p>
+
+        <span asp-validation-for="Label"
+              class="text-danger small">
+        </span>
+    </div>
+
+    <div class="table-form-field">
+        <label asp-for="Area"
+               class="table-form-label">
+            Seating area
+        </label>
+
+        <input asp-for="Area"
+               class="form-control form-control-lg"
+               placeholder="Main floor, Bar, Patio" />
+
+        <p>
+            Groups tables on the Floor Setup page and helps staff scan faster.
+        </p>
+
+        <span asp-validation-for="Area"
+              class="text-danger small">
+        </span>
+    </div>
+
+    <div class="table-form-field">
+        <label asp-for="Capacity"
+               class="table-form-label">
+            Seat capacity
+        </label>
+
+        <input asp-for="Capacity"
+               type="number"
+               min="1"
+               max="30"
+               class="form-control form-control-lg" />
+
+        <p>
+            Real seats only. This prevents assigning too many guests to a table.
+        </p>
+
+        <span asp-validation-for="Capacity"
+              class="text-danger small">
+        </span>
+    </div>
+
+    <div class="table-form-field table-form-active">
+        <div>
+            <span class="table-form-label">
+                Assignment status
+            </span>
+
+            <p>
+                Active tables appear in reservation approval dropdowns.
+            </p>
+        </div>
+
+        <label class="table-active-toggle">
+            <input asp-for="IsActive" />
+            <span></span>
+            <strong>Active for assignments</strong>
+        </label>
+    </div>
+</div>
+
+<div class="table-form-preview">
+    <span class="table-admin-area">
+        Preview
+    </span>
+
+    <div>
+        <strong>
+            This table will become selectable when approving reservations.
+        </strong>
+
+        <small>
+            If it is inactive, it stays saved but disappears from assignment choices.
+        </small>
+    </div>
+</div>

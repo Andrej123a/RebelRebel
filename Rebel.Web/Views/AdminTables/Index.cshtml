@@ -1,0 +1,184 @@
+@model List<Rebel.Domain.Entities.PubTable>
+
+@{
+    ViewData["Title"] = "Tables";
+
+    var activeTables = Model.Count(table => table.IsActive);
+    var totalCapacity = Model
+        .Where(table => table.IsActive)
+        .Sum(table => table.Capacity);
+
+    var inactiveTables = Model.Count(table => !table.IsActive);
+
+    var tableGroups = Model
+        .GroupBy(table =>
+            string.IsNullOrWhiteSpace(table.Area)
+                ? "Main floor"
+                : table.Area)
+        .OrderBy(group => group.Key)
+        .ToList();
+}
+
+<section class="table-admin-page">
+
+    <div class="table-admin-header">
+        <div>
+            <p class="table-admin-kicker">
+                Floor plan
+            </p>
+
+            <h1>
+                Floor Setup
+            </h1>
+
+            <p>
+                Internal admin setup for where approved reservations can be seated.
+                Guests never see this page; staff use it to assign parties to real tables.
+            </p>
+        </div>
+
+        <div class="table-admin-actions">
+            <a asp-controller="AdminReservations"
+               asp-action="Tonight"
+               class="table-admin-back">
+                Tonight View
+            </a>
+
+            <a asp-controller="AdminTables"
+               asp-action="Create"
+               class="table-admin-button">
+                Add Table
+            </a>
+        </div>
+    </div>
+
+    <div class="table-admin-stats">
+        <div>
+            <span>Active tables</span>
+            <strong>@activeTables</strong>
+        </div>
+
+        <div>
+            <span>Total active capacity</span>
+            <strong>@totalCapacity</strong>
+        </div>
+
+        <div>
+            <span>Configured tables</span>
+            <strong>@Model.Count</strong>
+        </div>
+
+        <div>
+            <span>Inactive / blocked</span>
+            <strong>@inactiveTables</strong>
+        </div>
+    </div>
+
+    <div class="table-admin-guide">
+        <div>
+            <strong>How staff use this</strong>
+            <span>Create the real floor once, then choose a table when approving a reservation.</span>
+        </div>
+
+        <div>
+            <strong>Capacity guard</strong>
+            <span>The app blocks assigning a party to a table that cannot seat them.</span>
+        </div>
+
+        <div>
+            <strong>Temporary changes</strong>
+            <span>Mark tables inactive when they are closed, reserved, broken or removed for an event.</span>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="table-admin-empty">
+            <h2>No tables configured.</h2>
+
+            <p>
+                Add your first table so approved reservations can be assigned to the floor.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="table-area-list">
+            @foreach (var group in tableGroups)
+            {
+                var groupActiveTables =
+                    group.Count(table => table.IsActive);
+
+                var groupCapacity =
+                    group
+                        .Where(table => table.IsActive)
+                        .Sum(table => table.Capacity);
+
+                <section class="table-area-section">
+                    <div class="table-area-header">
+                        <div>
+                            <span class="table-admin-area">
+                                Seating zone
+                            </span>
+
+                            <h2>
+                                @group.Key
+                            </h2>
+                        </div>
+
+                        <span>
+                            @groupActiveTables active · @groupCapacity seats
+                        </span>
+                    </div>
+
+                    <div class="table-admin-grid">
+                        @foreach (var table in group.OrderBy(table => table.Label))
+                        {
+                            <article class="table-admin-card @(!table.IsActive ? "is-inactive" : "")">
+                                <div class="table-card-top">
+                                    <span class="table-status-pill @(table.IsActive ? "is-active" : "is-inactive")">
+                                        @(table.IsActive ? "Assignable" : "Inactive")
+                                    </span>
+
+                                    <h3>
+                                        @table.Label
+                                    </h3>
+                                </div>
+
+                                <div class="table-seat-map"
+                                     aria-label="@table.Capacity seats">
+                                    @for (var seat = 1; seat <= Math.Min(table.Capacity, 12); seat++)
+                                    {
+                                        <span></span>
+                                    }
+
+                                    @if (table.Capacity > 12)
+                                    {
+                                        <small>+@(table.Capacity - 12)</small>
+                                    }
+                                </div>
+
+                                <div class="table-admin-capacity">
+                                    <strong>@table.Capacity</strong>
+                                    <span>seat capacity</span>
+                                </div>
+
+                                <div class="table-admin-card-footer">
+                                    <span>
+                                        Used during approval
+                                    </span>
+
+                                    <a asp-controller="AdminTables"
+                                       asp-action="Edit"
+                                       asp-route-id="@table.Id">
+                                        Edit
+                                    </a>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
+    }
+</section>

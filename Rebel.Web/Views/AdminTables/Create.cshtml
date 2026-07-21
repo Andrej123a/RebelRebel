@@ -1,0 +1,91 @@
+@model Rebel.Domain.Entities.PubTable
+
+@{
+    ViewData["Title"] = "Add Table";
+}
+
+<section class="table-admin-page">
+
+    <div class="table-form-shell">
+        <aside class="table-form-guide">
+            <a asp-controller="AdminTables"
+               asp-action="Index"
+               class="table-admin-back">
+                Back to floor setup
+            </a>
+
+            <p class="table-admin-kicker">
+                First-day friendly
+            </p>
+
+            <h1>Add Table</h1>
+
+            <p>
+                Add one real seating spot from the pub floor. This is used by staff
+                when approving reservations, so keep labels short and obvious.
+            </p>
+
+            <div class="table-form-steps">
+                <div>
+                    <strong>1</strong>
+                    <span>Give it the same name staff use during service.</span>
+                </div>
+
+                <div>
+                    <strong>2</strong>
+                    <span>Put it in an area like Main floor, Bar, Patio or Booths.</span>
+                </div>
+
+                <div>
+                    <strong>3</strong>
+                    <span>Enter the real seat capacity so oversized parties are blocked.</span>
+                </div>
+            </div>
+
+            <div class="table-form-examples">
+                <span>Good examples</span>
+                <code>T1 · Main floor · 4 seats</code>
+                <code>BAR2 · Bar · 2 seats</code>
+                <code>PATIO 3 · Patio · 6 seats</code>
+            </div>
+        </aside>
+
+        <div class="table-admin-form-panel">
+            <div class="table-form-heading">
+                <div>
+                    <span class="table-admin-area">
+                        Reservation assignment setup
+                    </span>
+
+                    <h2>Create seating spot</h2>
+                </div>
+            </div>
+
+            <form asp-controller="AdminTables"
+                  asp-action="Create"
+                  method="post">
+                @Html.AntiForgeryToken()
+
+                <partial name="_Form"
+                         model="Model" />
+
+                <div class="table-form-actions">
+                    <button type="submit"
+                            class="table-admin-button">
+                        Create Table
+                    </button>
+
+                    <a asp-controller="AdminTables"
+                       asp-action="Index"
+                       class="table-form-cancel">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
