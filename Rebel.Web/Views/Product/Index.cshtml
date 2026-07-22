@@ -19,12 +19,26 @@
             </p>
         </div>
 
-        <a asp-controller="Product"
-           asp-action="Create"
-           class="product-add-button">
-            <span>+</span>
-            Add Product
-        </a>
+        <div class="admin-page-tools">
+            <a asp-controller="Product"
+               asp-action="Create"
+               class="admin-tool-button is-primary">
+                Add Item
+            </a>
+
+            <a asp-controller="Category"
+               asp-action="Index"
+               class="admin-tool-button">
+                Sections
+            </a>
+
+            <a asp-controller="Product"
+               asp-action="Index"
+               asp-route-isAvailable="false"
+               class="admin-tool-button">
+                Sold Out
+            </a>
+        </div>
     </section>
 
     <form id="productFilterForm"
@@ -83,6 +97,38 @@
             </select>
         </div>
 
+        <div class="product-filter-field">
+            <label for="tagSelect">Tag</label>
+
+            <select name="tag"
+                    id="tagSelect">
+
+                <option value="">All tags</option>
+
+                @foreach (var tagOption in new[]
+                {
+                    ("popular", "Popular"),
+                    ("spicy", "Spicy"),
+                    ("vegetarian", "Vegetarian"),
+                    ("vegan", "Vegan"),
+                    ("gluten-free", "Gluten free"),
+                    ("nuts", "Contains nuts"),
+                    ("limited", "Limited"),
+                    ("promo", "Promo")
+                })
+                {
+                    if (ViewBag.Tag == tagOption.Item1)
+                    {
+                        <option value="@tagOption.Item1" selected>@tagOption.Item2</option>
+                    }
+                    else
+                    {
+                        <option value="@tagOption.Item1">@tagOption.Item2</option>
+                    }
+                }
+            </select>
+        </div>
+
         <div class="product-filter-reset">
             <a asp-controller="Product"
                asp-action="Index">
@@ -107,19 +153,36 @@
             const searchInput = document.getElementById("searchTermInput");
             const categorySelect = document.getElementById("categorySelect");
             const statusSelect = document.getElementById("statusSelect");
+            const tagSelect = document.getElementById("tagSelect");
             const productsContainer = document.getElementById("productsTableContainer");
 
             const filterUrl = '@Url.Action("FilterProducts", "Product")';
 
             let debounceTimer;
+            let openGroupKey;
+
+            function rememberOpenGroup() {
+                const openGroup = productsContainer.querySelector(
+                    "[data-product-group][open]"
+                );
+
+                openGroupKey = openGroup?.dataset.groupKey;
+            }
 
             function bindProductGroups() {
                 const groups = Array.from(
                     productsContainer.querySelectorAll("[data-product-group]")
                 );
 
-                if (groups.length > 0 && !groups.some(group => group.open)) {
-                    groups[0].open = true;
+                if (groups.length > 0) {
+                    const groupToOpen =
+                        groups.find(group => group.dataset.groupKey === openGroupKey) ||
+                        groups.find(group => group.open) ||
+                        groups[0];
+
+                    groups.forEach(function (group) {
+                        group.open = group === groupToOpen;
+                    });
                 }
 
                 groups.forEach(function (group) {
@@ -157,6 +220,8 @@
                             const button = form.querySelector("button");
 
                             try {
+                                rememberOpenGroup();
+
                                 button?.setAttribute("disabled", "disabled");
 
                                 const response = await fetch(form.action, {
@@ -182,10 +247,13 @@
             }
 
             async function loadProducts() {
+                rememberOpenGroup();
+
                 const query = new URLSearchParams({
                     searchTerm: searchInput.value.trim(),
                     categoryId: categorySelect.value,
-                    isAvailable: statusSelect.value
+                    isAvailable: statusSelect.value,
+                    tag: tagSelect.value
                 });
 
                 try {
@@ -247,6 +315,7 @@
 
             categorySelect.addEventListener("change", loadProducts);
             statusSelect.addEventListener("change", loadProducts);
+            tagSelect.addEventListener("change", loadProducts);
 
             bindProductGroups();
         });

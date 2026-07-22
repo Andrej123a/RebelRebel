@@ -14,5 +14,9 @@ namespace Rebel.Domain.Entities
 
         public ICollection<Product> Products { get; set; } = new List<Product>();
         public CategoryType Type { get; set; }
+
+        public bool IsDeleted { get; set; }
+
+        public DateTime? DeletedAtUtc { get; set; }
     }
 }

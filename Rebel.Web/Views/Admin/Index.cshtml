@@ -2,14 +2,6 @@
 
 @{
     ViewData["Title"] = "Control Room";
-
-    var pendingReservationsText =
-        Model.PendingReservationsCount.ToString("00");
-
-    var needsAttention =
-        Model.TonightPendingReservationsCount +
-        Model.TonightUnassignedTablesCount +
-        Model.UnavailableProductsCount;
 }
 
 <section class="control-room">
@@ -18,7 +10,7 @@
 
         <div>
             <div class="control-eyebrow">
-                Rebel Rebel backstage operations
+                Rebel Rebel by Fat Kitchen backstage operations
             </div>
 
             <h1 class="control-title">
@@ -28,7 +20,7 @@
 
             <p class="control-copy">
                 Events, reservations, food and drinks — everything that keeps
-                Rebel Rebel loud, alive and slightly out of control.
+                Rebel Rebel by Fat Kitchen loud, alive and slightly out of control.
             </p>
         </div>
 
@@ -39,104 +31,261 @@
 
     </header>
 
-    <section class="ops-snapshot">
-
-        <a asp-controller="AdminReservations"
-           asp-action="Tonight"
-           class="ops-card ops-primary">
-            <span class="ops-label">
-                Tonight
-            </span>
-
-            <strong>
-                @Model.TonightGuestsCount
-            </strong>
-
-            <small>
-                guests across @Model.TonightReservationsCount reservations
-            </small>
-        </a>
-
-        <a asp-controller="AdminReservations"
-           asp-action="Index"
-           asp-route-status="Pending"
-           class="ops-card">
-            <span class="ops-label">
-                Needs approval
-            </span>
-
-            <strong>
-                @Model.TonightPendingReservationsCount
-            </strong>
-
-            <small>
-                pending for tonight
-            </small>
-        </a>
-
-        <a asp-controller="AdminReservations"
-           asp-action="Tonight"
-           class="ops-card">
-            <span class="ops-label">
-                Floor gaps
-            </span>
-
-            <strong>
-                @Model.TonightUnassignedTablesCount
-            </strong>
-
-            <small>
-                approved without table
-            </small>
-        </a>
-
-        <a asp-controller="Product"
-           asp-action="Index"
-           asp-route-isAvailable="false"
-           class="ops-card">
-            <span class="ops-label">
-                Sold out
-            </span>
-
-            <strong>
-                @Model.UnavailableProductsCount
-            </strong>
-
-            <small>
-                unavailable menu items
-            </small>
-        </a>
-
-        <div class="ops-card ops-alert @(needsAttention > 0 ? "has-work" : "")">
-            <span class="ops-label">
-                Attention
-            </span>
-
-            <strong>
-                @needsAttention
-            </strong>
-
-            <small>
-                live items to handle
-            </small>
+    <section class="admin-quick-search">
+        <div>
+            <span>Quick jump</span>
+            <h2>Find anything fast</h2>
+            <p>
+                Search guest names, phone numbers, reservation codes, events or menu items.
+            </p>
         </div>
 
-        <a asp-controller="AdminTables"
-           asp-action="Index"
-           class="ops-card">
-            <span class="ops-label">
-                Floor capacity
-            </span>
+        <form asp-controller="Admin"
+              asp-action="Index"
+              method="get"
+              class="admin-quick-search-form">
+            <input type="search"
+                   name="q"
+                   value="@Model.SearchQuery"
+                   placeholder="Try RR-ABC123, Andrej, beer, burger..."
+                   autocomplete="off" />
 
-            <strong>
-                @Model.ActiveTableCapacity
-            </strong>
+            <button type="submit">
+                Search
+            </button>
 
-            <small>
-                seats across @Model.ActiveTablesCount active tables
-            </small>
-        </a>
+            @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+            {
+                <a asp-controller="Admin"
+                   asp-action="Index">
+                    Clear
+                </a>
+            }
+        </form>
 
+        @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+        {
+            <div class="admin-search-results">
+                <header>
+                    <span>
+                        Results for "@Model.SearchQuery"
+                    </span>
+                    <strong>@Model.SearchResults.Count</strong>
+                </header>
+
+                @if (Model.SearchResults.Any())
+                {
+                    <div class="admin-search-list">
+                        @foreach (var result in Model.SearchResults)
+                        {
+                            <a asp-controller="@result.Controller"
+                               asp-action="@result.Action"
+                               asp-route-id="@result.Id">
+                                <span>@result.Type</span>
+                                <strong>@result.Title</strong>
+                                <small>@result.Meta</small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>
+                        No matching reservations, events or menu items found.
+                    </p>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="service-glance">
+        <div class="service-glance-header">
+            <div>
+                <span>Today at a glance</span>
+                <h2>Service Priorities</h2>
+            </div>
+
+            <a asp-controller="AdminReservations"
+               asp-action="Tonight">
+                Open live floor
+            </a>
+        </div>
+
+        <div class="service-priority-grid">
+            <a asp-controller="AdminReservations"
+               asp-action="Index"
+               asp-route-status="Pending"
+               class="service-priority-card is-hot">
+                <span>New requests</span>
+                <strong>@Model.TonightPendingReservationsCount</strong>
+                <small>need approve / reject</small>
+            </a>
+
+            <a asp-controller="AdminReservations"
+               asp-action="Tonight"
+               class="service-priority-card">
+                <span>Next arrivals</span>
+                <strong>@Model.NextArrivals.Count</strong>
+                <small>approved guests coming in</small>
+            </a>
+
+            <a asp-controller="AdminReservations"
+               asp-action="Index"
+               class="service-priority-card is-warning">
+                <span>Large parties</span>
+                <strong>@Model.TonightLargePartiesCount</strong>
+                <small>9+ guests tonight</small>
+            </a>
+
+            <a asp-controller="AdminEvents"
+               asp-action="Index"
+               class="service-priority-card">
+                <span>Event bookings</span>
+                <strong>@Model.TodayEventBookingsCount</strong>
+                <small>reservations tied to events</small>
+            </a>
+
+            <a asp-controller="AdminReservations"
+               asp-action="Index"
+               class="service-priority-card @(Model.EmailFailuresCount > 0 ? "is-danger" : "")">
+                <span>Email failures</span>
+                <strong>@Model.EmailFailuresCount</strong>
+                <small>guest messages to retry</small>
+            </a>
+        </div>
+
+        <div class="service-work-grid">
+            <div class="service-work-panel">
+                <header>
+                    <span>Arrival watch</span>
+                    <a asp-controller="AdminReservations"
+                       asp-action="Tonight">
+                        Timeline
+                    </a>
+                </header>
+
+                @if (Model.NextArrivals.Any())
+                {
+                    <div class="service-work-list">
+                        @foreach (var reservation in Model.NextArrivals)
+                        {
+                            <a asp-controller="AdminReservations"
+                               asp-action="Details"
+                               asp-route-id="@reservation.Id">
+                                <strong>@reservation.ReservationTime.ToString(@"hh\:mm")</strong>
+                                <span>@reservation.FullName</span>
+                                <small>
+                                    @reservation.NumberOfGuests guests
+                                    @(string.IsNullOrWhiteSpace(reservation.TableLabel)
+                                        ? "/ no table"
+                                        : $"/ table {reservation.TableLabel}")
+                                </small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>No approved arrivals waiting for today.</p>
+                }
+            </div>
+
+            <div class="service-work-panel">
+                <header>
+                    <span>Large groups</span>
+                    <a asp-controller="AdminReservations"
+                       asp-action="Index">
+                        Review
+                    </a>
+                </header>
+
+                @if (Model.LargePartyReservations.Any())
+                {
+                    <div class="service-work-list">
+                        @foreach (var reservation in Model.LargePartyReservations)
+                        {
+                            <a asp-controller="AdminReservations"
+                               asp-action="Details"
+                               asp-route-id="@reservation.Id">
+                                <strong>@reservation.NumberOfGuests</strong>
+                                <span>@reservation.FullName</span>
+                                <small>@reservation.ReservationTime.ToString(@"hh\:mm") / seating check</small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>No large parties on tonight's active floor.</p>
+                }
+            </div>
+
+            <div class="service-work-panel">
+                <header>
+                    <span>Email failures</span>
+                    <a asp-controller="AdminReservations"
+                       asp-action="Index">
+                        Open desk
+                    </a>
+                </header>
+
+                @if (Model.EmailFailureReservations.Any())
+                {
+                    <div class="service-work-list">
+                        @foreach (var reservation in Model.EmailFailureReservations)
+                        {
+                            <a asp-controller="AdminReservations"
+                               asp-action="Details"
+                               asp-route-id="@reservation.Id">
+                                <strong>@reservation.ReservationTime.ToString(@"hh\:mm")</strong>
+                                <span>@reservation.FullName</span>
+                                <small>@reservation.EmailStatus / resend from details</small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>Guest email delivery looks clean.</p>
+                }
+            </div>
+
+            <div class="service-work-panel">
+                <header>
+                    <span>Event covers</span>
+                    <a asp-controller="AdminEvents"
+                       asp-action="Index">
+                        Event board
+                    </a>
+                </header>
+
+                @if (Model.TodayEventBookings.Any())
+                {
+                    <div class="service-work-list">
+                        @foreach (var eventSummary in Model.TodayEventBookings)
+                        {
+                            <a asp-controller="AdminEvents"
+                               asp-action="Bookings"
+                               asp-route-id="@eventSummary.EventId">
+                                <strong>
+                                    @(eventSummary.StartTime.HasValue
+                                        ? eventSummary.StartTime.Value.ToString(@"hh\:mm")
+                                        : "--")
+                                </strong>
+                                <span>@eventSummary.Title</span>
+                                <small>
+                                    @eventSummary.ReservationsCount bookings / @eventSummary.GuestsCount guests
+                                </small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>No event-linked reservations for today.</p>
+                }
+            </div>
+        </div>
     </section>
 
     <section class="attention-board">
@@ -249,153 +398,6 @@
 
     </section>
 
-    <div class="chaos-grid">
-
-        <a asp-controller="AdminReservations"
-           asp-action="Index"
-           asp-route-status="Pending"
-           class="control-panel panel-pending">
-
-            <div class="panel-number">
-                @pendingReservationsText
-            </div>
-
-            <div>
-                <span class="panel-kicker">
-                    Waiting for a decision
-                </span>
-
-                <h2 class="panel-title">
-                    Pending Reservations
-                </h2>
-
-                <p class="panel-copy">
-                    @Model.ReservationsCount total reservation requests
-                    currently stored in the system.
-                </p>
-
-                <div class="panel-action">
-                    Review requests →
-                </div>
-            </div>
-
-        </a>
-
-        <a asp-controller="AdminEvents"
-           asp-action="Index"
-           class="control-panel panel-events">
-
-            <div class="panel-small-number">
-                @Model.EventsCount
-            </div>
-
-            <div>
-                <span class="panel-kicker">
-                    Live board
-                </span>
-
-                <h2 class="panel-title">
-                    Events & Nights
-                </h2>
-
-                <p class="panel-copy">
-                    Create, edit, activate or kill upcoming Rebel nights.
-                </p>
-
-                <div class="panel-action">
-                    Manage events →
-                </div>
-            </div>
-
-        </a>
-
-        <a asp-controller="Product"
-           asp-action="Index"
-           class="control-panel panel-menu">
-
-            <div class="panel-small-number">
-                @Model.ProductsCount
-            </div>
-
-            <div>
-                <span class="panel-kicker">
-                    Kitchen and bar
-                </span>
-
-                <h2 class="panel-title">
-                    Menu Mutations
-                </h2>
-
-                <p class="panel-copy">
-                    Burgers, wings, beer, shots and everything in between.
-                </p>
-
-                <div class="panel-action">
-                    Edit the menu →
-                </div>
-            </div>
-
-        </a>
-
-        <a asp-controller="Category"
-           asp-action="Index"
-           class="control-panel panel-categories">
-
-            <div class="panel-small-number">
-                @Model.CategoriesCount
-            </div>
-
-            <div>
-                <span class="panel-kicker">
-                    Structure
-                </span>
-
-                <h2 class="panel-title">
-                    Categories
-                </h2>
-
-                <p class="panel-copy">
-                    Keep the menu organised.
-                </p>
-
-                <div class="panel-action">
-                    Open →
-                </div>
-            </div>
-
-        </a>
-
-        <a asp-controller="Home"
-           asp-action="Index"
-           target="_blank"
-           class="control-panel panel-website">
-
-            <div class="panel-small-number">
-                ↗
-            </div>
-
-            <div>
-                <span class="panel-kicker">
-                    Public side
-                </span>
-
-                <h2 class="panel-title">
-                    View Website
-                </h2>
-
-                <p class="panel-copy">
-                    See what the guests see.
-                </p>
-
-                <div class="panel-action">
-                    Open site ↗
-                </div>
-            </div>
-
-        </a>
-
-    </div>
-
     <section class="upcoming-section">
 
         <div class="upcoming-header">
@@ -414,7 +416,7 @@
                asp-action="Index"
                class="upcoming-view-all">
 
-                View all events →
+                View all events ->
             </a>
 
         </div>
@@ -471,7 +473,7 @@
                             </p>
 
                             <span class="upcoming-open">
-                                Open event →
+                                Open event ->
                             </span>
 
                         </div>

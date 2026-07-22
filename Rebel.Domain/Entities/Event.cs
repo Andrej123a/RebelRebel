@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,5 +26,15 @@ namespace Rebel.Domain.Entities
 
         public TimeSpan? EndTime { get; set; }
         public EventType EventType { get; set; }
+
+        [Range(1, 1000)]
+        public int? MaxReservations { get; set; }
+
+        [Range(1, 5000)]
+        public int? MaxGuests { get; set; }
+
+        public bool IsDeleted { get; set; }
+
+        public DateTime? DeletedAtUtc { get; set; }
     }
 }

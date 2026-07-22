@@ -105,10 +105,76 @@
                 <h2>@sectionTitle</h2>
             </div>
 
-            <p class="rr-menu-intro-text">
-                @sectionMessage
-            </p>
-        </div>
+        <p class="rr-menu-intro-text">
+            @sectionMessage
+        </p>
+    </div>
+
+        <section class="rr-menu-tools"
+                 aria-label="Menu search and filters">
+            <div class="rr-menu-search">
+                <label for="menuSearchInput">
+                    Find your order
+                </label>
+                <input id="menuSearchInput"
+                       type="search"
+                       placeholder="Search burgers, beer, spicy, vegan..."
+                       autocomplete="off" />
+            </div>
+
+            <div class="rr-menu-chip-row"
+                 aria-label="Menu tag filters">
+                <button type="button"
+                        class="rr-menu-chip active"
+                        data-filter="all">
+                    All
+                </button>
+                <button type="button"
+                        class="rr-menu-chip"
+                        data-filter="available">
+                    Available
+                </button>
+                <button type="button"
+                        class="rr-menu-chip"
+                        data-filter="popular">
+                    Popular
+                </button>
+                <button type="button"
+                        class="rr-menu-chip"
+                        data-filter="spicy">
+                    Spicy
+                </button>
+                <button type="button"
+                        class="rr-menu-chip"
+                        data-filter="vegan">
+                    Vegan
+                </button>
+                <button type="button"
+                        class="rr-menu-chip"
+                        data-filter="vegetarian">
+                    Vegetarian
+                </button>
+                <button type="button"
+                        class="rr-menu-chip"
+                        data-filter="glutenfree">
+                    Gluten-free
+                </button>
+            </div>
+
+            <p id="menuFilterSummary"
+               class="rr-menu-filter-summary"></p>
+
+            <div id="menuFilterEmpty"
+                 class="rr-menu-filter-empty"
+                 hidden>
+                <strong>No matching menu items.</strong>
+                <span>Try another search or clear the filters.</span>
+                <button type="button"
+                        id="menuFilterClear">
+                    Clear filters
+                </button>
+            </div>
+        </section>
 
         @if (!menuGroups.Any())
         {
@@ -146,7 +212,30 @@
 
                         @foreach (var product in group)
                         {
-                            <div class="col-md-6 col-xl-4">
+                            var searchableText =
+                                $"{product.Name} {product.Description} {group.Key}"
+                                    .ToLowerInvariant()
+                                    .Replace("\"", string.Empty);
+
+                            var tagData = string.Join(
+                                " ",
+                                new[]
+                                {
+                                    product.IsAvailable ? "available" : "unavailable",
+                                    product.IsPopular ? "popular" : "",
+                                    product.IsSpicy ? "spicy" : "",
+                                    product.IsVegetarian ? "vegetarian" : "",
+                                    product.IsVegan ? "vegan" : "",
+                                    product.IsGlutenFree ? "glutenfree" : "",
+                                    product.ContainsNuts ? "nuts" : "",
+                                    product.IsLimited ? "limited" : "",
+                                    product.IsPromo ? "promo" : ""
+                                }.Where(tag => !string.IsNullOrWhiteSpace(tag)));
+
+                            <div class="col-md-6 col-xl-4 rr-menu-product-shell"
+                                 data-menu-item
+                                 data-search="@searchableText"
+                                 data-tags="@tagData">
 
                                 <article class="rr-menu-card h-100 @(!product.IsAvailable ? "is-unavailable" : "")">
 
@@ -205,12 +294,54 @@
                                             @product.Name
                                         </h4>
 
+                                        <div class="rr-menu-tags">
+                                            @if (product.IsPopular)
+                                            {
+                                                <span><i>*</i>Popular</span>
+                                            }
+
+                                            @if (product.IsSpicy)
+                                            {
+                                                <span><i>🌶</i>Spicy</span>
+                                            }
+
+                                            @if (product.IsVegetarian)
+                                            {
+                                                <span><i>☘</i>Vegetarian</span>
+                                            }
+
+                                            @if (product.IsVegan)
+                                            {
+                                                <span><i>🌿</i>Vegan</span>
+                                            }
+
+                                            @if (product.IsGlutenFree)
+                                            {
+                                                <span><i>GF</i>Gluten free</span>
+                                            }
+
+                                            @if (product.ContainsNuts)
+                                            {
+                                                <span class="warning"><i>!</i>Contains nuts</span>
+                                            }
+
+                                            @if (product.IsLimited)
+                                            {
+                                                <span><i>#</i>Limited</span>
+                                            }
+
+                                            @if (product.IsPromo)
+                                            {
+                                                <span><i>%</i>Promo</span>
+                                            }
+                                        </div>
+
                                         <p class="rr-menu-card-description">
                                             @product.Description
                                         </p>
 
                                         <div class="rr-menu-card-footer">
-                                            <span>REBEL REBEL PUB</span>
+                                            <span>REBEL REBEL BY FAT KITCHEN</span>
                                             <span>✦</span>
                                         </div>
                                     </div>
@@ -229,3 +360,100 @@
 
     </main>
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const searchInput =
+                document.getElementById("menuSearchInput");
+            const summary =
+                document.getElementById("menuFilterSummary");
+            const emptyState =
+                document.getElementById("menuFilterEmpty");
+            const clearButton =
+                document.getElementById("menuFilterClear");
+            const chips =
+                Array.from(document.querySelectorAll(".rr-menu-chip"));
+            const items =
+                Array.from(document.querySelectorAll("[data-menu-item]"));
+            const categories =
+                Array.from(document.querySelectorAll(".rr-menu-category"));
+
+            if (!searchInput || !items.length) {
+                return;
+            }
+
+            let activeFilter = "all";
+
+            const applyFilters = () => {
+                const query =
+                    searchInput.value.trim().toLowerCase();
+
+                let visibleCount = 0;
+
+                items.forEach((item) => {
+                    const matchesSearch =
+                        !query ||
+                        item.dataset.search.includes(query);
+                    const matchesFilter =
+                        activeFilter === "all" ||
+                        item.dataset.tags.split(" ").includes(activeFilter);
+                    const isVisible =
+                        matchesSearch && matchesFilter;
+
+                    item.hidden = !isVisible;
+
+                    if (isVisible) {
+                        visibleCount++;
+                    }
+                });
+
+                categories.forEach((category) => {
+                    const hasVisibleItems =
+                        category.querySelector("[data-menu-item]:not([hidden])") !== null;
+
+                    category.hidden = !hasVisibleItems;
+                });
+
+                if (summary) {
+                    summary.textContent =
+                        visibleCount === 1
+                            ? "1 item found"
+                            : `${visibleCount} items found`;
+                }
+
+                if (emptyState) {
+                    emptyState.hidden = visibleCount > 0;
+                }
+            };
+
+            chips.forEach((chip) => {
+                chip.addEventListener("click", () => {
+                    activeFilter = chip.dataset.filter ?? "all";
+
+                    chips.forEach((item) => {
+                        item.classList.toggle("active", item === chip);
+                    });
+
+                    applyFilters();
+                });
+            });
+
+            searchInput.addEventListener("input", applyFilters);
+            clearButton?.addEventListener("click", () => {
+                searchInput.value = "";
+                activeFilter = "all";
+
+                chips.forEach((item) => {
+                    item.classList.toggle(
+                        "active",
+                        item.dataset.filter === "all");
+                });
+
+                applyFilters();
+                searchInput.focus();
+            });
+            applyFilters();
+        })();
+    </script>
+}

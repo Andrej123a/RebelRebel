@@ -1,0 +1,175 @@
+@model AdminArchiveViewModel
+
+@{
+    ViewData["Title"] = "Archive";
+    Layout = "_AdminLayout";
+}
+
+<section class="archive-admin-page">
+    <header class="archive-hero">
+        <div>
+            <span class="admin-section-kicker">Recovery Desk</span>
+            <h1>Archive</h1>
+            <p>
+                Restore menu items, events, reservations and sections that were hidden from active screens.
+            </p>
+        </div>
+
+        <div class="archive-hero-meter">
+            <span>@Model.TotalItems</span>
+            <strong>archived items</strong>
+        </div>
+    </header>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="admin-alert success">
+            @successMessage
+        </div>
+    }
+
+    @if (Model.TotalItems == 0)
+    {
+        <div class="archive-empty">
+            <span>ALL CLEAR</span>
+            <strong>No archived records yet.</strong>
+            <p>When staff archive something by mistake, it will appear here for recovery.</p>
+        </div>
+    }
+    else
+    {
+        <div class="archive-grid">
+            <article class="archive-section">
+                <header>
+                    <span>01</span>
+                    <h2>Menu Items</h2>
+                    <strong>@Model.Products.Count</strong>
+                </header>
+
+                @if (!Model.Products.Any())
+                {
+                    <p class="archive-muted">No archived menu items.</p>
+                }
+                else
+                {
+                    <div class="archive-list">
+                        @foreach (var product in Model.Products)
+                        {
+                            <div class="archive-row">
+                                <div>
+                                    <strong>@product.Name</strong>
+                                    <span>@product.Category?.Name · @product.Price.ToString("0.00") MKD</span>
+                                </div>
+
+                                <form asp-action="RestoreProduct" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@product.Id" />
+                                    <button type="submit">Restore</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </article>
+
+            <article class="archive-section">
+                <header>
+                    <span>02</span>
+                    <h2>Events</h2>
+                    <strong>@Model.Events.Count</strong>
+                </header>
+
+                @if (!Model.Events.Any())
+                {
+                    <p class="archive-muted">No archived events.</p>
+                }
+                else
+                {
+                    <div class="archive-list">
+                        @foreach (var eventItem in Model.Events)
+                        {
+                            <div class="archive-row">
+                                <div>
+                                    <strong>@eventItem.Title</strong>
+                                    <span>@eventItem.Date.ToString("dd MMM yyyy") · @(eventItem.StartTime?.ToString(@"hh\:mm") ?? "time TBC")</span>
+                                </div>
+
+                                <form asp-action="RestoreEvent" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@eventItem.Id" />
+                                    <button type="submit">Restore</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </article>
+
+            <article class="archive-section">
+                <header>
+                    <span>03</span>
+                    <h2>Reservations</h2>
+                    <strong>@Model.Reservations.Count</strong>
+                </header>
+
+                @if (!Model.Reservations.Any())
+                {
+                    <p class="archive-muted">No archived reservations.</p>
+                }
+                else
+                {
+                    <div class="archive-list">
+                        @foreach (var reservation in Model.Reservations)
+                        {
+                            <div class="archive-row">
+                                <div>
+                                    <strong>@reservation.FullName</strong>
+                                    <span>@reservation.ReservationDate.ToString("dd MMM yyyy") · @reservation.ReservationTime.ToString(@"hh\:mm") · @reservation.NumberOfGuests guests</span>
+                                </div>
+
+                                <form asp-action="RestoreReservation" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@reservation.Id" />
+                                    <button type="submit">Restore</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </article>
+
+            <article class="archive-section">
+                <header>
+                    <span>04</span>
+                    <h2>Menu Sections</h2>
+                    <strong>@Model.Categories.Count</strong>
+                </header>
+
+                @if (!Model.Categories.Any())
+                {
+                    <p class="archive-muted">No archived menu sections.</p>
+                }
+                else
+                {
+                    <div class="archive-list">
+                        @foreach (var category in Model.Categories)
+                        {
+                            <div class="archive-row">
+                                <div>
+                                    <strong>@category.Name</strong>
+                                    <span>@category.Type</span>
+                                </div>
+
+                                <form asp-action="RestoreCategory" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@category.Id" />
+                                    <button type="submit">Restore</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </article>
+        </div>
+    }
+</section>

@@ -2,37 +2,129 @@
     ViewData["Title"] = "Reservation Sent";
 }
 
-<section class="py-5 text-white">
-    <div class="container text-center"
-         style="max-width: 760px;">
+<section class="rr-booking-page">
+    <div class="container">
+        <div class="rr-confirmation-panel">
+            <div class="rr-confirmation-top">
+                <span class="rr-confirmation-mark">OK</span>
 
-        <div class="bg-dark border border-warning rounded-4 p-5 shadow-lg">
+                <div>
+                    <p class="rr-booking-kicker">
+                        Request received
+                    </p>
 
-            <div class="display-1 mb-3">
-                ✓
+                    <h1>
+                        Thanks, @ViewBag.ReservationName.
+                    </h1>
+
+                    <p>
+                        Your reservation request is pending approval. Keep your code safe so you can check the status or cancel if plans change.
+                    </p>
+                </div>
             </div>
 
-            <p class="text-warning fw-bold text-uppercase">
-                Request received
-            </p>
+            <div class="rr-confirmation-status">
+                <span>Current status</span>
+                <strong>Pending staff approval</strong>
+                <p>We will confirm once the team checks the floor.</p>
+            </div>
 
-            <h1 class="fw-bold mb-3">
-                Thanks, @ViewBag.ReservationName!
-            </h1>
+            <div class="rr-reservation-code">
+                <span>Reservation Code</span>
+                <div class="rr-reservation-code-line">
+                    <strong id="reservationCodeValue">@ViewBag.ReservationCode</strong>
+                    <button type="button"
+                            id="copyReservationCode"
+                            data-code="@ViewBag.ReservationCode">
+                        Copy
+                    </button>
+                </div>
+                <p>No account needed. This code is enough to find or cancel your reservation.</p>
+            </div>
 
-            <p class="lead text-secondary mb-4">
-                Your reservation request has been sent successfully.
-                Our team will review it and you will receive an email
-                once it has been approved or rejected.
-            </p>
+            <dl class="rr-reservation-summary">
+                <div>
+                    <dt>Date</dt>
+                    <dd>@ViewBag.ReservationDate</dd>
+                </div>
 
-            <a asp-controller="Home"
-               asp-action="Index"
-               class="btn btn-outline-warning btn-lg">
-                Back to Home
-            </a>
+                <div>
+                    <dt>Time</dt>
+                    <dd>@ViewBag.ReservationTime</dd>
+                </div>
 
+                <div>
+                    <dt>Guests</dt>
+                    <dd>@ViewBag.ReservationGuests</dd>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(ViewBag.ReservationEvent as string))
+                {
+                    <div>
+                        <dt>Event</dt>
+                        <dd>@ViewBag.ReservationEvent</dd>
+                    </div>
+                }
+            </dl>
+
+            <div class="rr-confirmation-next">
+                <span>What happens next</span>
+                <ol>
+                    <li>Staff checks the floor and table capacity.</li>
+                    <li>Your request is approved or declined by the team.</li>
+                    <li>Use your code anytime to track or cancel.</li>
+                </ol>
+            </div>
+
+            <div class="rr-confirmation-actions">
+                <a asp-controller="Reservations"
+                   asp-action="Lookup">
+                    Find My Reservation
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Index">
+                    Back Home
+                </a>
+            </div>
         </div>
-
     </div>
 </section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const button = document.getElementById("copyReservationCode");
+
+            if (!button) {
+                return;
+            }
+
+            button.addEventListener("click", async () => {
+                const code = button.dataset.code ?? "";
+
+                try {
+                    await navigator.clipboard.writeText(code);
+                    button.textContent = "Copied";
+                } catch {
+                    const codeElement =
+                        document.getElementById("reservationCodeValue");
+
+                    if (codeElement) {
+                        const range = document.createRange();
+                        range.selectNodeContents(codeElement);
+                        const selection = window.getSelection();
+                        selection?.removeAllRanges();
+                        selection?.addRange(range);
+                    }
+
+                    button.textContent = "Selected";
+                }
+
+                window.setTimeout(() => {
+                    button.textContent = "Copy";
+                }, 1800);
+            });
+        })();
+    </script>
+}

@@ -13,6 +13,7 @@
     var approvedReservations = (int)(ViewBag.ApprovedReservations ?? 0);
     var arrivedReservations = (int)(ViewBag.ArrivedReservations ?? 0);
     var noShowReservations = (int)(ViewBag.NoShowReservations ?? 0);
+    var cancelledReservations = (int)(ViewBag.CancelledReservations ?? 0);
     var slotCapacity = (int)(ViewBag.SlotCapacity ?? 40);
     var slotLoads =
         ViewBag.SlotLoads as Dictionary<TimeSpan, int>
@@ -30,6 +31,7 @@
             ReservationStatus.Approved => "is-approved",
             ReservationStatus.Arrived => "is-arrived",
             ReservationStatus.NoShow => "is-no-show",
+            ReservationStatus.Cancelled => "is-cancelled",
             ReservationStatus.Rejected => "is-rejected",
             _ => string.Empty
         };
@@ -43,6 +45,7 @@
             ReservationStatus.Approved => "Approved",
             ReservationStatus.Arrived => "Arrived",
             ReservationStatus.NoShow => "No-show",
+            ReservationStatus.Cancelled => "Cancelled",
             ReservationStatus.Rejected => "Rejected",
             _ => status.ToString()
         };
@@ -253,14 +256,18 @@
     }
 
     .tonight-reservation {
+        position: relative;
+        overflow: hidden;
         display: grid;
         grid-template-columns: 110px minmax(180px, 1.4fr) minmax(160px, 1fr) auto;
         align-items: center;
         gap: 20px;
-        padding: 20px;
-        border: 1px solid #3a3e44;
+        padding: 22px 24px;
+        border: 1px solid rgba(255, 255, 255, 0.13);
         border-left: 5px solid #767b83;
-        background: var(--tonight-surface);
+        background:
+            linear-gradient(135deg, rgba(244, 196, 0, 0.035), transparent 42%),
+            #141517;
     }
 
         .tonight-reservation.is-pending {
@@ -273,12 +280,23 @@
 
         .tonight-reservation.is-arrived {
             border-left-color: var(--tonight-green);
-            background: linear-gradient( 90deg, rgba(85, 200, 117, 0.08), transparent 35% ), var(--tonight-surface);
+            background:
+                linear-gradient(90deg, rgba(85, 200, 117, 0.14), transparent 34%),
+                #141817;
         }
 
         .tonight-reservation.is-no-show {
             border-left-color: var(--tonight-red);
-            opacity: 0.72;
+            background:
+                repeating-linear-gradient(
+                    -45deg,
+                    rgba(230, 43, 57, 0.08) 0,
+                    rgba(230, 43, 57, 0.08) 1px,
+                    transparent 1px,
+                    transparent 11px
+                ),
+                #121315;
+            opacity: 0.78;
         }
 
     .tonight-time {
@@ -346,7 +364,7 @@
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 8px;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
@@ -354,9 +372,10 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 30px;
-        padding: 0 11px;
-        border: 1px solid currentColor;
+        min-height: 32px;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: #0a0a0b;
         font-size: 10px;
         font-weight: 900;
         letter-spacing: 0.1em;
@@ -372,23 +391,54 @@
         }
 
         .tonight-status.is-arrived {
+            border-color: rgba(85, 200, 117, 0.45);
+            background: rgba(85, 200, 117, 0.12);
             color: var(--tonight-green);
         }
 
         .tonight-status.is-no-show,
         .tonight-status.is-rejected {
+            border-color: rgba(230, 43, 57, 0.45);
+            background: rgba(230, 43, 57, 0.1);
             color: var(--tonight-red);
         }
 
+    .tonight-locked-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #9aa0a8;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+        .tonight-locked-note::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            background: currentColor;
+            box-shadow: 0 0 14px currentColor;
+        }
+
+        .tonight-locked-note.is-arrived {
+            color: var(--tonight-green);
+        }
+
+        .tonight-locked-note.is-closed {
+            color: #777d86;
+        }
+
     .tonight-button {
-        min-height: 38px;
-        padding: 0 13px;
-        border: 1px solid #52565c;
-        background: transparent;
+        min-height: 42px;
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #0b0c0d;
         color: #fff;
         font-size: 10px;
         font-weight: 900;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.1em;
         text-decoration: none;
         text-transform: uppercase;
         cursor: pointer;
@@ -396,13 +446,15 @@
     }
 
         .tonight-button:hover {
-            border-color: #fff;
-            color: #fff;
+            border-color: var(--tonight-yellow);
+            color: var(--tonight-yellow);
+            transform: translateY(-1px);
         }
 
         .tonight-button.arrived {
-            border-color: var(--tonight-green);
-            color: var(--tonight-green);
+            border-color: rgba(85, 200, 117, 0.55);
+            background: rgba(85, 200, 117, 0.12);
+            color: #7ee69b;
         }
 
             .tonight-button.arrived:hover {
@@ -411,8 +463,9 @@
             }
 
         .tonight-button.no-show {
-            border-color: var(--tonight-red);
-            color: var(--tonight-red);
+            border-color: rgba(230, 43, 57, 0.58);
+            background: rgba(230, 43, 57, 0.09);
+            color: #ff4a58;
         }
 
             .tonight-button.no-show:hover {
@@ -564,20 +617,6 @@
         </div>
 
     </section>
-
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success mb-4">
-            @TempData["SuccessMessage"]
-        </div>
-    }
-
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger mb-4">
-            @TempData["ErrorMessage"]
-        </div>
-    }
 
     <section class="tonight-summary">
 
@@ -776,26 +815,10 @@
 
                                     <button type="submit"
                                             class="tonight-button arrived">
-                                        Arrived
+                                        Mark arrived
                                     </button>
                                 </form>
 
-                                <form asp-controller="AdminReservations"
-                                      asp-action="MarkNoShow"
-                                      asp-route-id="@reservation.Id"
-                                      method="post">
-                                    @Html.AntiForgeryToken()
-
-                                    <button type="submit"
-                                            class="tonight-button no-show">
-                                        No-show
-                                    </button>
-                                </form>
-                            }
-
-                            @if (reservation.Status ==
-                                                ReservationStatus.Arrived)
-                            {
                                 <form asp-controller="AdminReservations"
                                       asp-action="MarkNoShow"
                                       asp-route-id="@reservation.Id"
@@ -810,19 +833,19 @@
                             }
 
                             @if (reservation.Status ==
+                                                ReservationStatus.Arrived)
+                            {
+                                <span class="tonight-locked-note is-arrived">
+                                    Checked in
+                                </span>
+                            }
+
+                            @if (reservation.Status ==
                                                 ReservationStatus.NoShow)
                             {
-                                <form asp-controller="AdminReservations"
-                                      asp-action="MarkArrived"
-                                      asp-route-id="@reservation.Id"
-                                      method="post">
-                                    @Html.AntiForgeryToken()
-
-                                    <button type="submit"
-                                            class="tonight-button arrived">
-                                        Mark arrived
-                                    </button>
-                                </form>
+                                <span class="tonight-locked-note is-closed">
+                                    Closed
+                                </span>
                             }
 
                         </div>

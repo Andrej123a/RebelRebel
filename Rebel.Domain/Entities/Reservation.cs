@@ -7,6 +7,14 @@ namespace Rebel.Domain.Entities
     {
         public Guid Id { get; set; }
 
+        [Required]
+        [StringLength(16)]
+        public string ReservationCode { get; set; } = null!;
+
+        [Required]
+        [StringLength(30)]
+        public string EmailStatus { get; set; } = "NotSent";
+
         [Required(ErrorMessage = "Full name is required.")]
         [StringLength(100)]
         public string FullName { get; set; } = null!;
@@ -45,6 +53,11 @@ namespace Rebel.Domain.Entities
 
         public DateTime? RespondedAtUtc { get; set; }
 
+        public DateTime? LastEmailSentAtUtc { get; set; }
+
+        [StringLength(500)]
+        public string? LastEmailError { get; set; }
+
         [StringLength(500)]
         public string? AdminNote { get; set; }
 
@@ -57,5 +70,12 @@ namespace Rebel.Domain.Entities
         public Guid? EventId { get; set; }
 
         public Event? Event { get; set; }
+
+        public bool IsDeleted { get; set; }
+
+        public DateTime? DeletedAtUtc { get; set; }
+
+        public ICollection<ReservationActivity> Activities { get; set; }
+            = new List<ReservationActivity>();
     }
 }

@@ -21,6 +21,26 @@ namespace Rebel.Domain.Entities
 
         public bool IsAvailable { get; set; } = true;
 
+        public bool IsPopular { get; set; }
+
+        public bool IsSpicy { get; set; }
+
+        public bool IsVegetarian { get; set; }
+
+        public bool IsVegan { get; set; }
+
+        public bool IsGlutenFree { get; set; }
+
+        public bool ContainsNuts { get; set; }
+
+        public bool IsLimited { get; set; }
+
+        public bool IsPromo { get; set; }
+
+        public bool IsDeleted { get; set; }
+
+        public DateTime? DeletedAtUtc { get; set; }
+
         [Required]
         public Guid CategoryId { get; set; }
 

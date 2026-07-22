@@ -56,6 +56,7 @@
             groupNumber++;
 
             <details class="product-category-group"
+                     data-group-key="@group.Key"
                      data-product-group>
 
                 <summary class="product-category-summary">
@@ -115,6 +116,48 @@
                                     <div class="product-row-copy">
                                         <small>Menu item</small>
                                         <strong>@item.Name</strong>
+
+                                        <div class="product-tag-list">
+                                            @if (item.IsPopular)
+                                            {
+                                                <span><i>*</i>Popular</span>
+                                            }
+
+                                            @if (item.IsSpicy)
+                                            {
+                                                <span><i>🌶</i>Spicy</span>
+                                            }
+
+                                            @if (item.IsVegetarian)
+                                            {
+                                                <span><i>☘</i>Vegetarian</span>
+                                            }
+
+                                            @if (item.IsVegan)
+                                            {
+                                                <span><i>🌿</i>Vegan</span>
+                                            }
+
+                                            @if (item.IsGlutenFree)
+                                            {
+                                                <span><i>GF</i>Gluten free</span>
+                                            }
+
+                                            @if (item.ContainsNuts)
+                                            {
+                                                <span class="warning"><i>!</i>Nuts</span>
+                                            }
+
+                                            @if (item.IsLimited)
+                                            {
+                                                <span><i>#</i>Limited</span>
+                                            }
+
+                                            @if (item.IsPromo)
+                                            {
+                                                <span><i>%</i>Promo</span>
+                                            }
+                                        </div>
                                     </div>
                                 </div>
 
@@ -147,30 +190,19 @@
                                 </div>
 
                                 <div class="product-row-actions-wrap">
-                                    <details class="product-row-actions">
-                                        <summary aria-label="Actions for @item.Name">
-                                            <span></span>
-                                            <span></span>
-                                            <span></span>
-                                        </summary>
+                                    <a asp-controller="Product"
+                                       asp-action="Edit"
+                                       asp-route-id="@item.Id"
+                                       class="admin-row-action is-primary">
+                                        Edit
+                                    </a>
 
-                                        <div class="product-row-actions-menu">
-                                            <a asp-controller="Product"
-                                               asp-action="Edit"
-                                               asp-route-id="@item.Id">
-                                                <span>Edit</span>
-                                                <small>Update product</small>
-                                            </a>
-
-                                            <a asp-controller="Product"
-                                               asp-action="Delete"
-                                               asp-route-id="@item.Id"
-                                               class="danger">
-                                                <span>Delete</span>
-                                                <small>Remove product</small>
-                                            </a>
-                                        </div>
-                                    </details>
+                                    <a asp-controller="Product"
+                                       asp-action="Delete"
+                                       asp-route-id="@item.Id"
+                                       class="admin-row-action is-danger">
+                                        Archive
+                                    </a>
                                 </div>
 
                             </article>

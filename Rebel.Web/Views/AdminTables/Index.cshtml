@@ -165,14 +165,28 @@
 
                                 <div class="table-admin-card-footer">
                                     <span>
-                                        Used during approval
+                                        @(table.IsActive ? "Available for approval" : "Hidden from approval")
                                     </span>
 
-                                    <a asp-controller="AdminTables"
-                                       asp-action="Edit"
-                                       asp-route-id="@table.Id">
-                                        Edit
-                                    </a>
+                                    <div class="table-card-actions">
+                                        <a asp-controller="AdminTables"
+                                           asp-action="Edit"
+                                           asp-route-id="@table.Id">
+                                            Edit
+                                        </a>
+
+                                        <form asp-controller="AdminTables"
+                                              asp-action="ToggleActive"
+                                              asp-route-id="@table.Id"
+                                              method="post">
+                                            @Html.AntiForgeryToken()
+
+                                            <button type="submit"
+                                                    class="@(!table.IsActive ? "is-activate" : "")">
+                                                @(table.IsActive ? "Deactivate" : "Activate")
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </article>
                         }

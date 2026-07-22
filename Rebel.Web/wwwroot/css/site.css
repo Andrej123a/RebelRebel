@@ -1330,6 +1330,118 @@ textarea.form-control {
     line-height: 1.7;
 }
 
+.rr-menu-tools {
+    display: grid;
+    gap: 14px;
+    margin: -46px 0 56px;
+    padding: 16px;
+    background:
+        linear-gradient(110deg, rgba(244, 196, 0, 0.08), transparent 64%),
+        #101010;
+    border: 1px solid rgba(244, 196, 0, 0.26);
+}
+
+.rr-menu-search {
+    display: grid;
+    gap: 8px;
+}
+
+    .rr-menu-search label {
+        color: var(--rr-yellow);
+        font-size: 0.64rem;
+        font-weight: 900;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+    }
+
+    .rr-menu-search input {
+        min-height: 50px;
+        padding: 0 14px;
+        color: var(--rr-white);
+        background: #080808;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+        .rr-menu-search input:focus {
+            outline: 0;
+            border-color: var(--rr-yellow);
+            box-shadow: 0 0 0 3px rgba(244, 196, 0, 0.13);
+        }
+
+.rr-menu-chip-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rr-menu-chip {
+    min-height: 40px;
+    padding: 0 12px;
+    color: #a5a5a5;
+    background: #080808;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+}
+
+    .rr-menu-chip:hover,
+    .rr-menu-chip.active {
+        color: #0b0b0b;
+        background: var(--rr-yellow);
+        border-color: var(--rr-yellow);
+    }
+
+.rr-menu-filter-summary {
+    min-height: 20px;
+    margin: 0;
+    color: #8f8f8f;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.rr-menu-filter-empty {
+    display: grid;
+    gap: 8px;
+    padding: 18px;
+    background: rgba(200, 32, 45, 0.08);
+    border: 1px dashed rgba(200, 32, 45, 0.38);
+}
+
+    .rr-menu-filter-empty[hidden] {
+        display: none;
+    }
+
+    .rr-menu-filter-empty strong {
+        color: var(--rr-white);
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.9rem;
+        font-weight: 400;
+        line-height: 0.95;
+        text-transform: uppercase;
+    }
+
+    .rr-menu-filter-empty span {
+        color: #b9b9b9;
+    }
+
+    .rr-menu-filter-empty button {
+        width: fit-content;
+        min-height: 40px;
+        margin-top: 4px;
+        padding: 0 13px;
+        color: #0b0b0b;
+        background: var(--rr-yellow);
+        border: 1px solid var(--rr-yellow);
+        font-size: 0.62rem;
+        font-weight: 900;
+        letter-spacing: 1.1px;
+        text-transform: uppercase;
+    }
+
 /* =========================================================
    CATEGORY
 ========================================================= */
@@ -1674,6 +1786,10 @@ textarea.form-control {
         gap: 20px;
     }
 
+    .rr-menu-tools {
+        margin-top: -30px;
+    }
+
     .rr-category-heading {
         grid-template-columns: 78px minmax(0, 1fr);
     }
@@ -1742,6 +1858,20 @@ textarea.form-control {
 
     .rr-menu-intro {
         margin-bottom: 55px;
+    }
+
+    .rr-menu-tools {
+        margin-bottom: 42px;
+        padding: 13px;
+    }
+
+    .rr-menu-chip-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rr-menu-chip {
+        width: 100%;
     }
 
     .rr-menu-intro-text {
@@ -2043,5 +2173,1420 @@ section.py-5.text-white .rounded-4 {
 
     .home-events .btn-outline-warning {
         width: 100%;
+    }
+}
+
+/* PUBLIC BOOKING */
+
+.rr-booking-page {
+    padding: 74px 0 95px;
+    color: #eee9df;
+    background:
+        linear-gradient(120deg, rgba(244, 196, 0, 0.08), transparent 44%),
+        #080808;
+}
+
+.rr-menu-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 0 0 12px;
+}
+
+    .rr-menu-tags span {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 7px;
+        color: #f4c400;
+        background: rgba(244, 196, 0, 0.08);
+        border: 1px solid rgba(244, 196, 0, 0.32);
+        font-size: 0.58rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+        .rr-menu-tags span i {
+            display: inline-flex;
+            min-width: 14px;
+            justify-content: center;
+            font-style: normal;
+            line-height: 1;
+        }
+
+    .rr-menu-tags span.warning {
+        color: #ff6873;
+        background: rgba(200, 32, 45, 0.1);
+        border-color: rgba(200, 32, 45, 0.42);
+    }
+
+.rr-error-page {
+    min-height: 68vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 18px;
+    color: #eee9df;
+    background:
+        repeating-linear-gradient(-45deg, rgba(244, 196, 0, 0.06) 0 1px, transparent 1px 13px),
+        #080808;
+}
+
+.rr-error-panel {
+    width: min(780px, 100%);
+    padding: clamp(32px, 6vw, 58px);
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 8px 8px 0 rgba(200, 32, 45, 0.36);
+}
+
+    .rr-error-panel p {
+        margin: 0 0 12px;
+        color: #f4c400;
+        font-size: 0.76rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .rr-error-panel h1 {
+        margin: 0;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(4rem, 9vw, 7rem);
+        line-height: 0.84;
+        text-transform: uppercase;
+    }
+
+    .rr-error-panel > span {
+        display: block;
+        max-width: 560px;
+        margin-top: 18px;
+        color: #a5a5a5;
+        line-height: 1.65;
+    }
+
+.rr-error-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+}
+
+    .rr-error-actions a {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        padding: 0 16px;
+        color: #0b0b0b;
+        background: #f4c400;
+        border: 1px solid #f4c400;
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+        .rr-error-actions a:nth-child(even) {
+            color: #eee9df;
+            background: transparent;
+            border-color: rgba(255, 255, 255, 0.28);
+        }
+
+.rr-error-panel small {
+    display: block;
+    margin-top: 20px;
+    color: #666666;
+    font-size: 0.72rem;
+}
+
+    .rr-booking-page .container {
+        max-width: 1040px;
+    }
+
+.rr-booking-header {
+    max-width: 760px;
+    margin-bottom: 34px;
+}
+
+    .rr-booking-header p:first-child {
+        margin: 0 0 10px;
+        color: #f4c400;
+        font-size: 0.75rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .rr-booking-header h1 {
+        margin: 0;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(4rem, 9vw, 7.5rem);
+        letter-spacing: 2px;
+        line-height: 0.86;
+        text-transform: uppercase;
+    }
+
+    .rr-booking-header p:last-child {
+        max-width: 650px;
+        margin: 18px 0 0;
+        color: #a5a5a5;
+        font-size: 1.05rem;
+        line-height: 1.65;
+    }
+
+.rr-booking-card {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.38fr) minmax(0, 1fr);
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.rr-booking-note {
+    padding: 32px;
+    background:
+        repeating-linear-gradient(-45deg, rgba(244, 196, 0, 0.09) 0 1px, transparent 1px 12px),
+        #15130b;
+    border-right: 1px solid rgba(244, 196, 0, 0.28);
+}
+
+    .rr-booking-note span {
+        color: #c8202d;
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 1.7px;
+        text-transform: uppercase;
+    }
+
+    .rr-booking-note strong {
+        display: block;
+        margin: 12px 0;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 2.6rem;
+        font-weight: 400;
+        line-height: 0.9;
+        text-transform: uppercase;
+    }
+
+    .rr-booking-note p {
+        margin: 0;
+        color: #aaa296;
+        line-height: 1.6;
+    }
+
+.rr-booking-form {
+    padding: 32px;
+}
+
+    .rr-booking-card-upgraded .rr-booking-form {
+        display: grid;
+        gap: 22px;
+    }
+
+    .rr-booking-event-context {
+        margin-bottom: 22px;
+        padding: 15px 16px;
+        background: rgba(244, 196, 0, 0.08);
+        border: 1px solid rgba(244, 196, 0, 0.32);
+    }
+
+        .rr-booking-event-context span,
+        .rr-booking-event-context strong {
+            display: block;
+        }
+
+        .rr-booking-event-context span {
+            color: #c8202d;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+
+        .rr-booking-event-context strong {
+            margin-top: 5px;
+            color: #eee9df;
+            font-size: 1rem;
+        }
+
+        .rr-booking-event-context p {
+            margin: 8px 0 0;
+            color: #aaa296;
+            line-height: 1.45;
+        }
+
+    .rr-booking-form .form-label {
+        color: #f4c400;
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .rr-booking-form .form-control,
+    .rr-booking-form .form-select {
+        min-height: 48px;
+        border-radius: 0;
+        color: #eee9df;
+        background: #090909;
+        border-color: rgba(255, 255, 255, 0.17);
+    }
+
+        .rr-booking-form .form-control:focus,
+        .rr-booking-form .form-select:focus {
+            color: #eee9df;
+            background: #0d0d0d;
+            border-color: #f4c400;
+            box-shadow: 0 0 0 0.2rem rgba(244, 196, 0, 0.16);
+        }
+
+.rr-booking-submit {
+    width: 100%;
+    min-height: 54px;
+    color: #0b0b0b;
+    background: #f4c400;
+    border: 1px solid #f4c400;
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    transition: 0.2s ease;
+}
+
+    .rr-booking-submit:hover {
+        background: #ffe052;
+        transform: translateY(-1px);
+        box-shadow: 5px 5px 0 rgba(200, 32, 45, 0.36);
+    }
+
+.rr-booking-trust-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 28px;
+}
+
+    .rr-booking-trust-list div {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-top: 1px solid rgba(244, 196, 0, 0.18);
+    }
+
+    .rr-booking-trust-list strong {
+        margin: 0;
+        color: #f4c400;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.6rem;
+        line-height: 0.9;
+    }
+
+    .rr-booking-trust-list span {
+        color: #eee9df;
+        font-size: 0.72rem;
+        letter-spacing: 1.1px;
+    }
+
+.rr-booking-step {
+    padding: 18px;
+    background: #0d0d0d;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.rr-booking-step-header {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 13px;
+    margin-bottom: 18px;
+}
+
+    .rr-booking-step-header > span {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        color: #0b0b0b;
+        background: #f4c400;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.6rem;
+        line-height: 1;
+    }
+
+    .rr-booking-step-header h2 {
+        margin: 0;
+        color: #eee9df;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 2.2rem;
+        font-weight: 400;
+        line-height: 0.9;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .rr-booking-step-header p {
+        margin: 7px 0 0;
+        color: #8f8f8f;
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+
+.rr-booking-fields {
+    display: grid;
+    gap: 14px;
+}
+
+    .rr-booking-fields.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rr-booking-fields label,
+    .rr-booking-note-field {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+    }
+
+    .rr-booking-fields span,
+    .rr-booking-note-field span,
+    .rr-time-picker > span {
+        color: #f4c400;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .rr-booking-fields input,
+    .rr-booking-note-field textarea {
+        width: 100%;
+        min-height: 50px;
+        padding: 12px 13px;
+        color: #eee9df;
+        background: #090909;
+        border: 1px solid rgba(255, 255, 255, 0.17);
+        border-radius: 0;
+    }
+
+        .rr-booking-fields input:focus,
+        .rr-booking-note-field textarea:focus {
+            outline: 0;
+            border-color: #f4c400;
+            box-shadow: 0 0 0 3px rgba(244, 196, 0, 0.14);
+        }
+
+    .rr-booking-fields small,
+    .rr-booking-note-field small,
+    .rr-field-validation {
+        min-height: 18px;
+        color: #ff6873;
+        font-size: 0.76rem;
+    }
+
+.rr-time-picker {
+    display: grid;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.rr-time-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+    gap: 9px;
+}
+
+.rr-time-option {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    min-height: 74px;
+    place-items: center;
+    padding: 10px;
+    color: #eee9df;
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+}
+
+    .rr-time-option input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .rr-time-option strong {
+        color: #eee9df;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 2rem;
+        font-weight: 400;
+        line-height: 0.9;
+    }
+
+    .rr-time-option small {
+        color: #8f8f8f;
+        font-size: 0.62rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .rr-time-option:hover,
+    .rr-time-option.selected {
+        border-color: rgba(244, 196, 0, 0.68);
+        background:
+            linear-gradient(135deg, rgba(244, 196, 0, 0.14), transparent 72%),
+            #111111;
+    }
+
+    .rr-time-option.selected {
+        box-shadow: inset 0 0 0 1px rgba(244, 196, 0, 0.2);
+    }
+
+        .rr-time-option.selected small {
+            color: #f4c400;
+        }
+
+    .rr-time-option.disabled {
+        cursor: not-allowed;
+        opacity: 0.48;
+    }
+
+        .rr-time-option.disabled strong {
+            color: #7a7a7a;
+        }
+
+        .rr-time-option.disabled small {
+            color: #ff6873;
+        }
+
+.rr-booking-submit-row {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+    background: rgba(244, 196, 0, 0.07);
+    border: 1px solid rgba(244, 196, 0, 0.26);
+}
+
+    .rr-booking-submit-row p {
+        margin: 0;
+        color: #aaa296;
+        line-height: 1.5;
+    }
+
+.rr-booking-card-classic .rr-booking-note strong {
+    font-size: 2.35rem;
+}
+
+.rr-classic-booking-form {
+    display: grid;
+    gap: 22px;
+}
+
+.rr-classic-form-section {
+    display: grid;
+    gap: 15px;
+}
+
+    .rr-classic-form-section h2 {
+        margin: 0;
+        color: #eee9df;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 2.35rem;
+        font-weight: 400;
+        line-height: 0.9;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+.rr-classic-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+    .rr-classic-form-grid label,
+    .rr-classic-form-section label.wide {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+    }
+
+    .rr-classic-form-grid span,
+    .rr-classic-form-section label.wide span {
+        color: #f4c400;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .rr-classic-form-grid input,
+    .rr-classic-form-grid select,
+    .rr-classic-form-section textarea {
+        width: 100%;
+        min-height: 50px;
+        padding: 12px 13px;
+        color: #eee9df;
+        background: #090909;
+        border: 1px solid rgba(255, 255, 255, 0.17);
+        border-radius: 0;
+    }
+
+        .rr-classic-form-grid input:focus,
+        .rr-classic-form-grid select:focus,
+        .rr-classic-form-section textarea:focus {
+            outline: 0;
+            border-color: #f4c400;
+            box-shadow: 0 0 0 3px rgba(244, 196, 0, 0.14);
+        }
+
+    .rr-classic-form-grid small,
+    .rr-classic-form-section label.wide small {
+        min-height: 18px;
+        color: #ff6873;
+        font-size: 0.76rem;
+    }
+
+.rr-availability-message {
+    color: #8f8f8f !important;
+}
+
+    .rr-availability-message.error {
+        color: #ff6873 !important;
+    }
+
+.rr-slot-insight {
+    min-height: 48px;
+    padding: 11px 12px;
+    color: #8f8f8f;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+    .rr-slot-insight.open {
+        color: #9bd9a9;
+        background: rgba(86, 211, 126, 0.08);
+        border-color: rgba(86, 211, 126, 0.3);
+    }
+
+    .rr-slot-insight.low {
+        color: #f4c400;
+        background: rgba(244, 196, 0, 0.08);
+        border-color: rgba(244, 196, 0, 0.35);
+    }
+
+    .rr-slot-insight.full {
+        color: #ff6873;
+        background: rgba(255, 104, 115, 0.08);
+        border-color: rgba(255, 104, 115, 0.35);
+    }
+
+.rr-party-message {
+    color: #8f8f8f !important;
+}
+
+    .rr-party-message.warning {
+        color: #f4c400 !important;
+    }
+
+    .rr-party-message.strong {
+        color: #ff6873 !important;
+    }
+
+@media (max-width: 767.98px) {
+    .rr-booking-card {
+        grid-template-columns: 1fr;
+    }
+
+    .rr-booking-note {
+        border-right: 0;
+        border-bottom: 1px solid rgba(244, 196, 0, 0.28);
+    }
+
+    .rr-booking-form {
+        padding: 24px;
+    }
+
+    .rr-booking-fields.two {
+        grid-template-columns: 1fr;
+    }
+
+    .rr-time-options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rr-classic-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+   MOBILE-FIRST CONSISTENCY LAYER
+   ========================================================= */
+
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    -webkit-text-size-adjust: 100%;
+}
+
+button,
+.btn,
+a[class*="btn"],
+.rr-nav-link,
+.rr-nav-reserve,
+.rr-menu-nav-link {
+    min-height: 44px;
+}
+
+.rr-site-brand,
+.rr-brand-text,
+.rr-brand-text strong,
+.rr-nav-link,
+.rr-nav-reserve,
+.rr-footer-brand,
+.rr-footer-copy,
+.menu-card-title,
+.rr-menu-card-title,
+.event-card,
+.reservation-page,
+.contact-page {
+    min-width: 0;
+}
+
+.rr-brand-text strong,
+.menu-card-title,
+.rr-menu-card-title,
+.event-card h3,
+.reservation-page h1,
+.contact-page h1 {
+    overflow-wrap: anywhere;
+}
+
+.table-responsive,
+.rr-scroll-panel {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 991.98px) {
+    .rr-site-nav {
+        position: sticky;
+        top: 0;
+    }
+
+    .rr-nav-container {
+        width: min(100% - 28px, 1450px);
+        min-height: 78px;
+        gap: 16px;
+    }
+
+    .rr-site-brand {
+        flex: 1 1 auto;
+        gap: 11px;
+    }
+
+    .rr-brand-image-frame {
+        width: 50px;
+        height: 50px;
+        flex-basis: 50px;
+        box-shadow: 3px 3px 0 var(--rr-red);
+    }
+
+    .rr-brand-text small {
+        font-size: 0.48rem;
+        letter-spacing: 1.3px;
+    }
+
+    .rr-brand-text strong {
+        font-size: 1.35rem;
+        line-height: 0.95;
+    }
+
+    .rr-nav-collapse {
+        position: absolute;
+        top: calc(100% + 1px);
+        right: 0;
+        left: 0;
+        z-index: 1001;
+        padding: 14px;
+        background: #090909;
+        border: 1px solid var(--rr-border);
+        box-shadow: 0 18px 30px rgba(0, 0, 0, 0.42);
+    }
+
+    .rr-navigation {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .rr-nav-link,
+    .rr-nav-link:nth-child(even),
+    .rr-nav-link.active {
+        width: 100%;
+        transform: none;
+    }
+
+    .rr-nav-reserve {
+        width: 100%;
+        margin-top: 10px;
+        justify-content: space-between;
+        transform: none;
+    }
+
+    .rr-footer-container {
+        width: min(100% - 28px, 1450px);
+        grid-template-columns: 1fr;
+        gap: 14px;
+        text-align: left;
+    }
+}
+
+@media (max-width: 767.98px) {
+    main {
+        min-height: auto;
+    }
+
+    .container,
+    .container-fluid {
+        --bs-gutter-x: 1.25rem;
+    }
+
+    .row {
+        --bs-gutter-x: 1.25rem;
+    }
+
+    .rr-nav-warning-strip {
+        height: 30px;
+    }
+
+    .rr-nav-warning-track {
+        font-size: 0.68rem;
+    }
+
+    .rr-menu-navigation,
+    .reservation-filter-tabs,
+    .event-filter-tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rr-menu-nav-link,
+    .reservation-filter-tab,
+    .event-filter-tab {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+    }
+
+    .rr-menu-card,
+    .menu-card,
+    .event-card {
+        transform: none !important;
+    }
+
+    .rr-menu-card-footer,
+    .menu-card-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .rr-menu-tags,
+    .product-tag-list {
+        gap: 6px;
+    }
+
+    .rr-menu-tags span,
+    .product-tag-list span {
+        white-space: normal;
+    }
+
+    form .row > [class*="col-"] {
+        margin-bottom: 12px;
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 420px) {
+    .rr-nav-container {
+        width: min(100% - 20px, 1450px);
+    }
+
+    .rr-brand-image-frame {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+    }
+
+    .rr-brand-text strong {
+        font-size: 1.12rem;
+    }
+
+    .rr-nav-toggle {
+        padding-inline: 10px;
+    }
+}
+
+.rr-booking-kicker,
+.rr-confirmation-panel > p:first-of-type {
+    margin: 0 0 10px;
+    color: var(--rr-yellow);
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.rr-confirmation-panel {
+    width: min(820px, 100%);
+    margin: 0 auto;
+    padding: clamp(28px, 6vw, 54px);
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.rr-confirmation-top {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.rr-confirmation-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    color: #0b0b0b;
+    background: var(--rr-yellow);
+    font-size: 2rem;
+    font-weight: 900;
+}
+
+.rr-confirmation-panel h1 {
+    margin: 0;
+    font-size: clamp(3.4rem, 10vw, 6.5rem);
+    line-height: 0.86;
+}
+
+.rr-confirmation-top p:last-child {
+    max-width: 620px;
+    margin: 16px 0 0;
+    color: var(--rr-muted-light);
+    line-height: 1.65;
+}
+
+.rr-confirmation-status {
+    display: grid;
+    grid-template-columns: minmax(130px, auto) minmax(0, 1fr);
+    gap: 8px 18px;
+    align-items: center;
+    margin-top: 24px;
+    padding: 16px 18px;
+    background: rgba(244, 196, 0, 0.08);
+    border: 1px solid rgba(244, 196, 0, 0.32);
+}
+
+    .rr-confirmation-status span {
+        color: var(--rr-yellow);
+        font-size: 0.64rem;
+        font-weight: 900;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+    }
+
+    .rr-confirmation-status strong {
+        color: var(--rr-white);
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .rr-confirmation-status p {
+        grid-column: 2;
+        margin: 0;
+        color: var(--rr-muted-light);
+        font-size: 0.9rem;
+    }
+
+.rr-confirmation-next {
+    margin-top: 24px;
+    padding: 18px;
+    background: #0b0b0b;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+    .rr-confirmation-next > span {
+        color: var(--rr-yellow);
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+    }
+
+    .rr-confirmation-next ol {
+        display: grid;
+        gap: 8px;
+        margin: 13px 0 0;
+        padding-left: 20px;
+        color: var(--rr-muted-light);
+    }
+
+    .rr-confirmation-next li::marker {
+        color: var(--rr-yellow);
+        font-weight: 900;
+    }
+
+.rr-reservation-code {
+    display: grid;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 18px;
+    background: linear-gradient(110deg, rgba(244, 196, 0, 0.16), rgba(244, 196, 0, 0.02)), #0b0b0b;
+    border: 1px solid rgba(244, 196, 0, 0.42);
+}
+
+    .rr-reservation-code span {
+        color: var(--rr-yellow);
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+    }
+
+.rr-reservation-code-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+    .rr-reservation-code strong {
+        color: var(--rr-white);
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(2.7rem, 10vw, 4.4rem);
+        font-weight: 400;
+        line-height: 0.85;
+        letter-spacing: 2px;
+    }
+
+    .rr-reservation-code button {
+        min-height: 42px;
+        padding: 0 16px;
+        color: #0b0b0b;
+        background: var(--rr-yellow);
+        border: 1px solid var(--rr-yellow);
+        font-size: 0.7rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .rr-reservation-code p {
+        max-width: 520px;
+        margin: 0;
+        color: var(--rr-muted-light);
+        font-size: 0.92rem;
+    }
+
+.rr-reservation-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    margin: 28px 0 0;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+    .rr-reservation-summary div {
+        min-width: 0;
+        padding: 16px;
+        background: #0b0b0b;
+    }
+
+    .rr-reservation-summary dt {
+        color: var(--rr-muted);
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+    }
+
+    .rr-reservation-summary dd {
+        margin: 5px 0 0;
+        color: var(--rr-white);
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+.rr-confirmation-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+}
+
+    .rr-confirmation-actions a,
+    .rr-lookup-row button {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 17px;
+        color: #0b0b0b;
+        background: var(--rr-yellow);
+        border: 1px solid var(--rr-yellow);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    .rr-confirmation-actions a:last-child {
+        color: var(--rr-white);
+        background: transparent;
+        border-color: rgba(255, 255, 255, 0.28);
+    }
+
+@media (max-width: 620px) {
+    .rr-confirmation-top,
+    .rr-confirmation-status {
+        grid-template-columns: 1fr;
+    }
+
+    .rr-confirmation-status p {
+        grid-column: 1;
+    }
+
+    .rr-confirmation-actions a {
+        width: 100%;
+    }
+}
+
+.rr-lookup-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 360px) auto;
+    gap: 16px;
+    align-items: end;
+    margin-bottom: 24px;
+    padding: clamp(18px, 3vw, 26px);
+    background: linear-gradient(110deg, rgba(244, 196, 0, 0.08), rgba(244, 196, 0, 0.01)), #111111;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+    .rr-lookup-search > div:first-child {
+        display: grid;
+        gap: 6px;
+    }
+
+    .rr-lookup-search > div:first-child span,
+    .rr-lookup-cancel-panel span {
+        color: var(--rr-yellow);
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+    .rr-lookup-search > div:first-child strong,
+    .rr-lookup-cancel-panel strong {
+        color: var(--rr-white);
+        font-size: 1.08rem;
+        font-weight: 900;
+    }
+
+    .rr-lookup-search > div:first-child p,
+    .rr-lookup-cancel-panel p {
+        max-width: 520px;
+        margin: 0;
+        color: var(--rr-muted-light);
+        line-height: 1.55;
+    }
+
+.rr-lookup-input-group {
+    display: grid;
+    gap: 8px;
+}
+
+    .rr-lookup-input-group label {
+        color: var(--rr-yellow);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+    }
+
+    .rr-lookup-input-group input {
+        width: 100%;
+        min-height: 52px;
+        padding: 12px 14px;
+        color: var(--rr-white);
+        background: #090909;
+        border: 1px solid rgba(255, 255, 255, 0.17);
+        font-size: 1rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .rr-lookup-input-group input:focus {
+        outline: 0;
+        border-color: var(--rr-yellow);
+        box-shadow: 0 0 0 3px rgba(244, 196, 0, 0.14);
+    }
+
+    .rr-lookup-input-group span {
+        color: #ff6873;
+        font-size: 0.78rem;
+    }
+
+.rr-lookup-message,
+.rr-lookup-empty {
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    background: rgba(244, 196, 0, 0.08);
+    border: 1px solid rgba(244, 196, 0, 0.32);
+    color: var(--rr-white);
+    font-weight: 800;
+}
+
+.rr-lookup-empty {
+    display: grid;
+    gap: 6px;
+    margin-top: 20px;
+}
+
+    .rr-lookup-empty span {
+        color: var(--rr-muted);
+        font-weight: 500;
+    }
+
+.rr-lookup-results {
+    display: grid;
+    gap: 10px;
+}
+
+.rr-lookup-row {
+    display: grid;
+    gap: 18px;
+    padding: clamp(20px, 4vw, 30px);
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-left: 6px solid var(--rr-yellow);
+}
+
+.rr-lookup-row.is-approved,
+.rr-lookup-row.is-arrived {
+    border-left-color: #42d978;
+}
+
+.rr-lookup-row.is-cancelled {
+    border-left-color: #e51f38;
+}
+
+.rr-lookup-result-head {
+    display: grid;
+    gap: 9px;
+}
+
+    .rr-lookup-result-head h2 {
+        max-width: 680px;
+        margin: 0;
+        color: var(--rr-white);
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(2.4rem, 7vw, 4.4rem);
+        line-height: 0.9;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+
+    .rr-lookup-result-head p {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 0;
+        color: var(--rr-muted);
+    }
+
+    .rr-lookup-result-head p strong {
+        color: var(--rr-white);
+        font-weight: 900;
+        letter-spacing: 1px;
+    }
+
+.rr-copy-code-button {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    color: #0b0b0b;
+    background: var(--rr-yellow);
+    border: 1px solid var(--rr-yellow);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+}
+
+.rr-lookup-status,
+.rr-lookup-locked {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    padding: 0 10px;
+    color: var(--rr-yellow);
+    border: 1px solid rgba(244, 196, 0, 0.36);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.rr-lookup-locked {
+    color: var(--rr-muted);
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+.rr-lookup-row.is-approved .rr-lookup-status,
+.rr-lookup-row.is-arrived .rr-lookup-status {
+    color: #8df0a6;
+    border-color: rgba(66, 217, 120, 0.42);
+}
+
+.rr-lookup-row.is-cancelled .rr-lookup-status {
+    color: #ff6873;
+    border-color: rgba(229, 31, 56, 0.42);
+}
+
+.rr-lookup-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 1px;
+    margin: 0;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+    .rr-lookup-summary div {
+        min-width: 0;
+        padding: 15px;
+        background: #0b0b0b;
+    }
+
+    .rr-lookup-summary dt {
+        color: var(--rr-muted);
+        font-size: 0.64rem;
+        font-weight: 900;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+    }
+
+    .rr-lookup-summary dd {
+        margin: 5px 0 0;
+        color: var(--rr-white);
+        font-weight: 900;
+        overflow-wrap: anywhere;
+    }
+
+.rr-lookup-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+    .rr-lookup-actions form {
+        margin: 0;
+    }
+
+.rr-lookup-cancel-panel {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px;
+    background: #080808;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+    .rr-lookup-cancel-panel > div {
+        display: grid;
+        gap: 6px;
+    }
+
+    .rr-lookup-cancel-panel form {
+        margin: 0;
+    }
+
+    .rr-lookup-cancel-panel button,
+    .rr-lookup-actions a {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 17px;
+        color: #0b0b0b;
+        background: var(--rr-yellow);
+        border: 1px solid var(--rr-yellow);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    .rr-lookup-cancel-panel button {
+        color: var(--rr-white);
+        background: rgba(229, 31, 56, 0.12);
+        border-color: rgba(229, 31, 56, 0.7);
+    }
+
+@media (max-width: 767.98px) {
+    .rr-reservation-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rr-lookup-search {
+        grid-template-columns: 1fr;
+    }
+
+    .rr-lookup-cancel-panel,
+    .rr-lookup-actions,
+    .rr-lookup-cancel-panel button,
+    .rr-lookup-actions a,
+    .rr-lookup-cancel-panel form,
+    .rr-lookup-actions form {
+        width: 100%;
+    }
+
+    .rr-lookup-cancel-panel {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 420px) {
+    .rr-reservation-summary {
+        grid-template-columns: 1fr;
     }
 }

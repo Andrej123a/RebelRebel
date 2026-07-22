@@ -1,8 +1,8 @@
-﻿@model Rebel.Domain.Entities.Event
+@model Rebel.Domain.Entities.Event
 @using Rebel.Domain.Enums
 
 @{
-    ViewData["Title"] = "Delete Event";
+    ViewData["Title"] = "Archive Event";
 }
 
 @functions {
@@ -29,10 +29,10 @@
         if (startTime.HasValue && endTime.HasValue)
         {
             var nextDay = endTime.Value < startTime.Value
-                ? " · next day"
+                ? " / next day"
                 : "";
 
-            return $"{startTime.Value:hh\\:mm} – {endTime.Value:hh\\:mm}{nextDay}";
+            return $"{startTime.Value:hh\\:mm} - {endTime.Value:hh\\:mm}{nextDay}";
         }
 
         if (startTime.HasValue)
@@ -44,149 +44,116 @@
     }
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-9 col-xl-8">
+<section class="admin-archive-confirm">
+    <header class="admin-archive-hero">
+        <div>
+            <small>Archive event</small>
+            <h1>Confirm Archive</h1>
+            <p>
+                Archive this event when it should disappear from active event
+                screens while keeping the event and its booking history.
+            </p>
+        </div>
 
-            <div class="mb-4">
-                <p class="text-danger text-uppercase fw-bold small mb-1">
-                    Rebel Rebel Admin
-                </p>
+        <a asp-controller="AdminEvents"
+           asp-action="Index"
+           class="admin-tool-button">
+            Back to Events
+        </a>
+    </header>
 
-                <h1 class="fw-bold text-light mb-2">
-                    Delete Event
-                </h1>
-
-                <p class="text-secondary mb-0">
-                    Review the event before permanently deleting it.
-                </p>
-            </div>
-
-            <div class="border border-danger rounded-4 overflow-hidden bg-dark">
-
-                <div class="p-4 border-bottom border-danger">
-                    <div class="d-flex align-items-start gap-3">
-
-                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-danger"
-                             style="width: 48px; height: 48px; flex: 0 0 48px;">
-                            <span class="text-white fs-4 fw-bold">!</span>
-                        </div>
-
-                        <div>
-                            <h4 class="text-light fw-bold mb-2">
-                                Are you sure?
-                            </h4>
-
-                            <p class="text-secondary mb-0">
-                                This event will be permanently removed from the database
-                                and will no longer appear on the public website.
-                            </p>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="p-4">
-                    <div class="row g-4 align-items-stretch">
-
-                        <div class="col-md-5">
-                            <div class="rounded-4 overflow-hidden border border-secondary h-100"
-                                 style="min-height: 300px; background: #161616;">
-
-                                @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
-                                {
-                                    <img src="@Model.ImageUrl"
-                                         alt="@Model.Title"
-                                         class="w-100 h-100"
-                                         style="object-fit: cover; min-height: 300px;" />
-                                }
-                                else
-                                {
-                                    <div class="h-100 d-flex flex-column align-items-center justify-content-center text-center p-4"
-                                         style="min-height: 300px;">
-
-                                        <span class="display-3 text-warning mb-3">✦</span>
-
-                                        <p class="text-secondary mb-0">
-                                            No event image
-                                        </p>
-                                    </div>
-                                }
-
-                            </div>
-                        </div>
-
-                        <div class="col-md-7">
-                            <div class="h-100 d-flex flex-column">
-
-                                <div class="mb-3">
-                                    <span class="badge bg-warning text-dark">
-                                        @FormatEventType(Model.EventType)
-                                    </span>
-
-                                    @if (Model.IsActive)
-                                    {
-                                        <span class="badge bg-success ms-1">
-                                            Active
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary ms-1">
-                                            Hidden
-                                        </span>
-                                    }
-                                </div>
-
-                                <h2 class="text-light fw-bold mb-3">
-                                    @Model.Title
-                                </h2>
-
-                                <div class="mb-3">
-                                    <p class="text-warning fw-semibold mb-1">
-                                        @Model.Date.ToString("dd MMMM yyyy")
-                                    </p>
-
-                                    <p class="text-secondary mb-0">
-                                        @FormatTimeRange(Model.StartTime, Model.EndTime)
-                                    </p>
-                                </div>
-
-                                <p class="text-secondary mb-4">
-                                    @Model.Description
-                                </p>
-
-                                <div class="mt-auto">
-                                    <form asp-controller="AdminEvents"
-                                          asp-action="Delete"
-                                          asp-route-id="@Model.Id"
-                                          method="post">
-
-                                        <input type="hidden" asp-for="Id" />
-
-                                        <div class="d-flex flex-wrap gap-3">
-                                            <button type="submit"
-                                                    class="btn btn-danger px-4 fw-semibold">
-                                                Delete Permanently
-                                            </button>
-
-                                            <a asp-controller="AdminEvents"
-                                               asp-action="Index"
-                                               class="btn btn-outline-light px-4">
-                                                Cancel
-                                            </a>
-                                        </div>
-
-                                    </form>
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
+    <div class="admin-archive-warning">
+        <span>!</span>
+        <div>
+            <strong>@Model.Title will be archived.</strong>
+            <p>
+                The event will be hidden from normal event screens. Existing
+                reservations and admin records remain connected.
+            </p>
         </div>
     </div>
-</div>
+
+    <div class="admin-archive-grid">
+        <aside class="admin-archive-panel">
+            <div class="admin-media-preview">
+                @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                {
+                    <img src="@Url.Content(Model.ImageUrl)"
+                         alt="@Model.Title" />
+                }
+                else
+                {
+                    <div class="admin-media-placeholder">
+                        <span>IMG</span>
+                        <strong>No event image</strong>
+                        <small>This event does not currently have a poster.</small>
+                    </div>
+                }
+            </div>
+        </aside>
+
+        <section class="admin-archive-panel">
+            <h2 class="admin-archive-title">
+                @Model.Title
+            </h2>
+
+            <dl class="admin-archive-meta">
+                <div>
+                    <dt>Type</dt>
+                    <dd>@FormatEventType(Model.EventType)</dd>
+                </div>
+
+                <div>
+                    <dt>Date</dt>
+                    <dd>@Model.Date.ToString("dd MMMM yyyy")</dd>
+                </div>
+
+                <div>
+                    <dt>Time</dt>
+                    <dd>@FormatTimeRange(Model.StartTime, Model.EndTime)</dd>
+                </div>
+
+                <div>
+                    <dt>Status</dt>
+                    <dd>@(Model.IsActive ? "Active" : "Hidden")</dd>
+                </div>
+
+                <div>
+                    <dt>Capacity</dt>
+                    <dd>
+                        @(Model.MaxReservations?.ToString() ?? "Unlimited") bookings /
+                        @(Model.MaxGuests?.ToString() ?? "Unlimited") guests
+                    </dd>
+                </div>
+
+                <div>
+                    <dt>Description</dt>
+                    <dd>
+                        @(string.IsNullOrWhiteSpace(Model.Description)
+                            ? "No description available."
+                            : Model.Description)
+                    </dd>
+                </div>
+            </dl>
+
+            <form asp-controller="AdminEvents"
+                  asp-action="Delete"
+                  asp-route-id="@Model.Id"
+                  method="post"
+                  class="admin-archive-actions">
+                <input type="hidden" asp-for="Id" />
+
+                <button type="submit"
+                        class="btn btn-danger">
+                    Archive Event
+                </button>
+
+                <a asp-controller="AdminEvents"
+                   asp-action="Index"
+                   class="btn btn-outline-light">
+                    Cancel
+                </a>
+            </form>
+        </section>
+    </div>
+</section>

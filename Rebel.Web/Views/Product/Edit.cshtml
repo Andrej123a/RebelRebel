@@ -15,34 +15,30 @@
     );
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-xl-10">
-
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+<section class="admin-editor-page">
+    <header class="admin-editor-hero">
                 <div>
-                    <p class="text-warning text-uppercase fw-bold small mb-1">
-                        Rebel Rebel Admin
-                    </p>
+                    <small>Menu board</small>
 
-                    <h1 class="fw-bold text-light mb-1">
+                    <h1>
                         Edit Product
                     </h1>
 
-                    <p class="text-secondary mb-0">
+                    <p>
                         Update the product information, category and availability.
                     </p>
                 </div>
 
                 <a asp-action="Index"
-                   class="btn btn-outline-light">
+                   class="admin-tool-button">
                     Back to Products
                 </a>
-            </div>
+    </header>
 
-            <form asp-action="Edit"
+    <form asp-action="Edit"
                   asp-route-id="@Model.Id"
                   method="post"
+                  class="admin-editor-form"
                   autocomplete="off">
 
                 <input type="hidden" asp-for="Id" />
@@ -51,12 +47,13 @@
                      class="alert alert-danger mb-4">
                 </div>
 
-                <div class="row g-4">
+                <div class="admin-editor-grid">
 
-                    <div class="col-lg-7">
-                        <div class="bg-dark border border-secondary rounded-4 p-4 h-100">
+                    <div>
+                        <div class="admin-editor-panel">
+                            <h2>Product Details</h2>
 
-                            <div class="mb-4">
+                            <div class="admin-editor-field">
                                 <label asp-for="Name"
                                        class="form-label fw-semibold text-light">
                                 </label>
@@ -71,7 +68,7 @@
                                 </span>
                             </div>
 
-                            <div class="mb-4">
+                            <div class="admin-editor-field">
                                 <label asp-for="Description"
                                        class="form-label fw-semibold text-light">
                                 </label>
@@ -86,9 +83,9 @@
                                 </span>
                             </div>
 
-                            <div class="row g-3">
+                            <div class="admin-editor-fields-grid">
 
-                                <div class="col-md-6">
+                                <div>
                                     <label asp-for="Price"
                                            class="form-label fw-semibold text-light">
                                     </label>
@@ -110,7 +107,7 @@
                                     </span>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div>
                                     <label asp-for="CategoryId"
                                            class="form-label fw-semibold text-light">
                                     </label>
@@ -130,7 +127,7 @@
 
                             </div>
 
-                            <div class="form-check form-switch mt-4">
+                            <div class="form-check form-switch admin-editor-switch">
                                 <input asp-for="IsAvailable"
                                        class="form-check-input"
                                        role="switch" />
@@ -140,11 +137,56 @@
                                 </label>
                             </div>
 
+                            <div class="product-tag-editor mt-4">
+                                <span>Menu Signals</span>
+
+                                <label>
+                                    <input asp-for="IsPopular" />
+                                    Popular
+                                </label>
+
+                                <label>
+                                    <input asp-for="IsSpicy" />
+                                    Spicy
+                                </label>
+
+                                <label>
+                                    <input asp-for="IsVegetarian" />
+                                    Vegetarian
+                                </label>
+
+                                <label>
+                                    <input asp-for="IsVegan" />
+                                    Vegan
+                                </label>
+
+                                <label>
+                                    <input asp-for="IsGlutenFree" />
+                                    Gluten free
+                                </label>
+
+                                <label>
+                                    <input asp-for="ContainsNuts" />
+                                    Contains nuts
+                                </label>
+
+                                <label>
+                                    <input asp-for="IsLimited" />
+                                    Limited
+                                </label>
+
+                                <label>
+                                    <input asp-for="IsPromo" />
+                                    Promo
+                                </label>
+                            </div>
+
                         </div>
                     </div>
 
-                    <div class="col-lg-5">
-                        <div class="bg-dark border border-secondary rounded-4 p-4 h-100">
+                    <div>
+                        <div class="admin-editor-panel">
+                            <h2>Menu Image</h2>
 
                             <label asp-for="ImageUrl"
                                    class="form-label fw-semibold text-light">
@@ -164,33 +206,30 @@
                                 Change the URL to update the product image.
                             </p>
 
-                            <div class="rounded-4 overflow-hidden border border-secondary"
-                                 style="height: 300px; background: #161616;">
+                            <div class="admin-media-preview">
 
                                 <img id="imagePreview"
                                      src="@Model.ImageUrl"
                                      alt="@Model.Name"
-                                     class="w-100 h-100"
-                                     style="object-fit: cover;
-                                            display: @(string.IsNullOrWhiteSpace(Model.ImageUrl)
+                                     style="display: @(string.IsNullOrWhiteSpace(Model.ImageUrl)
                                                                                      ? "none"
                                                                                      : "block");" />
 
                                 <div id="imagePlaceholder"
-                                     class="h-100 flex-column align-items-center justify-content-center text-center p-4"
+                                     class="admin-media-placeholder"
                                      style="display: @(string.IsNullOrWhiteSpace(Model.ImageUrl)
                                                                               ? "flex"
                                                                               : "none");">
 
-                                    <span class="display-5 mb-3">✦</span>
+                                    <span>IMG</span>
 
-                                    <p class="text-light fw-semibold mb-1">
+                                    <strong>
                                         Product image preview
-                                    </p>
+                                    </strong>
 
-                                    <p class="text-secondary small mb-0">
+                                    <small>
                                         Enter an image URL to display the preview.
-                                    </p>
+                                    </small>
                                 </div>
 
                             </div>
@@ -199,7 +238,7 @@
 
                 </div>
 
-                <div class="d-flex flex-wrap gap-3 mt-4">
+                <div class="admin-editor-actions">
                     <button type="submit"
                             class="btn btn-warning px-4 fw-semibold">
                         Save Changes
@@ -211,10 +250,8 @@
                     </a>
                 </div>
 
-            </form>
-        </div>
-    </div>
-</div>
+    </form>
+</section>
 
 @section Scripts {
     @{

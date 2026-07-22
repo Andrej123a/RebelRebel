@@ -29,7 +29,87 @@ namespace Rebel.Web.Controllers
                 .ThenBy(e => e.StartTime)
                 .ToListAsync();
 
+            var eventIds = events
+                .Select(e => e.Id)
+                .ToList();
+
+            var reservationStatsRows = await _context.Reservations
+                .AsNoTracking()
+                .Where(reservation =>
+                    reservation.EventId.HasValue &&
+                    eventIds.Contains(reservation.EventId.Value))
+                .GroupBy(reservation => reservation.EventId!.Value)
+                .Select(group => new
+                {
+                    EventId = group.Key,
+                    ReservationCount = group.Count(),
+                    GuestCount = group.Sum(reservation =>
+                        reservation.NumberOfGuests),
+                    PendingCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.Pending),
+                    ApprovedCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.Approved),
+                    ArrivedCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.Arrived),
+                    NoShowCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.NoShow),
+                    CancelledCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.Cancelled)
+                })
+                .ToListAsync();
+
+            var reservationStats = reservationStatsRows
+                .ToDictionary(
+                    eventStats => eventStats.EventId,
+                    eventStats => new Dictionary<string, int>
+                    {
+                        ["Reservations"] = eventStats.ReservationCount,
+                        ["Guests"] = eventStats.GuestCount,
+                        ["Pending"] = eventStats.PendingCount,
+                        ["Approved"] = eventStats.ApprovedCount,
+                        ["Arrived"] = eventStats.ArrivedCount,
+                        ["NoShow"] = eventStats.NoShowCount,
+                        ["Cancelled"] = eventStats.CancelledCount
+                    });
+
+            ViewBag.ReservationStats = reservationStats;
+
             return View(events);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Bookings(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            var ev = await _context.Events
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    eventItem => eventItem.Id == id,
+                    cancellationToken);
+
+            if (ev == null)
+            {
+                return NotFound();
+            }
+
+            var reservations = await _context.Reservations
+                .AsNoTracking()
+                .Where(reservation =>
+                    reservation.EventId == id)
+                .OrderBy(reservation =>
+                    reservation.Status == ReservationStatus.Pending ? 0 :
+                    reservation.Status == ReservationStatus.Approved ? 1 :
+                    reservation.Status == ReservationStatus.Arrived ? 2 :
+                    reservation.Status == ReservationStatus.NoShow ? 3 :
+                    reservation.Status == ReservationStatus.Cancelled ? 4 : 5)
+                .ThenBy(reservation => reservation.ReservationTime)
+                .ThenBy(reservation => reservation.FullName)
+                .ToListAsync(cancellationToken);
+
+            ViewBag.Event = ev;
+
+            return View(reservations);
         }
 
         // CREATE GET
@@ -76,7 +156,8 @@ namespace Rebel.Web.Controllers
             _context.Events.Add(model);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Event created successfully.";
+            TempData["SuccessMessage"] =
+                $"{model.Title} was added to the gig calendar.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -136,6 +217,8 @@ namespace Rebel.Web.Controllers
             existingEvent.EndTime = model.EndTime;
             existingEvent.EventType = model.EventType;
             existingEvent.IsActive = model.IsActive;
+            existingEvent.MaxReservations = model.MaxReservations;
+            existingEvent.MaxGuests = model.MaxGuests;
 
             existingEvent.ImageUrl = string.IsNullOrWhiteSpace(model.ImageUrl)
                 ? null
@@ -143,7 +226,8 @@ namespace Rebel.Web.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Event updated successfully.";
+            TempData["SuccessMessage"] =
+                $"{existingEvent.Title} was updated.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -176,16 +260,36 @@ namespace Rebel.Web.Controllers
                 return NotFound();
             }
 
-            _context.Events.Remove(ev);
+            ev.IsDeleted = true;
+            ev.DeletedAtUtc = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Event deleted successfully.";
+            TempData["SuccessMessage"] =
+                $"{ev.Title} was archived from the gig calendar.";
 
             return RedirectToAction(nameof(Index));
         }
 
         private void ValidateEventTimes(Event model)
         {
+            if (model.MaxReservations.HasValue &&
+                model.MaxReservations.Value < 1)
+            {
+                ModelState.AddModelError(
+                    nameof(model.MaxReservations),
+                    "Max reservations must be at least 1."
+                );
+            }
+
+            if (model.MaxGuests.HasValue &&
+                model.MaxGuests.Value < 1)
+            {
+                ModelState.AddModelError(
+                    nameof(model.MaxGuests),
+                    "Max guests must be at least 1."
+                );
+            }
+
             if (!model.StartTime.HasValue || !model.EndTime.HasValue)
             {
                 return;
@@ -226,5 +330,6 @@ namespace Rebel.Web.Controllers
                 _ => eventType.ToString()
             };
         }
+
     }
 }

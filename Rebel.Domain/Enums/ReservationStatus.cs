@@ -6,6 +6,7 @@
         Approved = 1,
         Rejected = 2,
         Arrived = 3,
-        NoShow = 4
+        NoShow = 4,
+        Cancelled = 5
     }
 }

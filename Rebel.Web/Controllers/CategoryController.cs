@@ -51,6 +51,9 @@ namespace Rebel.Web.Controllers
             _context.Categories.Add(category);
             await _context.SaveChangesAsync();
 
+            TempData["SuccessMessage"] =
+                $"{category.Name} was added to menu sections.";
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -83,12 +86,17 @@ namespace Rebel.Web.Controllers
             _context.Categories.Update(category);
             await _context.SaveChangesAsync();
 
+            TempData["SuccessMessage"] =
+                $"{category.Name} was updated.";
+
             return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Delete(Guid id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _context.Categories
+                .Include(c => c.Products)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (category == null)
             {
@@ -109,8 +117,12 @@ namespace Rebel.Web.Controllers
                 return NotFound();
             }
 
-            _context.Categories.Remove(category);
+            category.IsDeleted = true;
+            category.DeletedAtUtc = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                $"{category.Name} was archived from menu sections.";
 
             return RedirectToAction(nameof(Index));
         }

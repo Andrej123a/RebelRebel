@@ -3,10 +3,10 @@ namespace Rebel.Web.Services
     public static class ReservationPolicy
     {
         public static readonly TimeSpan FirstOnlineSlot =
-            new(18, 0, 0);
+            new(10, 0, 0);
 
         public static readonly TimeSpan LastOnlineSlot =
-            new(23, 30, 0);
+            new(22, 0, 0);
 
         public static readonly TimeSpan SlotInterval =
             TimeSpan.FromMinutes(30);

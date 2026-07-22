@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Rebel.Infrastructure.Data;
 using Rebel.Web.Models;
 using System.Diagnostics;
+using System.Text;
 
 namespace Rebel.Web.Controllers
 {
@@ -75,6 +76,41 @@ namespace Rebel.Web.Controllers
         public IActionResult Contact()
         {
             return View();
+        }
+
+        [HttpGet("/sitemap.xml")]
+        public IActionResult Sitemap()
+        {
+            var baseUrl =
+                $"{Request.Scheme}://{Request.Host}";
+
+            var paths = new[]
+            {
+                "/",
+                "/Home/Menu",
+                "/Events",
+                "/Reservations/Create",
+                "/Home/Contact"
+            };
+
+            var sitemap = new StringBuilder();
+
+            sitemap.AppendLine("""<?xml version="1.0" encoding="utf-8"?>""");
+            sitemap.AppendLine("""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">""");
+
+            foreach (var path in paths)
+            {
+                sitemap.AppendLine("  <url>");
+                sitemap.AppendLine($"    <loc>{baseUrl}{path}</loc>");
+                sitemap.AppendLine("  </url>");
+            }
+
+            sitemap.AppendLine("</urlset>");
+
+            return Content(
+                sitemap.ToString(),
+                "application/xml",
+                Encoding.UTF8);
         }
 
         [HttpGet]

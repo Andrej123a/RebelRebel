@@ -27,6 +27,10 @@
 
     var activeEventsCount = events.Count(ev => ev.IsActive);
     var hiddenEventsCount = events.Count(ev => !ev.IsActive);
+
+    var reservationStats =
+        ViewBag.ReservationStats as Dictionary<Guid, Dictionary<string, int>>
+        ?? new Dictionary<Guid, Dictionary<string, int>>();
 }
 
 @functions {
@@ -75,6 +79,60 @@
             _ => "event-type-default"
         };
     }
+
+    public string GetCapacityClass(
+        Rebel.Domain.Entities.Event ev,
+        int reservationsCount,
+        int guestsCount)
+    {
+        var reservationPressure = ev.MaxReservations.HasValue
+            ? (double)reservationsCount / ev.MaxReservations.Value
+            : 0;
+
+        var guestPressure = ev.MaxGuests.HasValue
+            ? (double)guestsCount / ev.MaxGuests.Value
+            : 0;
+
+        var pressure = Math.Max(reservationPressure, guestPressure);
+
+        return pressure >= 1
+            ? "is-full"
+            : pressure >= 0.8
+                ? "is-near-capacity"
+                : string.Empty;
+    }
+
+    public string GetCapacityText(
+        Rebel.Domain.Entities.Event ev,
+        int reservationsCount,
+        int guestsCount)
+    {
+        if (ev.MaxGuests.HasValue &&
+            guestsCount >= ev.MaxGuests.Value)
+        {
+            return "Guest cap reached";
+        }
+
+        if (ev.MaxReservations.HasValue &&
+            reservationsCount >= ev.MaxReservations.Value)
+        {
+            return "Booking cap reached";
+        }
+
+        if (ev.MaxGuests.HasValue &&
+            guestsCount >= ev.MaxGuests.Value * 0.8)
+        {
+            return $"{ev.MaxGuests.Value - guestsCount} guest seats left";
+        }
+
+        if (ev.MaxReservations.HasValue &&
+            reservationsCount >= ev.MaxReservations.Value * 0.8)
+        {
+            return $"{ev.MaxReservations.Value - reservationsCount} bookings left";
+        }
+
+        return string.Empty;
+    }
 }
 
 <div class="events-admin-page">
@@ -82,41 +140,37 @@
     <section class="events-admin-hero">
         <div>
             <p class="events-admin-eyebrow">
-                Rebel Rebel Admin
+                Rebel Rebel by Fat Kitchen Admin
             </p>
 
             <h1>Manage Events</h1>
 
             <p class="events-admin-description">
-                Create, update and manage upcoming Rebel Rebel nights.
+                Create, update and manage upcoming Rebel Rebel by Fat Kitchen nights.
             </p>
         </div>
 
-        <a asp-controller="AdminEvents"
-           asp-action="Create"
-           class="events-add-button">
-            <span>+</span>
-            Add Event
-        </a>
-    </section>
+        <div class="admin-page-tools">
+            <a asp-controller="AdminEvents"
+               asp-action="Create"
+               class="admin-tool-button is-primary">
+                Add Event
+            </a>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="events-success-message"
-             role="alert">
+            <a asp-controller="Events"
+               asp-action="Index"
+               target="_blank"
+               class="admin-tool-button">
+                Public Events
+            </a>
 
-            <div>
-                <small>Control room signal</small>
-                <strong>@TempData["SuccessMessage"]</strong>
-            </div>
-
-            <button type="button"
-                    data-bs-dismiss="alert"
-                    aria-label="Close">
-                ×
-            </button>
+            <a asp-controller="AdminReservations"
+               asp-action="Tonight"
+               class="admin-tool-button">
+                Tonight
+            </a>
         </div>
-    }
+    </section>
 
     @if (events.Any())
     {
@@ -181,12 +235,27 @@
                         <div class="events-list-heading">
                             <span>Event</span>
                             <span>Date and time</span>
+                            <span>Reservations</span>
                             <span>Status</span>
                             <span>Actions</span>
                         </div>
 
                         @foreach (var ev in tonightEvents)
                         {
+                            var stats = reservationStats.TryGetValue(
+                                ev.Id,
+                                out var eventStats)
+                                ? eventStats
+                                : new Dictionary<string, int>();
+
+                            var reservationsCount = stats.GetValueOrDefault("Reservations");
+                            var guestsCount = stats.GetValueOrDefault("Guests");
+                            var pendingCount = stats.GetValueOrDefault("Pending");
+                            var approvedCount = stats.GetValueOrDefault("Approved");
+                            var arrivedCount = stats.GetValueOrDefault("Arrived");
+                            var capacityClass = GetCapacityClass(ev, reservationsCount, guestsCount);
+                            var capacityText = GetCapacityText(ev, reservationsCount, guestsCount);
+
                             <article class="events-list-row">
 
                                 <div class="events-row-main">
@@ -200,7 +269,7 @@
                                         else
                                         {
                                             <div class="events-row-placeholder">
-                                                <span>✦</span>
+                                                <span>?</span>
                                                 <small>Event</small>
                                             </div>
                                         }
@@ -233,6 +302,31 @@
                                     </span>
                                 </div>
 
+                                <a asp-controller="AdminReservations"
+                                   asp-action="Index"
+                                   asp-route-eventId="@ev.Id"
+                                   class="events-row-reservations @capacityClass">
+                                    <small>Reservations</small>
+                                    <strong>@reservationsCount</strong>
+                                    <span>@guestsCount guests</span>
+                                    @if (ev.MaxGuests.HasValue ||
+                                         ev.MaxReservations.HasValue)
+                                    {
+                                        <em>
+                                            Cap
+                                            @(ev.MaxReservations?.ToString() ?? "Unlimited") bookings ·
+                                            @(ev.MaxGuests?.ToString() ?? "Unlimited") guests
+                                        </em>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(capacityText))
+                                    {
+                                        <em class="capacity-warning">
+                                            @capacityText
+                                        </em>
+                                    }
+                                    <em>@pendingCount pending · @(approvedCount + arrivedCount) confirmed</em>
+                                </a>
+
                                 <div class="events-row-status">
                                     <small>Status</small>
 
@@ -257,42 +351,26 @@
                                 </div>
 
                                 <div class="events-row-actions-wrap">
-                                    <details class="events-row-actions">
-                                        <summary aria-label="Actions for @ev.Title">
-                                            <span></span>
-                                            <span></span>
-                                            <span></span>
-                                        </summary>
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Bookings"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action is-primary">
+                                        Bookings
+                                    </a>
 
-                                        <div class="events-row-actions-menu">
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Edit"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action">
+                                        Edit
+                                    </a>
 
-                                            @if (ev.IsActive)
-                                            {
-                                                <a asp-controller="Events"
-                                                   asp-action="Details"
-                                                   asp-route-id="@ev.Id">
-                                                    <strong>View</strong>
-                                                    <small>Open public event</small>
-                                                </a>
-                                            }
-
-                                            <a asp-controller="AdminEvents"
-                                               asp-action="Edit"
-                                               asp-route-id="@ev.Id">
-                                                <strong>Edit</strong>
-                                                <small>Update event</small>
-                                            </a>
-
-                                            <a asp-controller="AdminEvents"
-                                               asp-action="Delete"
-                                               asp-route-id="@ev.Id"
-                                               class="danger">
-                                                <strong>Delete</strong>
-                                                <small>Remove event</small>
-                                            </a>
-
-                                        </div>
-                                    </details>
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Delete"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action is-danger">
+                                        Archive
+                                    </a>
                                 </div>
 
                             </article>
@@ -335,12 +413,27 @@
                         <div class="events-list-heading">
                             <span>Event</span>
                             <span>Date and time</span>
+                            <span>Reservations</span>
                             <span>Status</span>
                             <span>Actions</span>
                         </div>
 
                         @foreach (var ev in upcomingEvents)
                         {
+                            var stats = reservationStats.TryGetValue(
+                                ev.Id,
+                                out var eventStats)
+                                ? eventStats
+                                : new Dictionary<string, int>();
+
+                            var reservationsCount = stats.GetValueOrDefault("Reservations");
+                            var guestsCount = stats.GetValueOrDefault("Guests");
+                            var pendingCount = stats.GetValueOrDefault("Pending");
+                            var approvedCount = stats.GetValueOrDefault("Approved");
+                            var arrivedCount = stats.GetValueOrDefault("Arrived");
+                            var capacityClass = GetCapacityClass(ev, reservationsCount, guestsCount);
+                            var capacityText = GetCapacityText(ev, reservationsCount, guestsCount);
+
                             <article class="events-list-row">
 
                                 <div class="events-row-main">
@@ -354,7 +447,7 @@
                                         else
                                         {
                                             <div class="events-row-placeholder">
-                                                <span>✦</span>
+                                                <span>?</span>
                                                 <small>Event</small>
                                             </div>
                                         }
@@ -387,6 +480,31 @@
                                     </span>
                                 </div>
 
+                                <a asp-controller="AdminReservations"
+                                   asp-action="Index"
+                                   asp-route-eventId="@ev.Id"
+                                   class="events-row-reservations @capacityClass">
+                                    <small>Reservations</small>
+                                    <strong>@reservationsCount</strong>
+                                    <span>@guestsCount guests</span>
+                                    @if (ev.MaxGuests.HasValue ||
+                                         ev.MaxReservations.HasValue)
+                                    {
+                                        <em>
+                                            Cap
+                                            @(ev.MaxReservations?.ToString() ?? "Unlimited") bookings ·
+                                            @(ev.MaxGuests?.ToString() ?? "Unlimited") guests
+                                        </em>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(capacityText))
+                                    {
+                                        <em class="capacity-warning">
+                                            @capacityText
+                                        </em>
+                                    }
+                                    <em>@pendingCount pending · @(approvedCount + arrivedCount) confirmed</em>
+                                </a>
+
                                 <div class="events-row-status">
                                     <small>Status</small>
 
@@ -411,42 +529,26 @@
                                 </div>
 
                                 <div class="events-row-actions-wrap">
-                                    <details class="events-row-actions">
-                                        <summary aria-label="Actions for @ev.Title">
-                                            <span></span>
-                                            <span></span>
-                                            <span></span>
-                                        </summary>
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Bookings"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action is-primary">
+                                        Bookings
+                                    </a>
 
-                                        <div class="events-row-actions-menu">
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Edit"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action">
+                                        Edit
+                                    </a>
 
-                                            @if (ev.IsActive)
-                                            {
-                                                <a asp-controller="Events"
-                                                   asp-action="Details"
-                                                   asp-route-id="@ev.Id">
-                                                    <strong>View</strong>
-                                                    <small>Open public event</small>
-                                                </a>
-                                            }
-
-                                            <a asp-controller="AdminEvents"
-                                               asp-action="Edit"
-                                               asp-route-id="@ev.Id">
-                                                <strong>Edit</strong>
-                                                <small>Update event</small>
-                                            </a>
-
-                                            <a asp-controller="AdminEvents"
-                                               asp-action="Delete"
-                                               asp-route-id="@ev.Id"
-                                               class="danger">
-                                                <strong>Delete</strong>
-                                                <small>Remove event</small>
-                                            </a>
-
-                                        </div>
-                                    </details>
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Delete"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action is-danger">
+                                        Archive
+                                    </a>
                                 </div>
 
                             </article>
@@ -500,12 +602,27 @@
                         <div class="events-list-heading">
                             <span>Event</span>
                             <span>Date and time</span>
+                            <span>Reservations</span>
                             <span>Status</span>
                             <span>Actions</span>
                         </div>
 
                         @foreach (var ev in pastEvents)
                         {
+                            var stats = reservationStats.TryGetValue(
+                                ev.Id,
+                                out var eventStats)
+                                ? eventStats
+                                : new Dictionary<string, int>();
+
+                            var reservationsCount = stats.GetValueOrDefault("Reservations");
+                            var guestsCount = stats.GetValueOrDefault("Guests");
+                            var pendingCount = stats.GetValueOrDefault("Pending");
+                            var approvedCount = stats.GetValueOrDefault("Approved");
+                            var arrivedCount = stats.GetValueOrDefault("Arrived");
+                            var capacityClass = GetCapacityClass(ev, reservationsCount, guestsCount);
+                            var capacityText = GetCapacityText(ev, reservationsCount, guestsCount);
+
                             <article class="events-list-row is-past">
 
                                 <div class="events-row-main">
@@ -519,7 +636,7 @@
                                         else
                                         {
                                             <div class="events-row-placeholder">
-                                                <span>✦</span>
+                                                <span>?</span>
                                                 <small>Event</small>
                                             </div>
                                         }
@@ -552,6 +669,31 @@
                                     </span>
                                 </div>
 
+                                <a asp-controller="AdminReservations"
+                                   asp-action="Index"
+                                   asp-route-eventId="@ev.Id"
+                                   class="events-row-reservations @capacityClass">
+                                    <small>Reservations</small>
+                                    <strong>@reservationsCount</strong>
+                                    <span>@guestsCount guests</span>
+                                    @if (ev.MaxGuests.HasValue ||
+                                         ev.MaxReservations.HasValue)
+                                    {
+                                        <em>
+                                            Cap
+                                            @(ev.MaxReservations?.ToString() ?? "Unlimited") bookings ·
+                                            @(ev.MaxGuests?.ToString() ?? "Unlimited") guests
+                                        </em>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(capacityText))
+                                    {
+                                        <em class="capacity-warning">
+                                            @capacityText
+                                        </em>
+                                    }
+                                    <em>@pendingCount pending · @(approvedCount + arrivedCount) confirmed</em>
+                                </a>
+
                                 <div class="events-row-status">
                                     <small>Status</small>
 
@@ -576,32 +718,26 @@
                                 </div>
 
                                 <div class="events-row-actions-wrap">
-                                    <details class="events-row-actions">
-                                        <summary aria-label="Actions for @ev.Title">
-                                            <span></span>
-                                            <span></span>
-                                            <span></span>
-                                        </summary>
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Bookings"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action is-primary">
+                                        Bookings
+                                    </a>
 
-                                        <div class="events-row-actions-menu">
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Edit"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action">
+                                        Edit
+                                    </a>
 
-                                            <a asp-controller="AdminEvents"
-                                               asp-action="Edit"
-                                               asp-route-id="@ev.Id">
-                                                <strong>Edit</strong>
-                                                <small>Update event</small>
-                                            </a>
-
-                                            <a asp-controller="AdminEvents"
-                                               asp-action="Delete"
-                                               asp-route-id="@ev.Id"
-                                               class="danger">
-                                                <strong>Delete</strong>
-                                                <small>Remove event</small>
-                                            </a>
-
-                                        </div>
-                                    </details>
+                                    <a asp-controller="AdminEvents"
+                                       asp-action="Delete"
+                                       asp-route-id="@ev.Id"
+                                       class="admin-row-action is-danger">
+                                        Archive
+                                    </a>
                                 </div>
 
                             </article>
@@ -616,7 +752,7 @@
     else
     {
         <section class="events-empty-state">
-            <span class="events-empty-symbol">✦</span>
+            <span class="events-empty-symbol">?</span>
 
             <div>
                 <p>No event signal</p>
@@ -624,7 +760,7 @@
                 <h2>No events created yet</h2>
 
                 <span>
-                    Create the first Rebel Rebel night and it will appear on the public Events page.
+                    Create the first Rebel Rebel by Fat Kitchen night and it will appear on the public Events page.
                 </span>
 
                 <a asp-controller="AdminEvents"
@@ -656,19 +792,6 @@
                         }
                     });
                 });
-            });
-
-            document.addEventListener("click", function (event) {
-                const clickedActionMenu =
-                    event.target.closest(".events-row-actions");
-
-                document
-                    .querySelectorAll(".events-row-actions[open]")
-                    .forEach(function (menu) {
-                        if (menu !== clickedActionMenu) {
-                            menu.removeAttribute("open");
-                        }
-                    });
             });
         });
     </script>

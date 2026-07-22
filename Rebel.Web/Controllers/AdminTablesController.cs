@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rebel.Domain.Entities;
+using Rebel.Domain.Enums;
 using Rebel.Infrastructure.Data;
 
 namespace Rebel.Web.Controllers
@@ -55,7 +56,7 @@ namespace Rebel.Web.Controllers
             var labelExists = await _context.PubTables
                 .AnyAsync(
                     existingTable =>
-                        existingTable.Label == table.Label,
+                        existingTable.Label.ToUpper() == table.Label,
                     cancellationToken);
 
             if (labelExists)
@@ -71,6 +72,9 @@ namespace Rebel.Web.Controllers
 
             _context.PubTables.Add(table);
             await _context.SaveChangesAsync(cancellationToken);
+
+            TempData["SuccessMessage"] =
+                $"{table.Label} was added to the floor plan.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -116,7 +120,7 @@ namespace Rebel.Web.Controllers
                 .AnyAsync(
                     existingTable =>
                         existingTable.Id != table.Id &&
-                        existingTable.Label == table.Label,
+                        existingTable.Label.ToUpper() == table.Label,
                     cancellationToken);
 
             if (labelExists)
@@ -138,6 +142,33 @@ namespace Rebel.Web.Controllers
                 return NotFound();
             }
 
+            if (!string.Equals(
+                    existingTable.Label,
+                    table.Label,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                var today = DateTime.UtcNow.Date;
+
+                var hasOpenAssignments = await _context.Reservations
+                    .AsNoTracking()
+                    .AnyAsync(
+                        reservation =>
+                            reservation.TableLabel == existingTable.Label &&
+                            reservation.ReservationDate.Date >= today &&
+                            (reservation.Status == ReservationStatus.Approved ||
+                             reservation.Status == ReservationStatus.Arrived),
+                        cancellationToken);
+
+                if (hasOpenAssignments)
+                {
+                    ModelState.AddModelError(
+                        nameof(table.Label),
+                        "This table has active reservations. Reassign them before changing the label.");
+
+                    return View(table);
+                }
+            }
+
             existingTable.Label = table.Label;
             existingTable.Area = table.Area;
             existingTable.Capacity = table.Capacity;
@@ -145,12 +176,64 @@ namespace Rebel.Web.Controllers
 
             await _context.SaveChangesAsync(cancellationToken);
 
+            TempData["SuccessMessage"] =
+                $"{existingTable.Label} was updated.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            var table = await _context.PubTables
+                .FirstOrDefaultAsync(
+                    existingTable => existingTable.Id == id,
+                    cancellationToken);
+
+            if (table == null)
+            {
+                return NotFound();
+            }
+
+            if (table.IsActive)
+            {
+                var today = DateTime.UtcNow.Date;
+
+                var hasOpenAssignments = await _context.Reservations
+                    .AsNoTracking()
+                    .AnyAsync(
+                        reservation =>
+                            reservation.TableLabel == table.Label &&
+                            reservation.ReservationDate.Date >= today &&
+                            (reservation.Status == ReservationStatus.Approved ||
+                             reservation.Status == ReservationStatus.Arrived),
+                        cancellationToken);
+
+                if (hasOpenAssignments)
+                {
+                    TempData["ErrorMessage"] =
+                        $"{table.Label} still has active reservations. Reassign them before deactivating the table.";
+
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            table.IsActive = !table.IsActive;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            TempData["SuccessMessage"] = table.IsActive
+                ? $"{table.Label} is active for reservation assignments."
+                : $"{table.Label} is inactive and hidden from assignment choices.";
+
             return RedirectToAction(nameof(Index));
         }
 
         private static void Normalize(PubTable table)
         {
-            table.Label = table.Label.Trim();
+            table.Label = table.Label.Trim().ToUpperInvariant();
 
             table.Area = string.IsNullOrWhiteSpace(table.Area)
                 ? null

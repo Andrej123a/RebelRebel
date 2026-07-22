@@ -19,12 +19,21 @@ namespace Rebel.Web.Controllers
 
         // INDEX
 
-        public async Task<IActionResult> Index(string? searchTerm, Guid? categoryId, bool? isAvailable)
+        public async Task<IActionResult> Index(
+            string? searchTerm,
+            Guid? categoryId,
+            bool? isAvailable,
+            string? tag)
         {
-            var products = await GetFilteredProducts(searchTerm, categoryId, isAvailable);
+            var products = await GetFilteredProducts(
+                searchTerm,
+                categoryId,
+                isAvailable,
+                tag);
 
             ViewBag.SearchTerm = searchTerm;
             ViewBag.IsAvailable = isAvailable;
+            ViewBag.Tag = tag;
             ViewBag.Categories = new SelectList(
                 await _context.Categories.OrderBy(c => c.Name).ToListAsync(),
                 "Id",
@@ -36,9 +45,17 @@ namespace Rebel.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> FilterProducts(string? searchTerm, Guid? categoryId, bool? isAvailable)
+        public async Task<IActionResult> FilterProducts(
+            string? searchTerm,
+            Guid? categoryId,
+            bool? isAvailable,
+            string? tag)
         {
-            var products = await GetFilteredProducts(searchTerm, categoryId, isAvailable);
+            var products = await GetFilteredProducts(
+                searchTerm,
+                categoryId,
+                isAvailable,
+                tag);
             return PartialView("_ProductsTablePartial", products);
         }
 
@@ -72,7 +89,8 @@ namespace Rebel.Web.Controllers
         private async Task<List<Rebel.Domain.Entities.Product>> GetFilteredProducts(
             string? searchTerm,
             Guid? categoryId,
-            bool? isAvailable)
+            bool? isAvailable,
+            string? tag)
         {
             var query = _context.Products
                 .Include(p => p.Category)
@@ -80,7 +98,10 @@ namespace Rebel.Web.Controllers
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(p => EF.Functions.ILike(p.Name, $"%{searchTerm}%"));
+                query = query.Where(p =>
+                    EF.Functions.ILike(p.Name, $"%{searchTerm}%") ||
+                    p.Description != null &&
+                    EF.Functions.ILike(p.Description, $"%{searchTerm}%"));
             }
             if (categoryId.HasValue)
             {
@@ -91,6 +112,19 @@ namespace Rebel.Web.Controllers
             {
                 query = query.Where(p => p.IsAvailable == isAvailable.Value);
             }
+
+            query = tag switch
+            {
+                "popular" => query.Where(p => p.IsPopular),
+                "spicy" => query.Where(p => p.IsSpicy),
+                "vegetarian" => query.Where(p => p.IsVegetarian),
+                "vegan" => query.Where(p => p.IsVegan),
+                "gluten-free" => query.Where(p => p.IsGlutenFree),
+                "nuts" => query.Where(p => p.ContainsNuts),
+                "limited" => query.Where(p => p.IsLimited),
+                "promo" => query.Where(p => p.IsPromo),
+                _ => query
+            };
 
             return await query
                 .OrderBy(p => p.Name)
@@ -133,6 +167,9 @@ namespace Rebel.Web.Controllers
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                $"{product.Name} was added to the menu board.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -183,8 +220,19 @@ namespace Rebel.Web.Controllers
             existingProduct.ImageUrl = product.ImageUrl;
             existingProduct.CategoryId = product.CategoryId;
             existingProduct.IsAvailable = product.IsAvailable;
+            existingProduct.IsPopular = product.IsPopular;
+            existingProduct.IsSpicy = product.IsSpicy;
+            existingProduct.IsVegetarian = product.IsVegetarian;
+            existingProduct.IsVegan = product.IsVegan;
+            existingProduct.IsGlutenFree = product.IsGlutenFree;
+            existingProduct.ContainsNuts = product.ContainsNuts;
+            existingProduct.IsLimited = product.IsLimited;
+            existingProduct.IsPromo = product.IsPromo;
 
             await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                $"{existingProduct.Name} was updated.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -213,8 +261,12 @@ namespace Rebel.Web.Controllers
                 return NotFound();
             }
 
-            _context.Products.Remove(product);
+            product.IsDeleted = true;
+            product.DeletedAtUtc = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                $"{product.Name} was archived from the menu board.";
 
             return RedirectToAction(nameof(Index));
         }

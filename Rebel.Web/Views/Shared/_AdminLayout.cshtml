@@ -5,17 +5,66 @@
     var currentController =
         ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
 
+    var currentAction =
+        ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+
     var unreadNotificationsCount = await DbContext.Notifications
         .AsNoTracking()
-        .CountAsync(notification => !notification.IsRead);
+        .CountAsync(notification =>
+            !notification.IsRead &&
+            notification.ReservationId.HasValue &&
+            notification.Reservation != null &&
+            notification.Reservation.Status ==
+                Rebel.Domain.Enums.ReservationStatus.Pending);
+
+    var latestUnreadReservationId = await DbContext.Notifications
+        .AsNoTracking()
+        .Where(notification =>
+            !notification.IsRead &&
+            notification.ReservationId.HasValue &&
+            notification.Reservation != null &&
+            notification.Reservation.Status ==
+                Rebel.Domain.Enums.ReservationStatus.Pending)
+        .OrderByDescending(notification => notification.CreatedAt)
+        .Select(notification => notification.ReservationId)
+        .FirstOrDefaultAsync();
 
     var displayedNotificationCount = unreadNotificationsCount > 99
         ? "99+"
         : unreadNotificationsCount.ToString();
 
+    var reservationSignalAction =
+        unreadNotificationsCount == 1 &&
+        latestUnreadReservationId.HasValue
+            ? "Details"
+            : "Index";
+
+    var reservationSignalRouteValues = new Dictionary<string, string?>();
+
+    if (unreadNotificationsCount == 1 &&
+        latestUnreadReservationId.HasValue)
+    {
+        reservationSignalRouteValues["id"] =
+            latestUnreadReservationId.Value.ToString();
+    }
+    else if (unreadNotificationsCount > 1)
+    {
+        reservationSignalRouteValues["status"] = "Pending";
+    }
+
     string GetActiveClass(string controllerName)
     {
         return currentController == controllerName
+            ? "active"
+            : string.Empty;
+    }
+
+    string GetCommandActiveClass(
+        string controllerName,
+        string actionName)
+    {
+        return currentController == controllerName &&
+               currentAction == actionName
             ? "active"
             : string.Empty;
     }
@@ -97,7 +146,7 @@
                        class="admin-nav-link @GetActiveClass("AdminReservations")">
 
                         <span class="admin-nav-number">02</span>
-                        <span>Reservations</span>
+                        <span>Reservation Desk</span>
 
                         <span id="reservationNavBadge"
                               class="admin-nav-alert @(unreadNotificationsCount > 0 ? string.Empty : "d-none")"
@@ -107,12 +156,27 @@
 
                     </a>
 
+                    <div class="admin-subnav"
+                         aria-label="Reservation shortcuts">
+                        <a asp-controller="AdminReservations"
+                           asp-action="Tonight"
+                           class="@GetCommandActiveClass("AdminReservations", "Tonight")">
+                            Tonight
+                        </a>
+
+                        <a asp-controller="AdminReservations"
+                           asp-action="Planner"
+                           class="@GetCommandActiveClass("AdminReservations", "Planner")">
+                            Week Planner
+                        </a>
+                    </div>
+
                     <a asp-controller="AdminEvents"
                        asp-action="Index"
                        class="admin-nav-link @GetActiveClass("AdminEvents")">
 
                         <span class="admin-nav-number">03</span>
-                        <span>Events</span>
+                        <span>Gig Calendar</span>
                     </a>
 
                     <a asp-controller="Product"
@@ -120,7 +184,7 @@
                        class="admin-nav-link @GetActiveClass("Product")">
 
                         <span class="admin-nav-number">04</span>
-                        <span>Menu Items</span>
+                        <span>Menu Board</span>
                     </a>
 
                     <a asp-controller="Category"
@@ -128,7 +192,7 @@
                        class="admin-nav-link @GetActiveClass("Category")">
 
                         <span class="admin-nav-number">05</span>
-                        <span>Categories</span>
+                        <span>Menu Sections</span>
                     </a>
 
                     <a asp-controller="AdminTables"
@@ -136,7 +200,15 @@
                        class="admin-nav-link @GetActiveClass("AdminTables")">
 
                         <span class="admin-nav-number">06</span>
-                        <span>Tables</span>
+                        <span>Floor Plan</span>
+                    </a>
+
+                    <a asp-controller="AdminArchive"
+                       asp-action="Index"
+                       class="admin-nav-link @GetActiveClass("AdminArchive")">
+
+                        <span class="admin-nav-number">07</span>
+                        <span>Archive</span>
                     </a>
 
                 </nav>
@@ -158,7 +230,7 @@
                        target="_blank"
                        class="admin-view-site">
 
-                        View website ↗
+                        View website
                     </a>
 
                     <form asp-area="Identity"
@@ -185,14 +257,15 @@
             <div class="admin-stage-topline">
 
                 <span>
-                    Rebel Rebel / Internal system
+                    Rebel Rebel by Fat Kitchen / Internal system
                 </span>
 
                 <div class="admin-topline-actions">
 
                     <a id="reservationSignal"
                        asp-controller="AdminReservations"
-                       asp-action="Index"
+                       asp-action="@reservationSignalAction"
+                       asp-all-route-data="@reservationSignalRouteValues"
                        class="admin-reservation-signal @(unreadNotificationsCount > 0 ? "has-notifications" : string.Empty)"
                        aria-label="Open reservation notifications">
 
@@ -243,12 +316,58 @@
                     </a>
 
                     <span class="admin-live-mark">
-                        ● SYSTEM ONLINE
+                        SYSTEM ONLINE
                     </span>
 
                 </div>
 
             </div>
+
+            @if (TempData["SuccessMessage"] != null ||
+                 TempData["ErrorMessage"] != null)
+            {
+                <div class="admin-system-signals"
+                     aria-live="polite">
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="admin-system-signal success"
+                             role="status">
+                            <span>OK</span>
+
+                            <div>
+                                <small>Control room update</small>
+                                <strong>@TempData["SuccessMessage"]</strong>
+                            </div>
+
+                            <button type="button"
+                                    aria-label="Dismiss message"
+                                    data-admin-dismiss-signal>
+                                Close
+                            </button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="admin-system-signal danger"
+                             role="alert">
+                            <span>!</span>
+
+                            <div>
+                                <small>Needs attention</small>
+                                <strong>@TempData["ErrorMessage"]</strong>
+                            </div>
+
+                            <button type="button"
+                                    aria-label="Dismiss message"
+                                    data-admin-dismiss-signal>
+                                Close
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
 
             <div class="admin-page-frame">
                 @RenderBody()
@@ -266,6 +385,50 @@
 
     <script src="~/js/admin-notifications.js"
             asp-append-version="true"></script>
+
+    <script>
+        (() => {
+            document.addEventListener("submit", (event) => {
+                const form = event.target;
+
+                if (!(form instanceof HTMLFormElement)) {
+                    return;
+                }
+
+                if (form.classList.contains("product-status-form")) {
+                    return;
+                }
+
+                if (form.dataset.submitting === "true") {
+                    event.preventDefault();
+                    return;
+                }
+
+                form.dataset.submitting = "true";
+
+                window.setTimeout(() => {
+                    form
+                        .querySelectorAll("button[type='submit']")
+                        .forEach((button) => {
+                            button.setAttribute("disabled", "disabled");
+                    });
+                }, 0);
+            });
+
+            document.addEventListener("click", (event) => {
+                const dismissButton =
+                    event.target.closest("[data-admin-dismiss-signal]");
+
+                if (!dismissButton) {
+                    return;
+                }
+
+                dismissButton
+                    .closest(".admin-system-signal")
+                    ?.remove();
+            });
+        })();
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 

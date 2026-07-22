@@ -1,4 +1,17 @@
 ﻿@{
+    var pageTitle = ViewData["Title"]?.ToString();
+    var metaTitle = string.IsNullOrWhiteSpace(pageTitle)
+        ? "Rebel Rebel by Fat Kitchen"
+        : $"{pageTitle} - Rebel Rebel by Fat Kitchen";
+
+    var metaDescription =
+        ViewData["MetaDescription"]?.ToString()
+        ?? "Rebel Rebel by Fat Kitchen in Skopje. Bold pub food, rare beer, events, and table reservations.";
+
+    var ogImage =
+        ViewData["OgImage"]?.ToString()
+        ?? Url.Content("~/images/email/rebel-logo.png");
+
     var currentController =
         ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
 
@@ -35,7 +48,34 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
 
-    <title>@ViewData["Title"] - Rebel Rebel</title>
+    <title>@metaTitle</title>
+
+    <meta name="description"
+          content="@metaDescription" />
+
+    <meta name="robots"
+          content="index, follow" />
+
+    <meta property="og:type"
+          content="website" />
+
+    <meta property="og:title"
+          content="@metaTitle" />
+
+    <meta property="og:description"
+          content="@metaDescription" />
+
+    <meta property="og:image"
+          content="@ogImage" />
+
+    <meta property="og:site_name"
+          content="Rebel Rebel by Fat Kitchen" />
+
+    <meta name="twitter:card"
+          content="summary_large_image" />
+
+    <link rel="canonical"
+          href="@($"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}")" />
 
     <link rel="stylesheet"
           href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -71,7 +111,7 @@
                     <span class="rr-brand-image-frame">
 
                         <img src="~/images/email/rebel-logo.png"
-                             alt="Rebel Rebel"
+                             alt="Rebel Rebel by Fat Kitchen"
                              class="rr-brand-image" />
 
                     </span>
@@ -170,6 +210,20 @@
 
                         </a>
 
+                        <a asp-controller="Reservations"
+                           asp-action="Lookup"
+                           class="rr-nav-link @IsActive("Reservations", "Lookup")">
+
+                            <span class="rr-nav-index">
+                                05
+                            </span>
+
+                            <span class="rr-nav-name">
+                                My Booking
+                            </span>
+
+                        </a>
+
                     </div>
 
                     <a asp-controller="Reservations"
@@ -185,7 +239,7 @@
                         </strong>
 
                         <span class="rr-reserve-arrow">
-                            ↗
+                            ?
                         </span>
 
                     </a>
@@ -199,19 +253,19 @@
                 <div class="rr-nav-warning-track">
 
                     <span>No boring nights</span>
-                    <i>✦</i>
+                    <i>?</i>
 
                     <span>Rare beer</span>
-                    <i>✦</i>
+                    <i>?</i>
 
                     <span>Bold food</span>
-                    <i>✦</i>
+                    <i>?</i>
 
                     <span>Alternative sound</span>
-                    <i>✦</i>
+                    <i>?</i>
 
                     <span>No boring nights</span>
-                    <i>✦</i>
+                    <i>?</i>
 
                     <span>Rare beer</span>
 
@@ -234,7 +288,7 @@
             <div class="rr-footer-brand">
 
                 <span>
-                    Rebel Rebel
+                    Rebel Rebel by Fat Kitchen
                 </span>
 
                 <strong>
@@ -244,14 +298,14 @@
             </div>
 
             <div class="rr-footer-copy">
-                © 2026 Rebel Rebel · Skopje
+                © 2026 Rebel Rebel by Fat Kitchen · Skopje
             </div>
 
             <a asp-controller="Reservations"
                asp-action="Create"
                class="rr-footer-link">
 
-                Book a table ↗
+                Book a table ?
             </a>
 
         </div>

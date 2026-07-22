@@ -32,7 +32,16 @@
 
         <input asp-for="Area"
                class="form-control form-control-lg"
+               list="tableAreaSuggestions"
                placeholder="Main floor, Bar, Patio" />
+
+        <datalist id="tableAreaSuggestions">
+            <option value="Main floor"></option>
+            <option value="Bar"></option>
+            <option value="Patio"></option>
+            <option value="Booths"></option>
+            <option value="Terrace"></option>
+        </datalist>
 
         <p>
             Groups tables on the Floor Setup page and helps staff scan faster.
@@ -94,7 +103,9 @@
         </strong>
 
         <small>
-            If it is inactive, it stays saved but disappears from assignment choices.
+            @(Model.IsActive
+                ? "It is active, so staff can assign approved reservations here."
+                : "It is inactive, so it stays saved but disappears from assignment choices.")
         </small>
     </div>
 </div>

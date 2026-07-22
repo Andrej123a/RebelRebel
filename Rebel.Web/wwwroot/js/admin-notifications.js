@@ -1,4 +1,23 @@
 ﻿document.addEventListener("DOMContentLoaded", async () => {
+    updateAdminMobileRailHeight();
+
+    window.addEventListener(
+        "resize",
+        updateAdminMobileRailHeight
+    );
+
+    const adminNavigation = document.getElementById("adminNavigation");
+
+    adminNavigation?.addEventListener(
+        "shown.bs.collapse",
+        updateAdminMobileRailHeight
+    );
+
+    adminNavigation?.addEventListener(
+        "hidden.bs.collapse",
+        updateAdminMobileRailHeight
+    );
+
     if (typeof signalR === "undefined") {
         console.error("SignalR JavaScript client is not loaded.");
         return;
@@ -10,7 +29,10 @@
         .build();
 
     connection.on("ReceiveNotification", notification => {
-        updateLiveNotificationState();
+        if (isNewReservationNotification(notification)) {
+            updateLiveNotificationState(notification);
+        }
+
         showLiveNotification(notification);
     });
 
@@ -22,7 +44,20 @@
     }
 });
 
-function updateLiveNotificationState() {
+function updateAdminMobileRailHeight() {
+    const rail = document.querySelector(".admin-rail");
+
+    if (!rail) {
+        return;
+    }
+
+    document.documentElement.style.setProperty(
+        "--admin-mobile-rail-height",
+        `${rail.offsetHeight}px`
+    );
+}
+
+function updateLiveNotificationState(notification) {
     const topBadge =
         document.getElementById("notificationBadge");
 
@@ -68,11 +103,22 @@ function updateLiveNotificationState() {
         reservationSignal.classList.add(
             "has-notifications"
         );
+
+        reservationSignal.href =
+            newCount === 1 && notification?.link
+                ? notification.link
+                : "/AdminReservations?status=Pending";
     }
 
     if (signalState) {
         signalState.textContent = "NEW REQUEST";
     }
+}
+
+function isNewReservationNotification(notification) {
+    return notification?.link?.includes(
+        "/AdminReservations/Details/"
+    ) === true;
 }
 
 function getCurrentCount(

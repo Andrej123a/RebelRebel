@@ -1,0 +1,153 @@
+﻿@model List<Rebel.Domain.Entities.Reservation>
+@using Rebel.Domain.Entities
+@using Rebel.Domain.Enums
+
+@{
+    var ev = ViewBag.Event as Event
+             ?? throw new InvalidOperationException("Event is required.");
+
+    ViewData["Title"] = $"{ev.Title} Bookings";
+
+    var activeReservations = Model
+        .Where(reservation =>
+            reservation.Status != ReservationStatus.Rejected &&
+            reservation.Status != ReservationStatus.NoShow &&
+            reservation.Status != ReservationStatus.Cancelled)
+        .ToList();
+
+    var guestCount = activeReservations.Sum(reservation =>
+        reservation.NumberOfGuests);
+
+    var guestCapacityClass =
+        ev.MaxGuests.HasValue && guestCount >= ev.MaxGuests.Value
+            ? "is-full"
+            : ev.MaxGuests.HasValue && guestCount >= ev.MaxGuests.Value * 0.8
+                ? "is-near-capacity"
+                : string.Empty;
+
+    string StatusClass(ReservationStatus status)
+    {
+        return status switch
+        {
+            ReservationStatus.Pending => "is-pending",
+            ReservationStatus.Approved => "is-approved",
+            ReservationStatus.Arrived => "is-arrived",
+            ReservationStatus.NoShow => "is-no-show",
+            ReservationStatus.Cancelled => "is-cancelled",
+            ReservationStatus.Rejected => "is-rejected",
+            _ => string.Empty
+        };
+    }
+}
+
+<section class="event-bookings-page">
+
+    <header class="event-bookings-hero">
+        <div>
+            <p>Event guest list</p>
+            <h1>@ev.Title</h1>
+            <span>
+                @ev.Date.ToString("dddd, dd MMM yyyy")
+                @(ev.StartTime.HasValue ? $" at {ev.StartTime.Value:hh\\:mm}" : "")
+            </span>
+        </div>
+
+        <div class="admin-page-tools">
+            <a asp-controller="AdminReservations"
+               asp-action="Index"
+               asp-route-eventId="@ev.Id"
+               class="admin-tool-button is-primary">
+                Reservation Board
+            </a>
+
+            <a asp-controller="AdminEvents"
+               asp-action="Edit"
+               asp-route-id="@ev.Id"
+               class="admin-tool-button">
+                Edit Event
+            </a>
+
+            <a asp-controller="AdminEvents"
+               asp-action="Index"
+               class="admin-tool-button">
+                Back to Events
+            </a>
+        </div>
+    </header>
+
+    <section class="event-bookings-stats">
+        <div>
+            <span>Reservations</span>
+            <strong>@activeReservations.Count</strong>
+            <small>active bookings</small>
+        </div>
+
+        <div class="@guestCapacityClass">
+            <span>Guests</span>
+            <strong>@guestCount</strong>
+            <small>
+                @(ev.MaxGuests.HasValue
+                    ? $"{ev.MaxGuests.Value - guestCount} seats left"
+                    : "no event guest cap")
+            </small>
+        </div>
+
+        <div>
+            <span>Pending</span>
+            <strong>@Model.Count(r => r.Status == ReservationStatus.Pending)</strong>
+            <small>need approval</small>
+        </div>
+
+        <div>
+            <span>Arrived</span>
+            <strong>@Model.Count(r => r.Status == ReservationStatus.Arrived)</strong>
+            <small>checked in</small>
+        </div>
+    </section>
+
+    @if (Model.Any())
+    {
+        <div class="event-bookings-list">
+            @foreach (var reservation in Model)
+            {
+                <article class="event-booking-row @StatusClass(reservation.Status)">
+                    <div>
+                        <strong>@reservation.ReservationTime.ToString(@"hh\:mm")</strong>
+                        <span>@reservation.Status</span>
+                    </div>
+
+                    <div>
+                        <strong>@reservation.FullName</strong>
+                        <span>@reservation.PhoneNumber Â· @reservation.Email</span>
+                    </div>
+
+                    <div>
+                        <strong>
+                            @reservation.NumberOfGuests
+                            @(reservation.NumberOfGuests == 1 ? "guest" : "guests")
+                        </strong>
+                        <span>
+                            @(string.IsNullOrWhiteSpace(reservation.TableLabel)
+                                ? "Table not assigned"
+                                : $"Table {reservation.TableLabel}")
+                        </span>
+                    </div>
+
+                    <a asp-controller="AdminReservations"
+                       asp-action="Details"
+                       asp-route-id="@reservation.Id">
+                        Open
+                    </a>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="event-bookings-empty">
+            <h2>No bookings yet</h2>
+            <p>Reservations made through this event will appear here.</p>
+        </div>
+    }
+
+</section>

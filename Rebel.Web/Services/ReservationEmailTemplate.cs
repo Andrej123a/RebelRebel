@@ -4,11 +4,12 @@ namespace Rebel.Web.Services
 {
     public static class ReservationEmailTemplate
     {
-        public static string BuildApproved(
+        public static string BuildReceived(
             string fullName,
             DateTime reservationDate,
             TimeSpan reservationTime,
             int numberOfGuests,
+            string reservationCode,
             string logoUrl,
             string? eventTitle = null)
         {
@@ -17,6 +18,34 @@ namespace Rebel.Web.Services
                 reservationDate,
                 reservationTime,
                 numberOfGuests,
+                reservationCode,
+                logoUrl,
+                eventTitle,
+                badgeText: "REQUEST RECEIVED",
+                badgeBackground: "#f4c430",
+                title: "WE GOT YOUR REQUEST",
+                message:
+                    "Your reservation is waiting for staff approval. Keep your code handy so you can track or cancel the request.",
+                closingTitle: "WE'LL CHECK THE FLOOR.",
+                closingText: "You will hear from us once the team confirms it."
+            );
+        }
+
+        public static string BuildApproved(
+            string fullName,
+            DateTime reservationDate,
+            TimeSpan reservationTime,
+            int numberOfGuests,
+            string reservationCode,
+            string logoUrl,
+            string? eventTitle = null)
+        {
+            return BuildTemplate(
+                fullName,
+                reservationDate,
+                reservationTime,
+                numberOfGuests,
+                reservationCode,
                 logoUrl,
                 eventTitle,
                 badgeText: "RESERVATION CONFIRMED",
@@ -34,6 +63,7 @@ namespace Rebel.Web.Services
             DateTime reservationDate,
             TimeSpan reservationTime,
             int numberOfGuests,
+            string reservationCode,
             string logoUrl,
             string? eventTitle = null)
         {
@@ -42,6 +72,7 @@ namespace Rebel.Web.Services
                 reservationDate,
                 reservationTime,
                 numberOfGuests,
+                reservationCode,
                 logoUrl,
                 eventTitle,
                 badgeText: "RESERVATION UPDATE",
@@ -54,11 +85,39 @@ namespace Rebel.Web.Services
             );
         }
 
+        public static string BuildCancelled(
+            string fullName,
+            DateTime reservationDate,
+            TimeSpan reservationTime,
+            int numberOfGuests,
+            string reservationCode,
+            string logoUrl,
+            string? eventTitle = null)
+        {
+            return BuildTemplate(
+                fullName,
+                reservationDate,
+                reservationTime,
+                numberOfGuests,
+                reservationCode,
+                logoUrl,
+                eventTitle,
+                badgeText: "RESERVATION CANCELLED",
+                badgeBackground: "#c93c3c",
+                title: "YOUR RESERVATION WAS CANCELLED",
+                message:
+                    "This reservation has been cancelled. If that does not look right, contact the team directly.",
+                closingTitle: "THANKS FOR UNDERSTANDING.",
+                closingText: "We hope to see you another time."
+            );
+        }
+
         private static string BuildTemplate(
             string fullName,
             DateTime reservationDate,
             TimeSpan reservationTime,
             int numberOfGuests,
+            string reservationCode,
             string logoUrl,
             string? eventTitle,
             string badgeText,
@@ -69,6 +128,7 @@ namespace Rebel.Web.Services
             string closingText)
         {
             var safeName = WebUtility.HtmlEncode(fullName);
+            var safeReservationCode = WebUtility.HtmlEncode(reservationCode);
             var safeLogoUrl = WebUtility.HtmlEncode(logoUrl);
             var safeEventTitle = WebUtility.HtmlEncode(eventTitle);
 
@@ -198,6 +258,17 @@ namespace Rebel.Web.Services
                                                    cellpadding="0"
                                                    border="0"
                                                    style="width:100%; background:#101010; border:1px solid #303030; border-radius:14px;">
+
+                                                <tr>
+                                                    <td style="padding:17px 20px; border-bottom:1px solid #303030; color:#888888; font-size:12px; font-weight:700; letter-spacing:1px;">
+                                                        CODE
+                                                    </td>
+
+                                                    <td align="right"
+                                                        style="padding:17px 20px; border-bottom:1px solid #303030; color:#f4c430; font-size:16px; font-weight:900; letter-spacing:1px;">
+                                                        {safeReservationCode}
+                                                    </td>
+                                                </tr>
 
                                                 <tr>
                                                     <td style="padding:17px 20px; border-bottom:1px solid #303030; color:#888888; font-size:12px; font-weight:700; letter-spacing:1px;">

@@ -1,241 +1,248 @@
-﻿@model Rebel.Domain.Entities.Event
+@model Rebel.Domain.Entities.Event
 
 @{
     ViewData["Title"] = "Edit Event";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-xl-10">
-
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-                <div>
-                    <p class="text-warning text-uppercase fw-bold small mb-1">
-                        Rebel Rebel Admin
-                    </p>
-
-                    <h1 class="fw-bold text-light mb-2">
-                        Edit Event
-                    </h1>
-
-                    <p class="text-secondary mb-0">
-                        Update the event details, schedule and visibility.
-                    </p>
-                </div>
-
-                <a asp-controller="AdminEvents"
-                   asp-action="Index"
-                   class="btn btn-outline-light">
-                    Back to Events
-                </a>
-            </div>
-
-            <form asp-controller="AdminEvents"
-                  asp-action="Edit"
-                  asp-route-id="@Model.Id"
-                  method="post"
-                  autocomplete="off">
-
-                <input type="hidden" asp-for="Id" />
-
-                <div asp-validation-summary="ModelOnly"
-                     class="alert alert-danger mb-4">
-                </div>
-
-                <div class="row g-4">
-
-                    <div class="col-lg-7">
-                        <div class="bg-dark border border-secondary rounded-4 p-4 h-100">
-
-                            <div class="mb-4">
-                                <label asp-for="Title"
-                                       class="form-label text-light fw-semibold">
-                                </label>
-
-                                <input asp-for="Title"
-                                       class="form-control"
-                                       placeholder="Enter event title"
-                                       autocomplete="off" />
-
-                                <span asp-validation-for="Title"
-                                      class="text-danger small">
-                                </span>
-                            </div>
-
-                            <div class="mb-4">
-                                <label asp-for="Description"
-                                       class="form-label text-light fw-semibold">
-                                </label>
-
-                                <textarea asp-for="Description"
-                                          class="form-control"
-                                          rows="6"
-                                          placeholder="Describe the event, music and atmosphere"></textarea>
-
-                                <span asp-validation-for="Description"
-                                      class="text-danger small">
-                                </span>
-                            </div>
-
-                            <div class="row g-3">
-
-                                <div class="col-md-6">
-                                    <label asp-for="Date"
-                                           class="form-label text-light fw-semibold">
-                                    </label>
-
-                                    <input asp-for="Date"
-                                           type="date"
-                                           class="form-control" />
-
-                                    <span asp-validation-for="Date"
-                                          class="text-danger small">
-                                    </span>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label asp-for="EventType"
-                                           class="form-label text-light fw-semibold">
-                                        Event Type
-                                    </label>
-
-                                    <select asp-for="EventType"
-                                            asp-items="ViewBag.EventTypes"
-                                            class="form-select">
-                                    </select>
-
-                                    <span asp-validation-for="EventType"
-                                          class="text-danger small">
-                                    </span>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label asp-for="StartTime"
-                                           class="form-label text-light fw-semibold">
-                                        Start Time
-                                    </label>
-
-                                    <input asp-for="StartTime"
-                                           type="time"
-                                           class="form-control"
-                                           id="startTimeInput" />
-
-                                    <span asp-validation-for="StartTime"
-                                          class="text-danger small">
-                                    </span>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label asp-for="EndTime"
-                                           class="form-label text-light fw-semibold">
-                                        End Time
-                                    </label>
-
-                                    <input asp-for="EndTime"
-                                           type="time"
-                                           class="form-control"
-                                           id="endTimeInput" />
-
-                                    <span asp-validation-for="EndTime"
-                                          class="text-danger small">
-                                    </span>
-
-                                    <div id="timeValidationMessage"
-                                         class="small mt-2 d-none">
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <div class="form-check form-switch mt-4">
-                                <input asp-for="IsActive"
-                                       class="form-check-input"
-                                       role="switch" />
-
-                                <label asp-for="IsActive"
-                                       class="form-check-label text-light">
-                                    Visible on the public Events page
-                                </label>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div class="col-lg-5">
-                        <div class="bg-dark border border-secondary rounded-4 p-4 h-100">
-
-                            <label asp-for="ImageUrl"
-                                   class="form-label text-light fw-semibold">
-                                Image URL
-                            </label>
-
-                            <input asp-for="ImageUrl"
-                                   class="form-control"
-                                   placeholder="https://example.com/event.jpg"
-                                   autocomplete="off"
-                                   id="imageUrlInput" />
-
-                            <span asp-validation-for="ImageUrl"
-                                  class="text-danger small">
-                            </span>
-
-                            <p class="text-secondary small mt-2 mb-3">
-                                Change or remove the URL to update the event poster.
-                            </p>
-
-                            <div class="rounded-4 overflow-hidden border border-secondary"
-                                 style="height: 360px; background: #161616;">
-
-                                <img id="imagePreview"
-                                     src="@Model.ImageUrl"
-                                     alt="@Model.Title"
-                                     class="w-100 h-100"
-                                     style="object-fit: cover;
-                                            display: @(string.IsNullOrWhiteSpace(Model.ImageUrl)
-                                                                                     ? "none"
-                                                                                     : "block");" />
-
-                                <div id="imagePlaceholder"
-                                     class="h-100 flex-column align-items-center justify-content-center text-center p-4"
-                                     style="display: @(string.IsNullOrWhiteSpace(Model.ImageUrl)
-                                                                              ? "flex"
-                                                                              : "none");">
-
-                                    <span class="display-4 mb-3">✦</span>
-
-                                    <p class="text-light fw-semibold mb-1">
-                                        Event image preview
-                                    </p>
-
-                                    <p class="text-secondary small mb-0">
-                                        The poster will appear here after entering its URL.
-                                    </p>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="d-flex flex-wrap gap-3 mt-4">
-                    <button type="submit"
-                            class="btn btn-warning px-4 fw-semibold"
-                            id="saveEventButton">
-                        Save Changes
-                    </button>
-
-                    <a asp-controller="AdminEvents"
-                       asp-action="Index"
-                       class="btn btn-outline-light px-4">
-                        Cancel
-                    </a>
-                </div>
-
-            </form>
+<section class="admin-editor-page">
+    <header class="admin-editor-hero">
+        <div>
+            <small>Gig calendar</small>
+            <h1>Edit Event</h1>
+            <p>
+                Update the public event details, service schedule, capacity
+                and visibility from one focused editor.
+            </p>
         </div>
-    </div>
-</div>
+
+        <a asp-controller="AdminEvents"
+           asp-action="Index"
+           class="admin-tool-button">
+            Back to Events
+        </a>
+    </header>
+
+    <form asp-controller="AdminEvents"
+          asp-action="Edit"
+          asp-route-id="@Model.Id"
+          method="post"
+          class="admin-editor-form"
+          autocomplete="off">
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger">
+        </div>
+
+        <div class="admin-editor-grid">
+            <section class="admin-editor-panel">
+                <h2>Event Details</h2>
+                <p class="admin-editor-help">
+                    Capacity fields are optional. Leave them empty when normal
+                    table availability should control reservations.
+                </p>
+
+                <div class="admin-editor-field">
+                    <label asp-for="Title"
+                           class="form-label">
+                    </label>
+
+                    <input asp-for="Title"
+                           class="form-control"
+                           placeholder="Beer tasting, DJ night, live band..."
+                           autocomplete="off" />
+
+                    <span asp-validation-for="Title"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+                <div class="admin-editor-field">
+                    <label asp-for="Description"
+                           class="form-label">
+                    </label>
+
+                    <textarea asp-for="Description"
+                              class="form-control"
+                              rows="6"
+                              placeholder="Describe the event, music and atmosphere"></textarea>
+
+                    <span asp-validation-for="Description"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+                <div class="admin-editor-fields-grid">
+                    <div>
+                        <label asp-for="Date"
+                               class="form-label">
+                        </label>
+
+                        <input asp-for="Date"
+                               type="date"
+                               class="form-control" />
+
+                        <span asp-validation-for="Date"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div>
+                        <label asp-for="EventType"
+                               class="form-label">
+                            Event Type
+                        </label>
+
+                        <select asp-for="EventType"
+                                asp-items="ViewBag.EventTypes"
+                                class="form-select">
+                        </select>
+
+                        <span asp-validation-for="EventType"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div>
+                        <label asp-for="StartTime"
+                               class="form-label">
+                            Start Time
+                        </label>
+
+                        <input asp-for="StartTime"
+                               type="time"
+                               class="form-control"
+                               id="startTimeInput" />
+
+                        <span asp-validation-for="StartTime"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div>
+                        <label asp-for="EndTime"
+                               class="form-label">
+                            End Time
+                        </label>
+
+                        <input asp-for="EndTime"
+                               type="time"
+                               class="form-control"
+                               id="endTimeInput" />
+
+                        <span asp-validation-for="EndTime"
+                              class="text-danger small">
+                        </span>
+
+                        <div id="timeValidationMessage"
+                             class="small mt-2 d-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label asp-for="MaxReservations"
+                               class="form-label">
+                            Reservation Limit
+                        </label>
+
+                        <input asp-for="MaxReservations"
+                               type="number"
+                               min="1"
+                               class="form-control"
+                               placeholder="Unlimited" />
+
+                        <span asp-validation-for="MaxReservations"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    <div>
+                        <label asp-for="MaxGuests"
+                               class="form-label">
+                            Guest Capacity
+                        </label>
+
+                        <input asp-for="MaxGuests"
+                               type="number"
+                               min="1"
+                               class="form-control"
+                               placeholder="Unlimited" />
+
+                        <span asp-validation-for="MaxGuests"
+                              class="text-danger small">
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-check form-switch admin-editor-switch">
+                    <input asp-for="IsActive"
+                           class="form-check-input"
+                           role="switch" />
+
+                    <label asp-for="IsActive"
+                           class="form-check-label">
+                        Visible on the public Events page
+                    </label>
+                </div>
+            </section>
+
+            <section class="admin-editor-panel">
+                <h2>Event Poster</h2>
+
+                <div class="admin-editor-field">
+                    <label asp-for="ImageUrl"
+                           class="form-label">
+                        Image URL
+                    </label>
+
+                    <input asp-for="ImageUrl"
+                           class="form-control"
+                           placeholder="https://example.com/event.jpg"
+                           autocomplete="off"
+                           id="imageUrlInput" />
+
+                    <span asp-validation-for="ImageUrl"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+                <div class="admin-media-preview">
+                    <img id="imagePreview"
+                         src="@Model.ImageUrl"
+                         alt="@Model.Title"
+                         style="display: @(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "none" : "block");" />
+
+                    <div id="imagePlaceholder"
+                         class="admin-media-placeholder"
+                         style="display: @(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "flex" : "none");">
+                        <span>IMG</span>
+                        <strong>Event image preview</strong>
+                        <small>The poster will appear here after entering its URL.</small>
+                    </div>
+                </div>
+
+                <ul class="admin-editor-note-list mt-3">
+                    <li>Changing visibility immediately affects the public Events page.</li>
+                    <li>Existing event reservations stay connected after editing.</li>
+                </ul>
+            </section>
+        </div>
+
+        <div class="admin-editor-actions">
+            <button type="submit"
+                    class="btn btn-warning"
+                    id="saveEventButton">
+                Save Changes
+            </button>
+
+            <a asp-controller="AdminEvents"
+               asp-action="Index"
+               class="btn btn-outline-light">
+                Cancel
+            </a>
+        </div>
+    </form>
+</section>
 
 @section Scripts {
     @{
@@ -304,27 +311,16 @@
                 }
             }
 
-            imagePreview.addEventListener(
-                "error",
-                showImagePlaceholder
-            );
+            if (imageInput && imagePreview && imagePlaceholder) {
+                imagePreview.addEventListener("error", showImagePlaceholder);
+                imageInput.addEventListener("input", updateImagePreview);
+            }
 
-            imageInput.addEventListener(
-                "input",
-                updateImagePreview
-            );
-
-            startTimeInput.addEventListener(
-                "change",
-                validateTimes
-            );
-
-            endTimeInput.addEventListener(
-                "change",
-                validateTimes
-            );
-
-            validateTimes();
+            if (startTimeInput && endTimeInput) {
+                startTimeInput.addEventListener("change", validateTimes);
+                endTimeInput.addEventListener("change", validateTimes);
+                validateTimes();
+            }
         });
     </script>
 }
