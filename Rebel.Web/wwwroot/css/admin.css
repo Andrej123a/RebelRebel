@@ -2477,6 +2477,116 @@ a {
     align-items: end;
 }
 
+.reservation-review-page > .reservation-review-back {
+    order: 0;
+}
+
+.reservation-review-page > .reservation-review-hero {
+    order: 1;
+}
+
+.reservation-review-page > .reservation-service-strip,
+.reservation-review-page > .reservation-large-party-alert,
+.reservation-review-page > .reservation-event-alert,
+.reservation-review-page > .reservation-email-alert {
+    order: 2;
+}
+
+.reservation-review-page > .reservation-decision-grid {
+    order: 3;
+}
+
+.reservation-review-page > .reservation-floor-panel {
+    order: 4;
+}
+
+.reservation-review-page > .reservation-review-grid {
+    order: 5;
+}
+
+.reservation-review-page > .reservation-cancel-panel {
+    order: 6;
+}
+
+.reservation-floor-brief {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding: 13px 14px;
+    background: #0b0b0b;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+    .reservation-floor-brief strong {
+        color: var(--rebel-white);
+        font-weight: 900;
+    }
+
+    .reservation-floor-brief span {
+        color: #8f8f8f;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+.reservation-review-page .reservation-review-hero {
+    align-items: center;
+    padding: clamp(20px, 3vw, 30px);
+    background:
+        linear-gradient(110deg, rgba(244, 196, 0, 0.11), transparent 58%),
+        #101010;
+}
+
+    .reservation-review-page .reservation-review-hero h1 {
+        margin: 6px 0 8px;
+        font-size: clamp(3rem, 5.4vw, 5.2rem);
+    }
+
+    .reservation-review-page .reservation-review-status {
+        min-width: 140px;
+        padding: 12px 14px;
+    }
+
+        .reservation-review-page .reservation-review-status strong {
+            font-size: 1.9rem;
+        }
+
+.reservation-review-page .reservation-service-strip strong {
+    font-family: inherit;
+    font-size: 1.28rem;
+    font-weight: 900;
+    line-height: 1.1;
+}
+
+.reservation-review-page .reservation-email-alert {
+    grid-template-columns: minmax(110px, auto) minmax(150px, auto) minmax(0, 1fr);
+    padding: 12px 14px;
+}
+
+    .reservation-review-page .reservation-email-alert strong {
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+
+.reservation-review-page .reservation-review-panel,
+.reservation-review-page .reservation-decision-card,
+.reservation-review-page .reservation-cancel-panel {
+    padding: clamp(16px, 2.5vw, 22px);
+}
+
+.reservation-review-page .reservation-review-section-title {
+    margin-bottom: 14px;
+}
+
+    .reservation-review-page .reservation-review-section-title h2,
+    .reservation-review-page .reservation-decision-card h2,
+    .reservation-review-page .reservation-cancel-panel h2 {
+        font-size: clamp(1.9rem, 3vw, 2.7rem);
+    }
+
 .today-panel {
     padding: 20px;
     background: #101010;

@@ -251,190 +251,47 @@
         </div>
     }
 
-    <div class="reservation-email-alert @EmailStatusClass(Model.EmailStatus)">
-        <span>Guest email</span>
-        <strong>@EmailStatusLabel(Model.EmailStatus)</strong>
-        <div>
-            <p>@EmailStatusDetail()</p>
+    @if (Model.EmailStatus?.Contains("Failed", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        <div class="reservation-email-alert @EmailStatusClass(Model.EmailStatus)">
+            <span>Email issue</span>
+            <strong>@EmailStatusLabel(Model.EmailStatus)</strong>
+            <div>
+                <p>@EmailStatusDetail()</p>
 
-            <form asp-controller="AdminReservations"
-                  asp-action="ResendGuestEmail"
-                  asp-route-id="@Model.Id"
-                  method="post"
-                  class="reservation-email-resend-form">
-                @Html.AntiForgeryToken()
+                <form asp-controller="AdminReservations"
+                      asp-action="ResendGuestEmail"
+                      asp-route-id="@Model.Id"
+                      method="post"
+                      class="reservation-email-resend-form">
+                    @Html.AntiForgeryToken()
 
-                <button type="submit"
-                        class="reservation-email-resend-button">
-                    Resend Guest Email
-                </button>
-            </form>
+                    <button type="submit"
+                            class="reservation-email-resend-button">
+                        Resend Guest Email
+                    </button>
+                </form>
+            </div>
         </div>
-    </div>
+    }
 
-    <div class="reservation-review-grid">
-        <section class="reservation-review-panel">
-            <div class="reservation-review-section-title">
-                <span>01</span>
-                <h2>Guest</h2>
-            </div>
-
-            <dl class="reservation-review-facts">
-                <div>
-                    <dt>Email</dt>
-                    <dd>@Model.Email</dd>
-                </div>
-
-                <div>
-                    <dt>Phone</dt>
-                    <dd>@Model.PhoneNumber</dd>
-                </div>
-
-                <div>
-                    <dt>Date</dt>
-                    <dd>@reservationDateText</dd>
-                </div>
-
-                <div>
-                    <dt>Time</dt>
-                    <dd>@reservationTimeText</dd>
-                </div>
-
-                <div>
-                    <dt>Guests</dt>
-                    <dd>@Model.NumberOfGuests</dd>
-                </div>
-
-                <div>
-                    <dt>Table</dt>
-                    <dd>@tableLabel</dd>
-                </div>
-
-                @if (Model.Event != null)
-                {
-                    <div class="wide">
-                        <dt>Event</dt>
-                        <dd>@Model.Event.Title</dd>
-                    </div>
-                }
-            </dl>
-
-            <div class="reservation-review-note">
-                <span>Guest note</span>
-                <p>@guestNote</p>
-            </div>
-        </section>
-
-        <aside class="reservation-review-panel">
-            <div class="reservation-review-section-title">
-                <span>02</span>
-                <h2>Activity Log</h2>
-            </div>
-
-            <ol class="reservation-status-log">
-                @if (reservationActivities.Count == 0)
-                {
-                    <li>
-                        <span>Submitted</span>
-                        <strong>@createdInSkopje.ToString("dd MMM yyyy, HH:mm")</strong>
-                        <p>Initial reservation request.</p>
-                    </li>
-                }
-                else
-                {
-                    @foreach (var activity in reservationActivities)
-                    {
-                        var activityAtUtc = DateTime.SpecifyKind(
-                            activity.CreatedAtUtc,
-                            DateTimeKind.Utc);
-
-                        var activityAt = TimeZoneInfo
-                            .ConvertTimeFromUtc(activityAtUtc, skopjeTimeZone)
-                            .ToString("dd MMM yyyy, HH:mm");
-
-                        <li>
-                            <span>@activity.Actor / @activityAt</span>
-                            <strong>@activity.Title</strong>
-                            <p>@activity.Description</p>
-                        </li>
-                    }
-                }
-
-                <li>
-                    <span>Current state</span>
-                    <strong>@StatusLabel(Model.Status)</strong>
-                </li>
-            </ol>
-
-            <div class="reservation-review-note">
-                <span>Admin response</span>
-                <p>@adminResponse</p>
-            </div>
-        </aside>
-    </div>
-
-    <section class="reservation-review-panel">
+    <section class="reservation-review-panel reservation-floor-panel">
         <div class="reservation-review-section-title">
-            <span>03</span>
-            <h2>Floor Decision</h2>
+            <span>01</span>
+            <h2>Table and Staff Note</h2>
         </div>
 
-        <div class="reservation-floor-summary">
-            <div class="is-open">
-                <span>Assignable</span>
-                <strong>@assignableTablesCount</strong>
-            </div>
-
-            <div>
-                <span>Busy at @reservationTimeText</span>
-                <strong>@busyTablesCount</strong>
-            </div>
-
-            <div>
-                <span>Too small</span>
-                <strong>@tooSmallTablesCount</strong>
-            </div>
-
-            <div class="is-recommended">
-                <span>Best fit</span>
-                <strong>@(recommendedTable?.Label ?? "None")</strong>
-            </div>
-        </div>
-
-        <div class="reservation-table-options">
-            @foreach (var table in activeTables)
-            {
-                var isBusy = busyTables.Contains(table.Label);
-                var isTooSmall = Model.NumberOfGuests > table.Capacity;
-                var isSelected = Model.TableLabel == table.Label;
-                var isRecommended = recommendedTable?.Label == table.Label;
-                var tableState = isSelected
-                    ? "Assigned"
-                    : isRecommended
-                        ? "Best fit"
-                        : isBusy
-                            ? $"Busy at {reservationTimeText}"
-                            : isTooSmall
-                                ? $"Needs {Model.NumberOfGuests}, seats {table.Capacity}"
-                                : "Available";
-
-                <div class="reservation-table-option @(isSelected ? "selected" : "") @(isRecommended ? "recommended" : "") @(isBusy || isTooSmall ? "blocked" : "")">
-                    <strong>@table.Label</strong>
-                    <span>@table.Capacity seats</span>
-
-                    @if (!string.IsNullOrWhiteSpace(table.Area))
-                    {
-                        <small>@table.Area</small>
-                    }
-
-                    <em>@tableState</em>
-                </div>
-            }
-        </div>
-
-        <div class="reservation-review-note">
-            <span>Staff note</span>
-            <p>@internalNote</p>
+        <div class="reservation-floor-brief">
+            <strong>
+                @(recommendedTable == null
+                    ? "No automatic table match"
+                    : $"Recommended: {recommendedTable.Label}")
+            </strong>
+            <span>
+                @assignableTablesCount assignable /
+                @busyTablesCount busy /
+                @tooSmallTablesCount too small
+            </span>
         </div>
 
         @if (canEditFloor)
@@ -508,10 +365,6 @@
                             }
                         }
                     </select>
-
-                    <span class="reservation-field-hint">
-                        Busy and too-small tables are blocked to prevent double seating.
-                    </span>
                 </label>
 
                 <label>
@@ -520,16 +373,19 @@
                            value="@Model.InternalNote"
                            maxlength="500"
                            placeholder="Birthday, regular guest, avoid bar seats..." />
-
-                    <span class="reservation-field-hint">
-                        Internal only. Guests do not see this note.
-                    </span>
                 </label>
 
                 <button type="submit">
-                    Save Floor Details
+                    Save
                 </button>
             </form>
+        }
+        else
+        {
+            <div class="reservation-review-note">
+                <span>Staff note</span>
+                <p>@internalNote</p>
+            </div>
         }
     </section>
 
@@ -549,10 +405,6 @@
 
                 <span>Decision</span>
                 <h2>Approve</h2>
-                <p>
-                    Confirm the booking and assign the best available table when possible.
-                    Approving without a table keeps it visible as unassigned.
-                </p>
 
                 <select name="tableLabel">
                     <option value=""
@@ -598,30 +450,18 @@
                     }
                 </select>
 
-                <small class="reservation-field-hint">
-                    Recommended table is auto-selected when one fits and is not busy.
-                </small>
-
                 <textarea name="adminNote"
-                          rows="3"
+                          rows="2"
                           maxlength="500"
                           placeholder="Optional guest-facing message..."></textarea>
-
-                <small class="reservation-field-hint">
-                    Guest-facing note appears in the approval email.
-                </small>
 
                 <textarea name="internalNote"
                           rows="2"
                           maxlength="500"
                           placeholder="Internal note, not sent to guest..."></textarea>
 
-                <small class="reservation-field-hint">
-                    Internal note is for staff only.
-                </small>
-
                 <button type="submit">
-                    Approve Reservation
+                    Approve
                 </button>
             </form>
 
@@ -638,10 +478,9 @@
 
                 <span>Decision</span>
                 <h2>Reject</h2>
-                <p>Decline the request when the floor cannot take it.</p>
 
                 <textarea name="adminNote"
-                          rows="5"
+                          rows="4"
                           maxlength="500"
                           placeholder="Optional reason or alternative time..."></textarea>
 
@@ -651,6 +490,93 @@
             </form>
         </section>
     }
+
+    <div class="reservation-review-grid">
+        <section class="reservation-review-panel">
+            <div class="reservation-review-section-title">
+                <span>02</span>
+                <h2>Guest Details</h2>
+            </div>
+
+            <dl class="reservation-review-facts">
+                <div>
+                    <dt>Email</dt>
+                    <dd>@Model.Email</dd>
+                </div>
+
+                <div>
+                    <dt>Phone</dt>
+                    <dd>@Model.PhoneNumber</dd>
+                </div>
+
+                <div>
+                    <dt>Submitted</dt>
+                    <dd>@createdInSkopje.ToString("dd MMM, HH:mm")</dd>
+                </div>
+
+                @if (Model.Event != null)
+                {
+                    <div class="wide">
+                        <dt>Event</dt>
+                        <dd>@Model.Event.Title</dd>
+                    </div>
+                }
+            </dl>
+
+            <div class="reservation-review-note">
+                <span>Guest note</span>
+                <p>@guestNote</p>
+            </div>
+
+            <div class="reservation-review-note">
+                <span>Admin response</span>
+                <p>@adminResponse</p>
+            </div>
+        </section>
+
+        <aside class="reservation-review-panel">
+            <div class="reservation-review-section-title">
+                <span>03</span>
+                <h2>Log</h2>
+            </div>
+
+            <ol class="reservation-status-log">
+                @if (reservationActivities.Count == 0)
+                {
+                    <li>
+                        <span>Submitted</span>
+                        <strong>@createdInSkopje.ToString("dd MMM yyyy, HH:mm")</strong>
+                        <p>Initial reservation request.</p>
+                    </li>
+                }
+                else
+                {
+                    @foreach (var activity in reservationActivities.Take(4))
+                    {
+                        var activityAtUtc = DateTime.SpecifyKind(
+                            activity.CreatedAtUtc,
+                            DateTimeKind.Utc);
+
+                        var activityAt = TimeZoneInfo
+                            .ConvertTimeFromUtc(activityAtUtc, skopjeTimeZone)
+                            .ToString("dd MMM yyyy, HH:mm");
+
+                        <li>
+                            <span>@activity.Actor / @activityAt</span>
+                            <strong>@activity.Title</strong>
+                            <p>@activity.Description</p>
+                        </li>
+                    }
+                }
+
+                <li>
+                    <span>Email</span>
+                    <strong>@EmailStatusLabel(Model.EmailStatus)</strong>
+                    <p>@EmailStatusDetail()</p>
+                </li>
+            </ol>
+        </aside>
+    </div>
 
     @if (canCancel)
     {
