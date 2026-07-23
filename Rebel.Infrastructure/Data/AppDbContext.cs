@@ -19,6 +19,8 @@ namespace Rebel.Infrastructure.Data
         public DbSet<ReservationActivity> ReservationActivities { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<PubTable> PubTables { get; set; }
+        public DbSet<StaffMember> StaffMembers { get; set; }
+        public DbSet<StaffShift> StaffShifts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -183,6 +185,59 @@ namespace Rebel.Infrastructure.Data
                     .WithMany()
                     .HasForeignKey(n => n.ReservationId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<StaffMember>(entity =>
+            {
+                entity.Property(staff => staff.FullName)
+                    .IsRequired()
+                    .HasMaxLength(80);
+
+                entity.Property(staff => staff.Role)
+                    .HasConversion<string>()
+                    .HasMaxLength(20);
+
+                entity.Property(staff => staff.PhoneNumber)
+                    .HasMaxLength(40);
+
+                entity.HasIndex(staff => new
+                {
+                    staff.IsActive,
+                    staff.Role
+                });
+            });
+
+            builder.Entity<StaffShift>(entity =>
+            {
+                entity.Property(shift => shift.Role)
+                    .HasConversion<string>()
+                    .HasMaxLength(20);
+
+                entity.Property(shift => shift.ShiftDate)
+                    .HasColumnType("date");
+
+                entity.Property(shift => shift.StartsAt)
+                    .HasColumnType("time without time zone");
+
+                entity.Property(shift => shift.EndsAt)
+                    .HasColumnType("time without time zone");
+
+                entity.Property(shift => shift.Note)
+                    .HasMaxLength(160);
+
+                entity.Property(shift => shift.CreatedAtUtc)
+                    .HasColumnType("timestamp with time zone");
+
+                entity.HasIndex(shift => new
+                {
+                    shift.ShiftDate,
+                    shift.Role
+                });
+
+                entity.HasOne(shift => shift.StaffMember)
+                    .WithMany(staff => staff.Shifts)
+                    .HasForeignKey(shift => shift.StaffMemberId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

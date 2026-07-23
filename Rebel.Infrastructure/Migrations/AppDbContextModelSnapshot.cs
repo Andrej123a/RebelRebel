@@ -506,6 +506,75 @@ namespace _03.Rebel.Infrastructure.Migrations
                     b.ToTable("ReservationActivities");
                 });
 
+            modelBuilder.Entity("Rebel.Domain.Entities.StaffMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive", "Role");
+
+                    b.ToTable("StaffMembers");
+                });
+
+            modelBuilder.Entity("Rebel.Domain.Entities.StaffShift", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan>("EndsAt")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("ShiftDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("StaffMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeSpan>("StartsAt")
+                        .HasColumnType("time without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffMemberId");
+
+                    b.HasIndex("ShiftDate", "Role");
+
+                    b.ToTable("StaffShifts");
+                });
+
             modelBuilder.Entity("Rebel.Domain.Entities.Reservation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -701,9 +770,25 @@ namespace _03.Rebel.Infrastructure.Migrations
                     b.Navigation("Reservation");
                 });
 
+            modelBuilder.Entity("Rebel.Domain.Entities.StaffShift", b =>
+                {
+                    b.HasOne("Rebel.Domain.Entities.StaffMember", "StaffMember")
+                        .WithMany("Shifts")
+                        .HasForeignKey("StaffMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StaffMember");
+                });
+
             modelBuilder.Entity("Rebel.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("Rebel.Domain.Entities.StaffMember", b =>
+                {
+                    b.Navigation("Shifts");
                 });
 #pragma warning restore 612, 618
         }

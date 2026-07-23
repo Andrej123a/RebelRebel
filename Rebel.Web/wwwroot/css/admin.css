@@ -2609,6 +2609,551 @@ a {
         text-transform: uppercase;
     }
 
+.staff-schedule-page {
+    display: grid;
+    gap: 18px;
+}
+
+.staff-schedule-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    padding: clamp(20px, 3vw, 30px);
+    background:
+        linear-gradient(110deg, rgba(244, 196, 0, 0.14), transparent 62%),
+        #101010;
+    border: 1px solid rgba(244, 196, 0, 0.34);
+    border-left: 6px solid var(--rebel-yellow);
+}
+
+    .staff-schedule-hero p,
+    .staff-rota-title span,
+    .staff-coverage-strip span,
+    .staff-day-card header span,
+    .staff-shift-card span {
+        margin: 0;
+        color: var(--rebel-yellow);
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 1.45px;
+        text-transform: uppercase;
+    }
+
+    .staff-schedule-hero h1 {
+        margin: 7px 0 8px;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(3rem, 6vw, 5.4rem);
+        font-weight: 400;
+        line-height: 0.85;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .staff-schedule-hero span {
+        color: #9b9b9b;
+        font-weight: 800;
+    }
+
+.staff-rota-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    gap: 18px;
+}
+
+.staff-rota-panel,
+.staff-list-panel {
+    display: grid;
+    gap: 14px;
+    padding: clamp(16px, 2.5vw, 22px);
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.staff-rota-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+    .staff-rota-title h2 {
+        margin: 0;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(2rem, 3vw, 3rem);
+        font-weight: 400;
+        line-height: 0.88;
+        text-transform: uppercase;
+    }
+
+.staff-rota-fields.two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.staff-shift-presets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+    .staff-shift-presets button {
+        min-height: 42px;
+        padding: 0 10px;
+        color: var(--rebel-yellow);
+        background: rgba(244, 196, 0, 0.05);
+        border: 1px solid rgba(244, 196, 0, 0.34);
+        font-size: 0.66rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .staff-shift-presets button:hover {
+        color: #0b0b0b;
+        background: var(--rebel-yellow);
+        border-color: var(--rebel-yellow);
+    }
+
+.staff-rota-panel label {
+    display: grid;
+    gap: 7px;
+    color: #858585;
+    font-size: 0.64rem;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.staff-rota-panel input,
+.staff-rota-panel select {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    color: var(--rebel-white);
+    background: #090909;
+    border: 1px solid rgba(255, 255, 255, 0.17);
+}
+
+    .staff-rota-panel input:focus,
+    .staff-rota-panel select:focus {
+        outline: 0;
+        border-color: rgba(244, 196, 0, 0.72);
+        box-shadow: 0 0 0 3px rgba(244, 196, 0, 0.12);
+    }
+
+.staff-rota-panel button,
+.staff-member-row button {
+    min-height: 44px;
+    padding: 0 14px;
+    color: #0b0b0b;
+    background: var(--rebel-yellow);
+    border: 1px solid var(--rebel-yellow);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+}
+
+.staff-coverage-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+    .staff-coverage-strip div {
+        min-width: 0;
+        padding: 14px;
+        background: #0b0b0b;
+    }
+
+    .staff-coverage-strip strong {
+        display: block;
+        margin-top: 6px;
+        color: var(--rebel-white);
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 2.2rem;
+        font-weight: 400;
+        line-height: 0.9;
+    }
+
+    .staff-coverage-strip small {
+        color: #8f8f8f;
+    }
+
+.staff-week-board {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(190px, 1fr));
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.staff-day-card {
+    min-width: 190px;
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+    .staff-day-card.is-today {
+        border-color: rgba(244, 196, 0, 0.5);
+        box-shadow: inset 0 3px 0 var(--rebel-yellow);
+    }
+
+    .staff-day-card header {
+        display: grid;
+        gap: 5px;
+        padding: 14px;
+        background: #0b0b0b;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .staff-day-card header strong {
+        color: var(--rebel-white);
+        font-size: 1.04rem;
+        font-weight: 900;
+    }
+
+    .staff-day-card header small {
+        color: #8f8f8f;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+.staff-shift-list {
+    display: grid;
+    gap: 9px;
+    padding: 10px;
+}
+
+.staff-day-events {
+    display: grid;
+    gap: 7px;
+    padding-bottom: 2px;
+}
+
+.staff-day-event {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 9px;
+    align-items: center;
+    min-width: 0;
+    padding: 8px;
+    color: var(--rebel-white);
+    background:
+        linear-gradient(110deg, rgba(244, 196, 0, 0.1), transparent 76%),
+        #0b0b0b;
+    border: 1px solid rgba(244, 196, 0, 0.26);
+    text-decoration: none;
+}
+
+    .staff-day-event:hover {
+        color: var(--rebel-white);
+        border-color: rgba(244, 196, 0, 0.55);
+    }
+
+    .staff-day-event img,
+    .staff-day-event-fallback {
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+        background: #151515;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .staff-day-event-fallback {
+        display: inline-grid;
+        place-items: center;
+        color: var(--rebel-yellow);
+        font-size: 0.58rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .staff-day-event span {
+        min-width: 0;
+    }
+
+    .staff-day-event strong {
+        display: block;
+        color: var(--rebel-white);
+        font-size: 0.82rem;
+        font-weight: 900;
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+    }
+
+    .staff-day-event small {
+        display: block;
+        margin-top: 4px;
+        color: #9b9b9b;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+
+.staff-shift-empty,
+.staff-member-empty {
+    padding: 14px;
+    color: #8f8f8f;
+    background: #0b0b0b;
+    border: 1px dashed rgba(255, 255, 255, 0.14);
+    font-weight: 800;
+}
+
+.staff-day-section {
+    display: grid;
+    gap: 7px;
+    padding-top: 3px;
+}
+
+    .staff-day-section > span {
+        color: #8f8f8f;
+        font-size: 0.58rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+    }
+
+    .staff-day-section > small {
+        padding: 9px 10px;
+        color: #6f6f6f;
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+
+.staff-shift-card {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 12px;
+    background: #0b0b0b;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: 4px solid var(--rebel-yellow);
+}
+
+    .staff-shift-card.role-kitchen {
+        border-left-color: #55c875;
+    }
+
+    .staff-shift-card.role-front {
+        border-left-color: #5fb4ff;
+    }
+
+    .staff-shift-card strong {
+        display: block;
+        margin-top: 4px;
+        color: var(--rebel-white);
+        font-weight: 900;
+        overflow-wrap: anywhere;
+    }
+
+    .staff-shift-card small,
+    .staff-shift-card em {
+        display: block;
+        color: #9b9b9b;
+        font-style: normal;
+        line-height: 1.35;
+    }
+
+    .staff-shift-card form {
+        margin: 0;
+    }
+
+    .staff-shift-card button {
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        color: #ff6873;
+        background: transparent;
+        border: 1px solid rgba(200, 32, 45, 0.45);
+        font-size: 0.75rem;
+        font-weight: 900;
+    }
+
+.staff-member-list {
+    display: grid;
+    gap: 8px;
+}
+
+.staff-section-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.staff-section-panel {
+    display: grid;
+    align-content: start;
+    gap: 9px;
+    min-width: 0;
+    padding: 14px;
+    background: #0b0b0b;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-top: 4px solid #5fb4ff;
+}
+
+    .staff-section-panel.role-kitchen {
+        border-top-color: #55c875;
+    }
+
+    .staff-section-panel header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 4px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .staff-section-panel header span {
+        color: var(--rebel-yellow);
+        font-size: 0.66rem;
+        font-weight: 900;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+    }
+
+    .staff-section-panel header strong {
+        display: inline-grid;
+        place-items: center;
+        min-width: 34px;
+        height: 34px;
+        color: #0b0b0b;
+        background: var(--rebel-yellow);
+        font-weight: 900;
+    }
+
+.staff-member-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 14px;
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+    .staff-member-row.is-inactive {
+        opacity: 0.55;
+    }
+
+    .staff-member-row strong {
+        display: block;
+        color: var(--rebel-white);
+        font-weight: 900;
+    }
+
+    .staff-member-row span,
+    .staff-member-row em,
+    .staff-member-row small {
+        display: block;
+        color: #8f8f8f;
+        font-size: 0.84rem;
+        font-weight: 800;
+    }
+
+    .staff-member-row em {
+        width: fit-content;
+        margin-top: 7px;
+        padding: 4px 8px;
+        color: var(--rebel-yellow);
+        background: rgba(244, 196, 0, 0.07);
+        border: 1px solid rgba(244, 196, 0, 0.25);
+        font-size: 0.68rem;
+        font-style: normal;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+    }
+
+.staff-member-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+    .staff-member-actions form {
+        margin: 0;
+    }
+
+    .staff-member-actions a,
+    .staff-member-actions button {
+        display: inline-flex;
+        min-height: 38px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        font-size: 0.64rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    .staff-member-actions a {
+        color: #0b0b0b;
+        background: var(--rebel-yellow);
+        border: 1px solid var(--rebel-yellow);
+    }
+
+    .staff-member-actions button {
+        color: #9b9b9b;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+@media (max-width: 991.98px) {
+    .staff-schedule-hero,
+    .staff-rota-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .staff-schedule-hero {
+        display: grid;
+        align-items: start;
+    }
+
+    .staff-coverage-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .staff-rota-fields.two,
+    .staff-shift-presets,
+    .staff-coverage-strip,
+    .staff-section-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .staff-member-row,
+    .staff-shift-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .staff-member-actions {
+        justify-content: stretch;
+    }
+
+    .staff-member-actions a,
+    .staff-member-actions button,
+    .staff-member-row button,
+    .staff-member-row form {
+        width: 100%;
+    }
+}
+
     .today-panel-header a {
         color: #9b9b9b;
         font-size: 0.66rem;

@@ -1,0 +1,469 @@
+@model AdminStaffScheduleViewModel
+
+@using Rebel.Domain.Enums
+
+@{
+    ViewData["Title"] = "Staff Schedule";
+
+    var days = Enumerable
+        .Range(0, 7)
+        .Select(offset => Model.StartDate.AddDays(offset))
+        .ToList();
+
+    var activeStaff = Model.StaffMembers
+        .Where(staff => staff.IsActive)
+        .ToList();
+
+    var sections = Enum
+        .GetValues<StaffRole>()
+        .ToList();
+
+    var shiftsByDay = Model.Shifts
+        .GroupBy(shift => shift.ShiftDate.Date)
+        .ToDictionary(
+            group => group.Key,
+            group => group
+                .OrderBy(shift => shift.StartsAt)
+                .ThenBy(shift => shift.Role)
+                .ToList());
+
+    var coverageBySection = Model.Shifts
+        .GroupBy(shift => shift.Role)
+        .ToDictionary(
+            group => group.Key,
+            group => group.Count());
+
+    var shiftsByStaff = Model.Shifts
+        .GroupBy(shift => shift.StaffMemberId)
+        .ToDictionary(
+            group => group.Key,
+            group => group.Count());
+
+    var eventsByDay = Model.Events
+        .GroupBy(weekEvent => weekEvent.Date.Date)
+        .ToDictionary(
+            group => group.Key,
+            group => group.ToList());
+}
+
+<section class="staff-schedule-page">
+    <header class="staff-schedule-hero">
+        <div>
+            <p>Internal rota</p>
+            <h1>Staff Schedule</h1>
+            <span>
+                @Model.StartDate.ToString("dd MMM") - @Model.EndDate.ToString("dd MMM yyyy")
+            </span>
+        </div>
+
+        <div class="admin-page-tools">
+            <a asp-controller="AdminStaffSchedule"
+               asp-action="Index"
+               asp-route-startDate="@Model.PreviousWeek.ToString("yyyy-MM-dd")"
+               class="admin-tool-button">
+                Previous Week
+            </a>
+
+            <a asp-controller="AdminStaffSchedule"
+               asp-action="Index"
+               asp-route-startDate="@DateTime.Today.ToString("yyyy-MM-dd")"
+               class="admin-tool-button is-primary">
+                This Week
+            </a>
+
+            <a asp-controller="AdminStaffSchedule"
+               asp-action="Index"
+               asp-route-startDate="@Model.NextWeek.ToString("yyyy-MM-dd")"
+               class="admin-tool-button">
+                Next Week
+            </a>
+        </div>
+    </header>
+
+    <section class="staff-rota-grid">
+        <form asp-controller="AdminStaffSchedule"
+              asp-action="CreateShift"
+              method="post"
+              id="add-shift"
+              class="staff-rota-panel">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="startDate"
+                   value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+
+            <div class="staff-rota-title">
+                <span>01</span>
+                <h2>Add Shift</h2>
+            </div>
+
+            <div class="staff-shift-presets"
+                 aria-label="Quick shift presets">
+                <button type="button"
+                        data-shift-start="10:00"
+                        data-shift-end="16:00">
+                    First / 10-16
+                </button>
+
+                <button type="button"
+                        data-shift-start="16:00"
+                        data-shift-end="00:00">
+                    Second / 16-00
+                </button>
+
+                <button type="button"
+                        data-shift-start="12:00"
+                        data-shift-end="20:00">
+                    Middle / 12-20
+                </button>
+            </div>
+
+            <label>
+                Staff
+                <select name="StaffMemberId" required>
+                    <option value="">Choose staff</option>
+                    @foreach (var staffMember in activeStaff)
+                    {
+                        <option value="@staffMember.Id"
+                                selected="@(Model.NewShift.StaffMemberId == staffMember.Id)">
+                            @staffMember.FullName / @staffMember.Role
+                        </option>
+                    }
+                </select>
+            </label>
+
+            <div class="staff-rota-fields two">
+                <label>
+                    Date
+                    <input name="ShiftDate"
+                           type="date"
+                           value="@Model.NewShift.ShiftDate.ToString("yyyy-MM-dd")"
+                           required />
+                </label>
+
+                <label>
+                    Note
+                    <input name="Note"
+                           maxlength="160"
+                           placeholder="Optional" />
+                </label>
+            </div>
+
+            <div class="staff-rota-fields two">
+                <label>
+                    Start
+                    <input name="StartsAt"
+                           id="shiftStartsAt"
+                           type="time"
+                           value="@Model.NewShift.StartsAt.ToString(@"hh\:mm")"
+                           required />
+                </label>
+
+                <label>
+                    End
+                    <input name="EndsAt"
+                           id="shiftEndsAt"
+                           type="time"
+                           value="@Model.NewShift.EndsAt.ToString(@"hh\:mm")"
+                           required />
+                </label>
+            </div>
+
+            <button type="submit">
+                Add Shift
+            </button>
+        </form>
+
+        <form asp-controller="AdminStaffSchedule"
+              asp-action="CreateStaff"
+              method="post"
+              class="staff-rota-panel">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="startDate"
+                   value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+
+            <div class="staff-rota-title">
+                <span>02</span>
+                <h2>Add Staff</h2>
+            </div>
+
+            <label>
+                Name
+                <input name="FullName"
+                       maxlength="80"
+                       placeholder="Staff name"
+                       required />
+            </label>
+
+            <div class="staff-rota-fields two">
+                <label>
+                    Section
+                    <select name="Role">
+                        @foreach (var staffSection in sections)
+                        {
+                            <option value="@staffSection">@staffSection</option>
+                        }
+                    </select>
+                </label>
+
+                <label>
+                    Phone
+                    <input name="PhoneNumber"
+                           maxlength="40"
+                           placeholder="Optional" />
+                </label>
+            </div>
+
+            <button type="submit">
+                Add Staff
+            </button>
+        </form>
+    </section>
+
+    <section class="staff-coverage-strip">
+        @foreach (var staffSection in sections)
+        {
+            var count = coverageBySection.TryGetValue(staffSection, out var sectionCount)
+                ? sectionCount
+                : 0;
+
+            <div>
+                <span>@staffSection</span>
+                <strong>@count</strong>
+                <small>shifts this week</small>
+            </div>
+        }
+    </section>
+
+    <div class="staff-week-board">
+        @foreach (var day in days)
+        {
+            var dayShifts = shiftsByDay.TryGetValue(day.Date, out var shifts)
+                ? shifts
+                : new List<Rebel.Domain.Entities.StaffShift>();
+
+            var dayEvents = eventsByDay.TryGetValue(day.Date, out var events)
+                ? events
+                : new List<StaffScheduleEventViewModel>();
+
+            <article class="staff-day-card @(day.Date == DateTime.Today ? "is-today" : "")">
+                <header>
+                    <span>@day.ToString("ddd")</span>
+                    <strong>@day.ToString("dd MMM")</strong>
+                    <small>@dayShifts.Count shifts</small>
+                </header>
+
+                <div class="staff-shift-list">
+                    @if (dayEvents.Count > 0)
+                    {
+                        <div class="staff-day-events">
+                            @foreach (var weekEvent in dayEvents)
+                            {
+                                <a asp-controller="AdminEvents"
+                                   asp-action="Bookings"
+                                   asp-route-id="@weekEvent.Id"
+                                   class="staff-day-event">
+                                    @if (!string.IsNullOrWhiteSpace(weekEvent.ImageUrl))
+                                    {
+                                        <img src="@Url.Content(weekEvent.ImageUrl)"
+                                             alt="@weekEvent.Title" />
+                                    }
+                                    else
+                                    {
+                                        <span class="staff-day-event-fallback">
+                                            Gig
+                                        </span>
+                                    }
+
+                                    <span>
+                                        <strong>@weekEvent.Title</strong>
+                                        <small>
+                                            @(weekEvent.StartTime?.ToString(@"hh\:mm") ?? "Time TBC")
+                                            / @weekEvent.ReservationCount reservations
+                                            / @weekEvent.GuestCount guests
+                                        </small>
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    }
+
+                    @if (dayShifts.Count == 0)
+                    {
+                        <div class="staff-shift-empty">
+                            No shifts yet.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var staffSection in sections)
+                        {
+                            var sectionShifts = dayShifts
+                                .Where(shift => shift.Role == staffSection)
+                                .ToList();
+
+                            <div class="staff-day-section">
+                                <span>@staffSection</span>
+
+                                @if (sectionShifts.Count == 0)
+                                {
+                                    <small>No @staffSection.ToString().ToLowerInvariant() cover.</small>
+                                }
+                                else
+                                {
+                                    @foreach (var shift in sectionShifts)
+                                    {
+                                        <div class="staff-shift-card role-@shift.Role.ToString().ToLowerInvariant()">
+                                            <div>
+                                                <strong>@shift.StaffMember?.FullName</strong>
+                                                <small>
+                                                    @shift.StartsAt.ToString(@"hh\:mm") - @shift.EndsAt.ToString(@"hh\:mm")
+                                                </small>
+                                                @if (!string.IsNullOrWhiteSpace(shift.Note))
+                                                {
+                                                    <em>@shift.Note</em>
+                                                }
+                                            </div>
+
+                                            <form asp-controller="AdminStaffSchedule"
+                                                  asp-action="DeleteShift"
+                                                  method="post"
+                                                  onsubmit="return confirm('Remove this shift?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden"
+                                                       name="id"
+                                                       value="@shift.Id" />
+                                                <input type="hidden"
+                                                       name="startDate"
+                                                       value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+                                                <button type="submit"
+                                                        aria-label="Remove shift">
+                                                    X
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </article>
+        }
+    </div>
+
+    <section class="staff-list-panel">
+        <div class="staff-rota-title">
+            <span>03</span>
+            <h2>Staff List</h2>
+        </div>
+
+        <div class="staff-member-list">
+            @if (Model.StaffMembers.Count == 0)
+            {
+                <div class="staff-member-empty">
+                    Add staff members before building the weekly rota.
+                </div>
+            }
+            else
+            {
+                <div class="staff-section-columns">
+                @foreach (var staffSection in sections)
+                {
+                    var sectionStaff = Model.StaffMembers
+                        .Where(staffMember => staffMember.Role == staffSection)
+                        .ToList();
+
+                    <article class="staff-section-panel role-@staffSection.ToString().ToLowerInvariant()">
+                        <header>
+                            <span>@staffSection</span>
+                            <strong>@sectionStaff.Count</strong>
+                        </header>
+
+                        @if (sectionStaff.Count == 0)
+                        {
+                            <div class="staff-member-empty">
+                                No @staffSection.ToString().ToLowerInvariant() staff yet.
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var staffMember in sectionStaff)
+                            {
+                                <div class="staff-member-row @(staffMember.IsActive ? "" : "is-inactive")">
+                                    <div>
+                                        <strong>@staffMember.FullName</strong>
+                                        <span>@(staffMember.IsActive ? "Active" : "Inactive")</span>
+                                        <em>
+                                            @(shiftsByStaff.TryGetValue(staffMember.Id, out var staffShiftCount)
+                                                ? staffShiftCount
+                                                : 0)
+                                            shifts this week
+                                        </em>
+                                        @if (!string.IsNullOrWhiteSpace(staffMember.PhoneNumber))
+                                        {
+                                            <small>@staffMember.PhoneNumber</small>
+                                        }
+                                    </div>
+
+                                    <div class="staff-member-actions">
+                                        @if (staffMember.IsActive)
+                                        {
+                                            <a asp-controller="AdminStaffSchedule"
+                                               asp-action="Index"
+                                               asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+                                               asp-route-staffMemberId="@staffMember.Id"
+                                               asp-fragment="add-shift">
+                                                Add Shift
+                                            </a>
+                                        }
+
+                                        <form asp-controller="AdminStaffSchedule"
+                                              asp-action="ToggleStaff"
+                                              method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@staffMember.Id" />
+                                            <input type="hidden"
+                                                   name="startDate"
+                                                   value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+                                            <button type="submit">
+                                                @(staffMember.IsActive ? "Deactivate" : "Reactivate")
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </article>
+                }
+                </div>
+            }
+        </div>
+    </section>
+</section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const startInput = document.getElementById("shiftStartsAt");
+            const endInput = document.getElementById("shiftEndsAt");
+
+            if (!startInput || !endInput) {
+                return;
+            }
+
+            document
+                .querySelectorAll("[data-shift-start][data-shift-end]")
+                .forEach((button) => {
+                    button.addEventListener("click", () => {
+                        startInput.value = button.dataset.shiftStart ?? "";
+                        endInput.value = button.dataset.shiftEnd ?? "";
+                    });
+                });
+        })();
+    </script>
+}

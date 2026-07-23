@@ -217,6 +217,47 @@ using (var scope = app.Services.CreateScope())
         CREATE UNIQUE INDEX IF NOT EXISTS "IX_PubTables_Label"
             ON "PubTables" ("Label");
 
+        CREATE TABLE IF NOT EXISTS "StaffMembers" (
+            "Id" uuid NOT NULL,
+            "FullName" character varying(80) NOT NULL,
+            "Role" character varying(20) NOT NULL,
+            "PhoneNumber" character varying(40) NULL,
+            "IsActive" boolean NOT NULL,
+            CONSTRAINT "PK_StaffMembers" PRIMARY KEY ("Id")
+        );
+
+        CREATE INDEX IF NOT EXISTS "IX_StaffMembers_IsActive_Role"
+            ON "StaffMembers" ("IsActive", "Role");
+
+        CREATE TABLE IF NOT EXISTS "StaffShifts" (
+            "Id" uuid NOT NULL,
+            "StaffMemberId" uuid NOT NULL,
+            "Role" character varying(20) NOT NULL,
+            "ShiftDate" date NOT NULL,
+            "StartsAt" time without time zone NOT NULL,
+            "EndsAt" time without time zone NOT NULL,
+            "Note" character varying(160) NULL,
+            "CreatedAtUtc" timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_StaffShifts" PRIMARY KEY ("Id"),
+            CONSTRAINT "FK_StaffShifts_StaffMembers_StaffMemberId"
+                FOREIGN KEY ("StaffMemberId") REFERENCES "StaffMembers" ("Id")
+                ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS "IX_StaffShifts_ShiftDate_Role"
+            ON "StaffShifts" ("ShiftDate", "Role");
+
+        CREATE INDEX IF NOT EXISTS "IX_StaffShifts_StaffMemberId"
+            ON "StaffShifts" ("StaffMemberId");
+
+        UPDATE "StaffMembers"
+        SET "Role" = 'Front'
+        WHERE "Role" IN ('Manager', 'Waiter', 'Bar');
+
+        UPDATE "StaffShifts"
+        SET "Role" = 'Front'
+        WHERE "Role" IN ('Manager', 'Waiter', 'Bar');
+
         DO $$
         BEGIN
             IF NOT EXISTS (
