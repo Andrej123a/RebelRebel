@@ -6580,6 +6580,31 @@ a.admin-metric.active {
     content: " -";
 }
 
+.table-zone-disclosure > summary {
+    min-height: 68px;
+    padding: 8px 2px;
+}
+
+.table-zone-disclosure > summary > span:first-child {
+    padding-left: 14px;
+    border-left: 4px solid var(--rebel-yellow);
+    color: #f2eee7;
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 1.85rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1;
+}
+
+.table-zone-disclosure > summary > span:last-child {
+    color: #aeb1b6;
+    font-size: 0.7rem;
+}
+
+.table-zone-disclosure[open] > summary > span:first-child {
+    color: var(--rebel-yellow);
+}
+
 .admin-filter-panel {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

@@ -86,7 +86,7 @@
                 .Where(table => table.IsActive)
                 .Sum(table => table.Capacity);
 
-            <details class="admin-content-disclosure"
+            <details class="admin-content-disclosure table-zone-disclosure"
                      open="@(index == 0 ? "open" : null)">
                 <summary>
                     <span>@group.Key</span>

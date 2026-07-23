@@ -184,23 +184,25 @@
                            class="@GetCommandActiveClass("AdminReservations", "Planner")">
                             Weekly View
                         </a>
-
-                        <a asp-controller="AdminTables"
-                           asp-action="Index"
-                           class="@GetActiveClass("AdminTables")">
-                            Tables
-                        </a>
                     </div>
 
                     <span class="admin-nav-section">
                         Manage
                     </span>
 
+                    <a asp-controller="AdminTables"
+                       asp-action="Index"
+                       class="admin-nav-link @GetActiveClass("AdminTables")">
+
+                        <span class="admin-nav-number">04</span>
+                        <span>Floor Plan</span>
+                    </a>
+
                     <a asp-controller="AdminEvents"
                        asp-action="Index"
                        class="admin-nav-link @GetActiveClass("AdminEvents")">
 
-                        <span class="admin-nav-number">04</span>
+                        <span class="admin-nav-number">05</span>
                         <span>Events</span>
                     </a>
 
@@ -208,7 +210,7 @@
                        asp-action="Index"
                        class="admin-nav-link @GetActiveClass("Product")">
 
-                        <span class="admin-nav-number">05</span>
+                        <span class="admin-nav-number">06</span>
                         <span>Menu</span>
                     </a>
 
@@ -231,7 +233,7 @@
                        asp-action="Index"
                        class="admin-nav-link @GetActiveClass("AdminStaffSchedule")">
 
-                        <span class="admin-nav-number">06</span>
+                        <span class="admin-nav-number">07</span>
                         <span>Staff</span>
                     </a>
 
