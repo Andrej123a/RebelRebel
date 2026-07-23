@@ -1,16 +1,13 @@
-﻿@model List<Rebel.Domain.Entities.Reservation>
-
+@model List<Rebel.Domain.Entities.Reservation>
 @using Rebel.Domain.Enums
 
 @{
     ViewData["Title"] = "Reservations";
 
-    ReservationStatus? selectedStatus = null;
-
-    if (ViewBag.SelectedStatus is ReservationStatus status)
-    {
-        selectedStatus = status;
-    }
+    ReservationStatus? selectedStatus =
+        ViewBag.SelectedStatus is ReservationStatus status
+            ? status
+            : null;
 
     var selectedEvent =
         ViewBag.SelectedEvent as Rebel.Domain.Entities.Event;
@@ -30,164 +27,143 @@
             ? time
             : null;
 
-    var selectedRange =
-        ViewBag.SelectedRange as string;
+    var selectedRange = ViewBag.SelectedRange as string;
 
-    var totalReservations = Model.Count;
-    var pendingCount = Model.Count(r => r.Status == ReservationStatus.Pending);
-    var approvedCount = Model.Count(r => r.Status == ReservationStatus.Approved);
-    var arrivedCount = Model.Count(r => r.Status == ReservationStatus.Arrived);
-    var noShowCount = Model.Count(r => r.Status == ReservationStatus.NoShow);
-    var cancelledCount = Model.Count(r => r.Status == ReservationStatus.Cancelled);
-    var closedCount = Model.Count(r =>
-        r.Status == ReservationStatus.Arrived ||
-        r.Status == ReservationStatus.NoShow ||
-        r.Status == ReservationStatus.Cancelled ||
-        r.Status == ReservationStatus.Rejected);
-    var unassignedActiveCount = Model.Count(r =>
-        (r.Status == ReservationStatus.Pending || r.Status == ReservationStatus.Approved) &&
-        string.IsNullOrWhiteSpace(r.TableLabel));
-    var largePartyCount = Model.Count(r =>
-        r.NumberOfGuests >= 9 &&
-        r.Status != ReservationStatus.Cancelled &&
-        r.Status != ReservationStatus.Rejected &&
-        r.Status != ReservationStatus.NoShow);
+    var needsTable =
+        ViewBag.NeedsTable is bool needsTableValue &&
+        needsTableValue;
 
-    var isPendingQueue =
-        selectedStatus == ReservationStatus.Pending &&
-        !selectedEventId.HasValue &&
-        !selectedDate.HasValue &&
-        !selectedTime.HasValue &&
-        string.IsNullOrWhiteSpace(selectedRange);
+    var pendingCount = Model.Count(reservation =>
+        reservation.Status == ReservationStatus.Pending);
 
-    string StatusClass(ReservationStatus status)
+    var approvedCount = Model.Count(reservation =>
+        reservation.Status == ReservationStatus.Approved);
+
+    var unassignedCount = Model.Count(reservation =>
+        (reservation.Status == ReservationStatus.Pending ||
+         reservation.Status == ReservationStatus.Approved) &&
+        string.IsNullOrWhiteSpace(reservation.TableLabel));
+
+    var hasFilters =
+        selectedStatus.HasValue ||
+        selectedEventId.HasValue ||
+        selectedDate.HasValue ||
+        selectedTime.HasValue ||
+        !string.IsNullOrWhiteSpace(selectedRange) ||
+        needsTable;
+
+    var filterSummary =
+        selectedEvent != null ? $"Event: {selectedEvent.Title}" :
+        needsTable ? "Bookings without a table" :
+        selectedDate.HasValue ? selectedDate.Value.ToString("dd MMM yyyy") :
+        selectedTime.HasValue ? selectedTime.Value.ToString(@"hh\:mm") :
+        !string.IsNullOrWhiteSpace(selectedRange)
+            ? selectedRange switch
+            {
+                "today" => "Today",
+                "tomorrow" => "Tomorrow",
+                "week" => "This week",
+                _ => "Filtered"
+            } :
+        selectedStatus.HasValue ? selectedStatus.Value.ToString() :
+        "All bookings";
+
+    string StatusLabel(ReservationStatus reservationStatus)
     {
-        return status switch
+        return reservationStatus switch
         {
-            ReservationStatus.Pending => "is-pending",
-            ReservationStatus.Approved => "is-approved",
-            ReservationStatus.Arrived => "is-arrived",
-            ReservationStatus.NoShow => "is-no-show",
-            ReservationStatus.Cancelled => "is-cancelled",
-            ReservationStatus.Rejected => "is-rejected",
-            _ => string.Empty
-        };
-    }
-
-    string StatusLabel(ReservationStatus status)
-    {
-        return status switch
-        {
+            ReservationStatus.Pending => "New request",
+            ReservationStatus.Approved => "Approved",
+            ReservationStatus.Arrived => "Arrived",
             ReservationStatus.NoShow => "No-show",
             ReservationStatus.Cancelled => "Cancelled",
-            _ => status.ToString()
-        };
-    }
-
-    string EmailStatusClass(string? status)
-    {
-        return status?.Contains("Failed", StringComparison.OrdinalIgnoreCase) == true
-            ? "is-failed"
-            : status?.Contains("Sent", StringComparison.OrdinalIgnoreCase) == true
-                ? "is-sent"
-                : "is-pending";
-    }
-
-    string EmailStatusLabel(string? status)
-    {
-        return status switch
-        {
-            "RequestSent" => "Request email sent",
-            "ApprovedSent" => "Approval email sent",
-            "RejectedSent" => "Rejection email sent",
-            "CancelledSent" => "Cancel email sent",
-            "RequestEmailFailed" => "Request email failed",
-            "ApprovedEmailFailed" => "Approval email failed",
-            "RejectedEmailFailed" => "Rejection email failed",
-            "CancelledEmailFailed" => "Cancel email failed",
-            _ => "Email pending"
+            ReservationStatus.Rejected => "Rejected",
+            _ => reservationStatus.ToString()
         };
     }
 }
 
-<section class="reservation-admin-page">
+<div class="admin-workspace">
 
-    <header class="reservation-admin-hero">
+    <header class="admin-workspace-header">
+        <div class="admin-workspace-heading">
+            <span class="admin-workspace-eyebrow">
+                Reservation desk
+            </span>
 
-        <div>
-            <p class="reservation-admin-eyebrow">
-                Rebel reservation desk
-            </p>
+            <h1 class="admin-workspace-title">
+                Reservations
+            </h1>
 
-            <h1>Bookings Board</h1>
-
-            <p class="reservation-admin-description">
-                @if (isPendingQueue)
-                {
-                    <span>
-                        Focused inbox for new reservation requests. Handle these first, then move to the wider board.
-                    </span>
-                }
-                else if (selectedEvent != null)
-                {
-                    <span>
-                        Showing bookings connected to @selectedEvent.Title on @selectedEvent.Date.ToString("dd MMM yyyy").
-                    </span>
-                }
-                else if (selectedDate.HasValue || selectedTime.HasValue)
-                {
-                    <span>
-                        Showing bookings
-                        @(selectedDate.HasValue ? $"on {selectedDate.Value:dd MMM yyyy}" : "")
-                        @(selectedTime.HasValue ? $"at {selectedTime.Value:hh\\:mm}" : "").
-                    </span>
-                }
-                else
-                {
-                    <span>
-                        Review requests, assign tables, and keep service states clean from one place.
-                    </span>
-                }
+            <p class="admin-workspace-copy">
+                Review new requests, confirm tables, and find any booking
+                without searching through the whole system.
             </p>
         </div>
 
-        <div class="admin-page-tools">
-            @if (selectedEvent != null)
-            {
-                <a asp-controller="AdminReservations"
-                   asp-action="Index"
-                   class="admin-tool-button">
-                    Clear Event
-                </a>
-            }
-
-            @if (selectedDate.HasValue || selectedTime.HasValue)
-            {
-                <a asp-controller="AdminReservations"
-                   asp-action="Index"
-                   class="admin-tool-button">
-                    Clear Slot
-                </a>
-            }
-
+        <div class="admin-workspace-actions">
             <a asp-controller="AdminReservations"
                asp-action="Index"
                asp-route-status="Pending"
-               class="admin-tool-button is-primary">
-                Pending Queue
+               class="admin-primary-button">
+                New requests
+            </a>
+
+            <a asp-controller="AdminReservations"
+               asp-action="Tonight"
+               class="admin-secondary-button">
+                Tonight
             </a>
         </div>
-
     </header>
 
-    <section class="reservation-desk-toolbar">
-        <div class="reservation-quick-filters"
-             aria-label="Quick reservation date filters">
+    <section class="admin-metric-bar"
+             style="--metric-columns: 4;"
+             aria-label="Reservation summary">
+
+        <a asp-controller="AdminReservations"
+           asp-action="Index"
+           class="admin-metric @(!hasFilters ? "active" : "")">
+            <span>Showing</span>
+            <strong>@Model.Count</strong>
+        </a>
+
+        <a asp-controller="AdminReservations"
+           asp-action="Index"
+           asp-route-status="Pending"
+           class="admin-metric is-attention @(selectedStatus == ReservationStatus.Pending ? "active" : "")">
+            <span>New requests</span>
+            <strong>@pendingCount</strong>
+        </a>
+
+        <a asp-controller="AdminReservations"
+           asp-action="Index"
+           asp-route-status="Approved"
+           class="admin-metric @(selectedStatus == ReservationStatus.Approved ? "active" : "")">
+            <span>Approved</span>
+            <strong>@approvedCount</strong>
+        </a>
+
+        <a asp-controller="AdminReservations"
+           asp-action="Index"
+           asp-route-needsTable="true"
+           class="admin-metric @(needsTable ? "active" : "")">
+            <span>Need table</span>
+            <strong>@unassignedCount</strong>
+        </a>
+
+    </section>
+
+    <details class="admin-filter-disclosure">
+        <summary>
+            <span>Filters: @filterSummary</span>
+            <span>@(hasFilters ? "Change" : "Open")</span>
+        </summary>
+
+        <div class="admin-filter-shortcuts">
             <a asp-controller="AdminReservations"
                asp-action="Index"
                asp-route-range="today"
-               asp-route-status="@selectedStatus"
-               asp-route-time="@selectedTime?.ToString(@"hh\:mm")"
                class="@(selectedRange == "today" ? "active" : "")">
                 Today
             </a>
@@ -195,8 +171,6 @@
             <a asp-controller="AdminReservations"
                asp-action="Index"
                asp-route-range="tomorrow"
-               asp-route-status="@selectedStatus"
-               asp-route-time="@selectedTime?.ToString(@"hh\:mm")"
                class="@(selectedRange == "tomorrow" ? "active" : "")">
                 Tomorrow
             </a>
@@ -204,29 +178,21 @@
             <a asp-controller="AdminReservations"
                asp-action="Index"
                asp-route-range="week"
-               asp-route-status="@selectedStatus"
-               asp-route-time="@selectedTime?.ToString(@"hh\:mm")"
                class="@(selectedRange == "week" ? "active" : "")">
                 This week
             </a>
 
             <a asp-controller="AdminReservations"
-               asp-action="Index"
-               asp-route-status="Pending"
-               class="@(selectedStatus == ReservationStatus.Pending && !selectedDate.HasValue && string.IsNullOrWhiteSpace(selectedRange) ? "active" : "")">
-                Pending
-            </a>
-
-            <a asp-controller="AdminReservations"
                asp-action="Index">
-                Clear
+                Clear filters
             </a>
         </div>
 
         <form asp-controller="AdminReservations"
               asp-action="Index"
               method="get"
-              class="reservation-custom-filter">
+              class="admin-filter-panel">
+
             <label>
                 Date
                 <input type="date"
@@ -244,7 +210,7 @@
             <label>
                 Status
                 <select name="status">
-                    <option value="">All</option>
+                    <option value="">All statuses</option>
                     @foreach (var statusOption in Enum.GetValues<ReservationStatus>())
                     {
                         <option value="@statusOption"
@@ -262,247 +228,73 @@
                        value="@selectedEventId" />
             }
 
-            <button type="submit">
-                Apply
+            @if (needsTable)
+            {
+                <input type="hidden"
+                       name="needsTable"
+                       value="true" />
+            }
+
+            <button type="submit"
+                    class="admin-primary-button">
+                Apply filters
             </button>
         </form>
-    </section>
+    </details>
 
-    <section class="reservation-desk-summary"
-             aria-label="Reservation desk summary">
-
-        <a asp-controller="AdminReservations"
-           asp-action="Index"
-           asp-route-eventId="@selectedEventId"
-           asp-route-date="@selectedDate?.ToString("yyyy-MM-dd")"
-           asp-route-range="@selectedRange"
-           asp-route-time="@selectedTime?.ToString(@"hh\:mm")"
-           class="reservation-summary-item @(!selectedStatus.HasValue ? "active" : "")">
-            <span>All</span>
-            <strong>@totalReservations</strong>
-        </a>
-
-        <a asp-controller="AdminReservations"
-           asp-action="Index"
-           asp-route-status="Pending"
-           asp-route-eventId="@selectedEventId"
-           asp-route-date="@selectedDate?.ToString("yyyy-MM-dd")"
-           asp-route-range="@selectedRange"
-           asp-route-time="@selectedTime?.ToString(@"hh\:mm")"
-           class="reservation-summary-item is-hot @(selectedStatus == ReservationStatus.Pending ? "active" : "")">
-            <span>New requests</span>
-            <strong>@pendingCount</strong>
-        </a>
-
-        <a asp-controller="AdminReservations"
-           asp-action="Index"
-           asp-route-status="Approved"
-           asp-route-eventId="@selectedEventId"
-           asp-route-date="@selectedDate?.ToString("yyyy-MM-dd")"
-           asp-route-range="@selectedRange"
-           asp-route-time="@selectedTime?.ToString(@"hh\:mm")"
-           class="reservation-summary-item @(selectedStatus == ReservationStatus.Approved ? "active" : "")">
-            <span>Ready</span>
-            <strong>@approvedCount</strong>
-        </a>
-
-        <a asp-controller="AdminReservations"
-           asp-action="Index"
-           asp-route-status="Arrived"
-           asp-route-eventId="@selectedEventId"
-           asp-route-date="@selectedDate?.ToString("yyyy-MM-dd")"
-           asp-route-range="@selectedRange"
-           asp-route-time="@selectedTime?.ToString(@"hh\:mm")"
-           class="reservation-summary-item @(selectedStatus == ReservationStatus.Arrived ? "active" : "")">
-            <span>Arrived</span>
-            <strong>@arrivedCount</strong>
-        </a>
-
-        <div class="reservation-ops-card">
-            <span>Need Table</span>
-            <strong>@unassignedActiveCount</strong>
-        </div>
-
-        <div class="reservation-ops-card is-alert">
-            <span>Large Parties</span>
-            <strong>@largePartyCount</strong>
-        </div>
-
-        <div class="reservation-ops-card is-muted"
-             title="@noShowCount no-show / @cancelledCount cancelled / rejected or completed bookings">
-            <span>Closed Log</span>
-            <strong>@closedCount</strong>
-        </div>
-
-    </section>
-
-    @if (isPendingQueue)
+    @if (Model.Count == 0)
     {
-        <section class="reservation-inbox-brief">
-            <div>
-                <span>New request queue</span>
-                <h2>@pendingCount waiting</h2>
-                <p>
-                    Review each request, assign a table when one fits, then approve or reject from the detail screen.
-                </p>
-            </div>
-
-            <a asp-controller="AdminReservations"
-               asp-action="Index"
-               asp-route-range="today">
-                Switch to today board
-            </a>
-        </section>
+        <div class="admin-empty-state">
+            <strong>No reservations found.</strong>
+            <span>Try clearing the filters or choosing another date.</span>
+        </div>
     }
-
-        @if (Model.Count == 0)
-        {
-            <div class="reservation-empty-state">
-
-                <span>00</span>
-
-                <h2>No reservations found</h2>
-
-                <p>
-                    New requests and filtered booking states will appear here.
-                </p>
-
-            </div>
-        }
-        else
-        {
-            var reservationGroups = Model
-            .GroupBy(r => r.ReservationDate.Date)
+    else
+    {
+        var reservationGroups = Model
+            .GroupBy(reservation => reservation.ReservationDate.Date)
             .OrderBy(group => group.Key);
 
-            @foreach (var reservationGroup in reservationGroups)
-            {
-                var reservationCount = reservationGroup.Count();
-                var pendingForDay = reservationGroup.Count(r => r.Status == ReservationStatus.Pending);
-                var orderedReservations = reservationGroup
-                    .OrderBy(r => r.Status == ReservationStatus.Pending ? 0 :
-                        r.Status == ReservationStatus.Approved ? 1 :
-                        r.Status == ReservationStatus.Arrived ? 2 :
-                        r.Status == ReservationStatus.NoShow ? 3 :
-                        r.Status == ReservationStatus.Cancelled ? 4 :
-                        5)
-                    .ThenBy(r => r.ReservationTime);
+        @foreach (var reservationGroup in reservationGroups)
+        {
+            var orderedReservations = reservationGroup
+                .OrderBy(reservation =>
+                    reservation.Status == ReservationStatus.Pending ? 0 :
+                    reservation.Status == ReservationStatus.Approved ? 1 :
+                    reservation.Status == ReservationStatus.Arrived ? 2 :
+                    3)
+                .ThenBy(reservation => reservation.ReservationTime)
+                .ToList();
 
-                <section class="reservation-date-group @(isPendingQueue ? "is-inbox-group" : "")">
+            var newCount = orderedReservations.Count(reservation =>
+                reservation.Status == ReservationStatus.Pending);
 
-                    <div class="reservation-date-header">
+            <section class="admin-section">
+                <header class="admin-section-heading">
+                    <div>
+                        <span class="admin-workspace-eyebrow">
+                            @(newCount > 0 ? $"{newCount} new" : "Schedule")
+                        </span>
 
                         <h2>
                             @reservationGroup.Key.ToString("dddd, dd MMM yyyy")
                         </h2>
-
-                        <span>
-                            @if (pendingForDay > 0)
-                            {
-                                <strong>@pendingForDay new</strong>
-                                <text> / </text>
-                            }
-
-                            @reservationCount
-                            @(reservationCount == 1 ? "reservation" : "reservations")
-                        </span>
-
                     </div>
 
-                    <div class="reservation-board">
+                    <span class="admin-section-count">
+                        @orderedReservations.Count
+                    </span>
+                </header>
 
-                        @foreach (var reservation in orderedReservations)
-                        {
-                            var reservationTimeText =
-                                reservation.ReservationTime.ToString(@"hh\:mm");
-
-                            var isNewRequest =
-                                reservation.Status == ReservationStatus.Pending;
-
-                            var isHandled =
-                                reservation.Status == ReservationStatus.Arrived ||
-                                reservation.Status == ReservationStatus.NoShow ||
-                                reservation.Status == ReservationStatus.Cancelled ||
-                                reservation.Status == ReservationStatus.Rejected;
-
-                            var isLargeParty =
-                                reservation.NumberOfGuests >= 9;
-
-                            <article class="reservation-board-row @StatusClass(reservation.Status) @(isHandled ? "is-handled" : "") @(isPendingQueue ? "is-inbox-row" : "")">
-
-                                <div class="reservation-time-block">
-                                    <strong>@reservationTimeText</strong>
-                                    <span>@reservation.ReservationDate.ToString("ddd")</span>
-                                </div>
-
-                                <div class="reservation-guest-block">
-                                    <strong>@reservation.FullName</strong>
-                                    <span>@reservation.PhoneNumber · @reservation.Email</span>
-
-                                    @if (reservation.Event != null)
-                                    {
-                                        <span class="reservation-event-badge">
-                                            Event · @reservation.Event.Title
-                                        </span>
-                                    }
-                                </div>
-
-                                <div class="reservation-service-block">
-                                    <span>
-                                        <strong>@reservation.NumberOfGuests</strong>
-                                        @(reservation.NumberOfGuests == 1 ? "guest" : "guests")
-                                    </span>
-
-                                    <span>
-                                        @(string.IsNullOrWhiteSpace(reservation.TableLabel)
-                                            ? "Table not assigned"
-                                            : $"Table {reservation.TableLabel}")
-                                    </span>
-
-                                    @if (isLargeParty)
-                                    {
-                                        <span class="reservation-large-party-badge">
-                                            @(reservation.NumberOfGuests >= 13
-                                                ? "Large group / note required"
-                                                : "Large party")
-                                        </span>
-                                    }
-                                </div>
-
-                                <div class="reservation-row-status">
-                                    @if (isNewRequest)
-                                    {
-                                        <span class="reservation-new-badge">
-                                            New request
-                                        </span>
-                                    }
-
-                                    <span class="reservation-status-pill @StatusClass(reservation.Status)">
-                                        @StatusLabel(reservation.Status)
-                                    </span>
-
-                                    <span class="reservation-email-badge @EmailStatusClass(reservation.EmailStatus)"
-                                          title="Guest communication status">
-                                        @EmailStatusLabel(reservation.EmailStatus)
-                                    </span>
-                                </div>
-
-                                <div class="reservation-row-actions">
-                                    <a asp-controller="AdminReservations"
-                                       asp-action="Details"
-                                       asp-route-id="@reservation.Id"
-                                       class="reservation-action-button @(isNewRequest ? "is-primary" : "")">
-                                        @(isNewRequest ? "Review Request" : "Details")
-                                    </a>
-                                </div>
-
-                            </article>
-                        }
-
-                    </div>
-
-                </section>
-            }
+                <div class="admin-list">
+                    @foreach (var reservation in orderedReservations)
+                    {
+                        <partial name="_ReservationDeskRow"
+                                 model="reservation" />
+                    }
+                </div>
+            </section>
         }
+    }
 
-</section>
+</div>

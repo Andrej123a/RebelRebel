@@ -59,6 +59,15 @@
             : string.Empty;
     }
 
+    string GetReservationsActiveClass()
+    {
+        return currentController == "AdminReservations" &&
+               currentAction != "Tonight" &&
+               currentAction != "Planner"
+            ? "active"
+            : string.Empty;
+    }
+
     string GetCommandActiveClass(
         string controllerName,
         string actionName)
@@ -133,20 +142,32 @@
 
                 <nav class="admin-navigation">
 
+                    <span class="admin-nav-section">
+                        Service
+                    </span>
+
                     <a asp-controller="Admin"
                        asp-action="Index"
                        class="admin-nav-link @GetActiveClass("Admin")">
 
                         <span class="admin-nav-number">01</span>
-                        <span>Dashboard</span>
+                        <span>Start Here</span>
+                    </a>
+
+                    <a asp-controller="AdminReservations"
+                       asp-action="Tonight"
+                       class="admin-nav-link @GetCommandActiveClass("AdminReservations", "Tonight")">
+
+                        <span class="admin-nav-number">02</span>
+                        <span>Tonight</span>
                     </a>
 
                     <a asp-controller="AdminReservations"
                        asp-action="Index"
-                       class="admin-nav-link @GetActiveClass("AdminReservations")">
+                       class="admin-nav-link @GetReservationsActiveClass()">
 
-                        <span class="admin-nav-number">02</span>
-                        <span>Reservation Desk</span>
+                        <span class="admin-nav-number">03</span>
+                        <span>Reservations</span>
 
                         <span id="reservationNavBadge"
                               class="admin-nav-alert @(unreadNotificationsCount > 0 ? string.Empty : "d-none")"
@@ -159,64 +180,59 @@
                     <div class="admin-subnav"
                          aria-label="Reservation shortcuts">
                         <a asp-controller="AdminReservations"
-                           asp-action="Tonight"
-                           class="@GetCommandActiveClass("AdminReservations", "Tonight")">
-                            Tonight
-                        </a>
-
-                        <a asp-controller="AdminReservations"
                            asp-action="Planner"
                            class="@GetCommandActiveClass("AdminReservations", "Planner")">
-                            Week Planner
+                            Weekly View
+                        </a>
+
+                        <a asp-controller="AdminTables"
+                           asp-action="Index"
+                           class="@GetActiveClass("AdminTables")">
+                            Tables
                         </a>
                     </div>
+
+                    <span class="admin-nav-section">
+                        Manage
+                    </span>
 
                     <a asp-controller="AdminEvents"
                        asp-action="Index"
                        class="admin-nav-link @GetActiveClass("AdminEvents")">
 
-                        <span class="admin-nav-number">03</span>
-                        <span>Gig Calendar</span>
+                        <span class="admin-nav-number">04</span>
+                        <span>Events</span>
                     </a>
 
                     <a asp-controller="Product"
                        asp-action="Index"
                        class="admin-nav-link @GetActiveClass("Product")">
 
-                        <span class="admin-nav-number">04</span>
-                        <span>Menu Board</span>
-                    </a>
-
-                    <a asp-controller="Category"
-                       asp-action="Index"
-                       class="admin-nav-link @GetActiveClass("Category")">
-
                         <span class="admin-nav-number">05</span>
-                        <span>Menu Sections</span>
+                        <span>Menu</span>
                     </a>
 
-                    <a asp-controller="AdminTables"
-                       asp-action="Index"
-                       class="admin-nav-link @GetActiveClass("AdminTables")">
+                    <div class="admin-subnav"
+                         aria-label="Menu shortcuts">
+                        <a asp-controller="Product"
+                           asp-action="Create"
+                           class="@GetCommandActiveClass("Product", "Create")">
+                            Add Item
+                        </a>
 
-                        <span class="admin-nav-number">06</span>
-                        <span>Floor Plan</span>
-                    </a>
-
-                    <a asp-controller="AdminArchive"
-                       asp-action="Index"
-                       class="admin-nav-link @GetActiveClass("AdminArchive")">
-
-                        <span class="admin-nav-number">07</span>
-                        <span>Archive</span>
-                    </a>
+                        <a asp-controller="Category"
+                           asp-action="Index"
+                           class="@GetActiveClass("Category")">
+                            Sections
+                        </a>
+                    </div>
 
                     <a asp-controller="AdminStaffSchedule"
                        asp-action="Index"
                        class="admin-nav-link @GetActiveClass("AdminStaffSchedule")">
 
-                        <span class="admin-nav-number">08</span>
-                        <span>Staff Schedule</span>
+                        <span class="admin-nav-number">06</span>
+                        <span>Staff</span>
                     </a>
 
                 </nav>
@@ -239,6 +255,13 @@
                        class="admin-view-site">
 
                         View website
+                    </a>
+
+                    <a asp-controller="AdminArchive"
+                       asp-action="Index"
+                       class="admin-view-site">
+
+                        Archive
                     </a>
 
                     <form asp-area="Identity"
@@ -322,10 +345,6 @@
                         </span>
 
                     </a>
-
-                    <span class="admin-live-mark">
-                        SYSTEM ONLINE
-                    </span>
 
                 </div>
 

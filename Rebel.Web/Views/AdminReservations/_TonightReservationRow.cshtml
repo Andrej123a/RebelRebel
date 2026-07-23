@@ -1,0 +1,175 @@
+@model Rebel.Domain.Entities.Reservation
+@using Rebel.Domain.Enums
+
+@{
+    var currentTime =
+        (TimeSpan)(ViewBag.CurrentTime ?? DateTime.Now.TimeOfDay);
+
+    var isPending =
+        Model.Status == ReservationStatus.Pending;
+
+    var isApproved =
+        Model.Status == ReservationStatus.Approved;
+
+    var isArrived =
+        Model.Status == ReservationStatus.Arrived;
+
+    var isNoShow =
+        Model.Status == ReservationStatus.NoShow;
+
+    var rowClass =
+        isPending ? "is-pending" :
+        isApproved ? "is-approved" :
+        isArrived ? "is-arrived" :
+        isNoShow ? "is-no-show" :
+        string.Empty;
+
+    var serviceState = Model.Status switch
+    {
+        ReservationStatus.Pending => "Decision needed",
+        ReservationStatus.Arrived => "Checked in",
+        ReservationStatus.NoShow => "No-show",
+        _ when currentTime > Model.ReservationTime.Add(
+            TimeSpan.FromMinutes(15)) => "Late",
+        _ when currentTime >= Model.ReservationTime.Subtract(
+            TimeSpan.FromMinutes(15)) => "Due now",
+        _ => "Expected"
+    };
+
+    var hasNotes =
+        !string.IsNullOrWhiteSpace(Model.Note) ||
+        !string.IsNullOrWhiteSpace(Model.AdminNote) ||
+        !string.IsNullOrWhiteSpace(Model.InternalNote);
+}
+
+<article class="tonight-booking @rowClass">
+
+    <time datetime="@Model.ReservationTime.ToString(@"hh\:mm")"
+          class="tonight-booking-time">
+        @Model.ReservationTime.ToString(@"hh\:mm")
+    </time>
+
+    <div class="tonight-booking-guest">
+        <h3>@Model.FullName</h3>
+
+        <p>
+            <span>
+                @Model.NumberOfGuests
+                @(Model.NumberOfGuests == 1 ? "guest" : "guests")
+            </span>
+
+            <span aria-hidden="true">/</span>
+
+            <span>
+                @(string.IsNullOrWhiteSpace(Model.TableLabel)
+                    ? "No table assigned"
+                    : $"Table {Model.TableLabel}")
+            </span>
+
+            @if (hasNotes)
+            {
+                <span aria-hidden="true">/</span>
+                <span class="tonight-note-flag">Has note</span>
+            }
+        </p>
+    </div>
+
+    <span class="tonight-booking-state @rowClass">
+        @serviceState
+    </span>
+
+    <div class="tonight-booking-actions">
+        @if (isPending)
+        {
+            <a asp-controller="AdminReservations"
+               asp-action="Details"
+               asp-route-id="@Model.Id"
+               class="tonight-primary-action">
+                Review request
+            </a>
+        }
+        else if (isApproved)
+        {
+            <form asp-controller="AdminReservations"
+                  asp-action="MarkArrived"
+                  asp-route-id="@Model.Id"
+                  method="post">
+                @Html.AntiForgeryToken()
+
+                <button type="submit"
+                        class="tonight-primary-action is-arrival">
+                    Guest arrived
+                </button>
+            </form>
+        }
+
+        <details class="tonight-booking-more">
+            <summary>More</summary>
+
+            <div class="tonight-booking-more-panel">
+                <a href="tel:@Model.PhoneNumber">
+                    Call @Model.PhoneNumber
+                </a>
+
+                <a href="mailto:@Model.Email">
+                    Email guest
+                </a>
+
+                <a asp-controller="AdminReservations"
+                   asp-action="Details"
+                   asp-route-id="@Model.Id">
+                    View full details
+                </a>
+
+                @if (isApproved)
+                {
+                    <form asp-controller="AdminReservations"
+                          asp-action="MarkNoShow"
+                          asp-route-id="@Model.Id"
+                          method="post"
+                          onsubmit="return confirm('Mark this reservation as a no-show and release its table?');">
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit">
+                            Mark no-show
+                        </button>
+                    </form>
+                }
+            </div>
+        </details>
+    </div>
+
+    @if (hasNotes)
+    {
+        <details class="tonight-booking-notes">
+            <summary>View notes</summary>
+
+            <div>
+                @if (!string.IsNullOrWhiteSpace(Model.Note))
+                {
+                    <p>
+                        <strong>Guest:</strong>
+                        @Model.Note
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
+                {
+                    <p>
+                        <strong>Manager:</strong>
+                        @Model.AdminNote
+                    </p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.InternalNote))
+                {
+                    <p>
+                        <strong>Floor:</strong>
+                        @Model.InternalNote
+                    </p>
+                }
+            </div>
+        </details>
+    }
+
+</article>

@@ -1,160 +1,86 @@
-﻿@model Rebel.Domain.Entities.Category
+@model Rebel.Domain.Entities.Category
 
 @{
     ViewData["Title"] = Model.Name;
 
     var products = Model.Products?
-        .OrderBy(p => p.Name)
+        .OrderBy(product => product.Name)
         .ToList()
         ?? new List<Rebel.Domain.Entities.Product>();
 }
 
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-5">
-        <div>
-            <p class="text-warning text-uppercase fw-bold small mb-1">
-                Rebel Rebel by Fat Kitchen Admin
-            </p>
+<div class="admin-workspace">
 
-            <h1 class="fw-bold text-light mb-2">
+    <header class="admin-workspace-header">
+        <div class="admin-workspace-heading">
+            <a asp-controller="Category"
+               asp-action="Index"
+               class="admin-workspace-eyebrow">
+                Back to sections
+            </a>
+
+            <h1 class="admin-workspace-title">
                 @Model.Name
             </h1>
 
-            <p class="text-secondary mb-0">
+            <p class="admin-workspace-copy">
                 @(string.IsNullOrWhiteSpace(Model.Description)
-                                ? "Manage the products in this category."
-                                : Model.Description)
+                    ? "Menu items in this section."
+                    : Model.Description)
             </p>
-
-            <div class="mt-3">
-                <span class="badge bg-secondary px-3 py-2">
-                    @products.Count @(products.Count == 1 ? "product" : "products")
-                </span>
-            </div>
         </div>
 
-        <div class="d-flex flex-wrap gap-2">
-            <a asp-controller="Category"
-               asp-action="Index"
-               class="btn btn-outline-light px-4">
-                Back to Categories
+        <div class="admin-workspace-actions">
+            <a asp-controller="Product"
+               asp-action="Create"
+               asp-route-categoryId="@Model.Id"
+               class="admin-primary-button">
+                Add item
             </a>
+
+            <a asp-controller="Product"
+               asp-action="Index"
+               class="admin-secondary-button">
+                Full menu
+            </a>
+        </div>
+    </header>
+
+    <section class="admin-metric-bar"
+             aria-label="Section summary">
+        <div class="admin-metric">
+            <span>Items</span>
+            <strong>@products.Count</strong>
+        </div>
+
+        <div class="admin-metric">
+            <span>Available</span>
+            <strong>@products.Count(product => product.IsAvailable)</strong>
+        </div>
+
+        <div class="admin-metric">
+            <span>Unavailable</span>
+            <strong>@products.Count(product => !product.IsAvailable)</strong>
+        </div>
+    </section>
+
+    @if (products.Count == 0)
+    {
+        <div class="admin-empty-state">
+            <strong>No items in this section.</strong>
 
             <a asp-controller="Product"
                asp-action="Create"
                asp-route-categoryId="@Model.Id"
-               class="btn btn-warning px-4 fw-semibold">
-                + Add Product
+               class="admin-primary-button">
+                Add first item
             </a>
-        </div>
-    </div>
-
-    @if (products.Any())
-    {
-        <div class="row g-4">
-            @foreach (var item in products)
-            {
-                <div class="col-md-6 col-xl-4">
-                    <div class="card h-100 bg-dark text-light border-secondary rounded-4 overflow-hidden shadow-sm">
-
-                        <div style="height: 230px; background: #161616;">
-                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                            {
-                                <img src="@Url.Content(item.ImageUrl)"
-                                     alt="@item.Name"
-                                     loading="lazy"
-                                     class="w-100 h-100"
-                                     style="object-fit: cover;" />
-                            }
-                            else
-                            {
-                                <div class="h-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
-                                    <span class="display-5 mb-3">?</span>
-
-                                    <p class="text-light fw-semibold mb-1">
-                                        No product image
-                                    </p>
-
-                                    <p class="text-secondary small mb-0">
-                                        Add an image URL when editing this product.
-                                    </p>
-                                </div>
-                            }
-                        </div>
-
-                        <div class="card-body d-flex flex-column p-4">
-                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                                <h5 class="card-title fw-bold mb-0">
-                                    @item.Name
-                                </h5>
-
-                                @if (item.IsAvailable)
-                                {
-                                    <span class="badge bg-success">
-                                        Available
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">
-                                        Unavailable
-                                    </span>
-                                }
-                        </div>
-
-                        <p class="text-secondary small mb-4">
-                            @(string.IsNullOrWhiteSpace(item.Description)
-                                                    ? "No description available."
-                                                    : item.Description)
-                    </p>
-
-                            <div class="mt-auto">
-                                <div class="fw-bold text-warning fs-5 mb-3">
-                                    @item.Price.ToString("0.##") MKD
-                                </div>
-
-                                <div class="d-flex flex-wrap gap-2">
-                                    <a asp-controller="Product"
-                                       asp-action="Edit"
-                                       asp-route-id="@item.Id"
-                                       class="btn btn-sm btn-outline-info flex-grow-1">
-                                        Edit
-                                    </a>
-
-                                    <a asp-controller="Product"
-                                       asp-action="Delete"
-                                       asp-route-id="@item.Id"
-                                       class="btn btn-sm btn-outline-danger flex-grow-1">
-                                        Archive
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-                }
         </div>
     }
     else
     {
-        <div class="bg-dark border border-secondary rounded-4 text-center p-5">
-            <span class="display-4 d-block mb-3">?</span>
-
-            <h4 class="fw-bold text-light mb-2">
-                No products yet
-            </h4>
-
-            <p class="text-secondary mb-4">
-                Start by adding the first product to this category.
-            </p>
-
-            <a asp-controller="Product"
-               asp-action="Create"
-               asp-route-categoryId="@Model.Id"
-               class="btn btn-warning px-4 fw-semibold">
-                + Add First Product
-            </a>
-        </div>
+        <partial name="_ProductsTablePartial"
+                 model="products" />
     }
+
 </div>

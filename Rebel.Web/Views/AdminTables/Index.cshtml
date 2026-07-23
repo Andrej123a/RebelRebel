@@ -4,11 +4,11 @@
     ViewData["Title"] = "Tables";
 
     var activeTables = Model.Count(table => table.IsActive);
-    var totalCapacity = Model
+    var inactiveTables = Model.Count(table => !table.IsActive);
+
+    var activeCapacity = Model
         .Where(table => table.IsActive)
         .Sum(table => table.Capacity);
-
-    var inactiveTables = Model.Count(table => !table.IsActive);
 
     var tableGroups = Model
         .GroupBy(table =>
@@ -19,160 +19,119 @@
         .ToList();
 }
 
-<section class="table-admin-page">
+<div class="admin-workspace">
 
-    <div class="table-admin-header">
-        <div>
-            <p class="table-admin-kicker">
+    <header class="admin-workspace-header">
+        <div class="admin-workspace-heading">
+            <span class="admin-workspace-eyebrow">
                 Floor plan
-            </p>
+            </span>
 
-            <h1>
-                Floor Setup
+            <h1 class="admin-workspace-title">
+                Tables
             </h1>
 
-            <p>
-                Internal admin setup for where approved reservations can be seated.
-                Guests never see this page; staff use it to assign parties to real tables.
+            <p class="admin-workspace-copy">
+                These are the real tables staff can assign to approved
+                reservations. Inactive tables disappear from assignment.
             </p>
         </div>
 
-        <div class="table-admin-actions">
-            <a asp-controller="AdminReservations"
-               asp-action="Tonight"
-               class="table-admin-back">
-                Tonight View
-            </a>
-
+        <div class="admin-workspace-actions">
             <a asp-controller="AdminTables"
                asp-action="Create"
-               class="table-admin-button">
-                Add Table
+               class="admin-primary-button">
+                Add table
+            </a>
+
+            <a asp-controller="AdminReservations"
+               asp-action="Tonight"
+               class="admin-secondary-button">
+                Tonight
             </a>
         </div>
-    </div>
+    </header>
 
-    <div class="table-admin-stats">
-        <div>
+    <section class="admin-metric-bar"
+             aria-label="Floor summary">
+        <div class="admin-metric">
             <span>Active tables</span>
             <strong>@activeTables</strong>
         </div>
 
-        <div>
-            <span>Total active capacity</span>
-            <strong>@totalCapacity</strong>
+        <div class="admin-metric">
+            <span>Available seats</span>
+            <strong>@activeCapacity</strong>
         </div>
 
-        <div>
-            <span>Configured tables</span>
-            <strong>@Model.Count</strong>
-        </div>
-
-        <div>
-            <span>Inactive / blocked</span>
+        <div class="admin-metric @(inactiveTables > 0 ? "is-attention" : "")">
+            <span>Inactive</span>
             <strong>@inactiveTables</strong>
         </div>
-    </div>
+    </section>
 
-    <div class="table-admin-guide">
-        <div>
-            <strong>How staff use this</strong>
-            <span>Create the real floor once, then choose a table when approving a reservation.</span>
-        </div>
-
-        <div>
-            <strong>Capacity guard</strong>
-            <span>The app blocks assigning a party to a table that cannot seat them.</span>
-        </div>
-
-        <div>
-            <strong>Temporary changes</strong>
-            <span>Mark tables inactive when they are closed, reserved, broken or removed for an event.</span>
-        </div>
-    </div>
-
-    @if (!Model.Any())
+    @if (Model.Count == 0)
     {
-        <div class="table-admin-empty">
-            <h2>No tables configured.</h2>
-
-            <p>
-                Add your first table so approved reservations can be assigned to the floor.
-            </p>
+        <div class="admin-empty-state">
+            <strong>No tables configured.</strong>
+            <span>Add the real floor before assigning reservation tables.</span>
         </div>
     }
     else
     {
-        <div class="table-area-list">
-            @foreach (var group in tableGroups)
-            {
-                var groupActiveTables =
-                    group.Count(table => table.IsActive);
+        @for (var index = 0; index < tableGroups.Count; index++)
+        {
+            var group = tableGroups[index];
+            var groupCapacity = group
+                .Where(table => table.IsActive)
+                .Sum(table => table.Capacity);
 
-                var groupCapacity =
-                    group
-                        .Where(table => table.IsActive)
-                        .Sum(table => table.Capacity);
+            <details class="admin-content-disclosure"
+                     open="@(index == 0 ? "open" : null)">
+                <summary>
+                    <span>@group.Key</span>
+                    <span>
+                        @group.Count(table => table.IsActive) active /
+                        @groupCapacity seats
+                    </span>
+                </summary>
 
-                <section class="table-area-section">
-                    <div class="table-area-header">
-                        <div>
-                            <span class="table-admin-area">
-                                Seating zone
+                <div class="admin-list">
+                    @foreach (var table in group.OrderBy(table => table.Label))
+                    {
+                        <article class="admin-list-row @(!table.IsActive ? "is-danger" : "")">
+                            <div class="admin-row-main">
+                                <div class="admin-row-copy">
+                                    <strong>@table.Label</strong>
+                                    <span>@group.Key</span>
+                                </div>
+                            </div>
+
+                            <div class="admin-row-data">
+                                <strong>@table.Capacity seats</strong>
+                                <span>Maximum party size</span>
+                            </div>
+
+                            <span class="admin-state @(table.IsActive ? "is-success" : "is-danger")">
+                                @(table.IsActive ? "Assignable" : "Inactive")
                             </span>
 
-                            <h2>
-                                @group.Key
-                            </h2>
-                        </div>
+                            <div class="admin-row-actions">
+                                <a asp-controller="AdminTables"
+                                   asp-action="Edit"
+                                   asp-route-id="@table.Id"
+                                   class="admin-secondary-button">
+                                    Edit
+                                </a>
 
-                        <span>
-                            @groupActiveTables active · @groupCapacity seats
-                        </span>
-                    </div>
+                                <details class="admin-more-menu">
+                                    <summary>More</summary>
 
-                    <div class="table-admin-grid">
-                        @foreach (var table in group.OrderBy(table => table.Label))
-                        {
-                            <article class="table-admin-card @(!table.IsActive ? "is-inactive" : "")">
-                                <div class="table-card-top">
-                                    <span class="table-status-pill @(table.IsActive ? "is-active" : "is-inactive")">
-                                        @(table.IsActive ? "Assignable" : "Inactive")
-                                    </span>
-
-                                    <h3>
-                                        @table.Label
-                                    </h3>
-                                </div>
-
-                                <div class="table-seat-map"
-                                     aria-label="@table.Capacity seats">
-                                    @for (var seat = 1; seat <= Math.Min(table.Capacity, 12); seat++)
-                                    {
-                                        <span></span>
-                                    }
-
-                                    @if (table.Capacity > 12)
-                                    {
-                                        <small>+@(table.Capacity - 12)</small>
-                                    }
-                                </div>
-
-                                <div class="table-admin-capacity">
-                                    <strong>@table.Capacity</strong>
-                                    <span>seat capacity</span>
-                                </div>
-
-                                <div class="table-admin-card-footer">
-                                    <span>
-                                        @(table.IsActive ? "Available for approval" : "Hidden from approval")
-                                    </span>
-
-                                    <div class="table-card-actions">
+                                    <div class="admin-more-panel">
                                         <a asp-controller="AdminTables"
                                            asp-action="Edit"
                                            asp-route-id="@table.Id">
-                                            Edit
+                                            Edit table
                                         </a>
 
                                         <form asp-controller="AdminTables"
@@ -182,17 +141,20 @@
                                             @Html.AntiForgeryToken()
 
                                             <button type="submit"
-                                                    class="@(!table.IsActive ? "is-activate" : "")">
-                                                @(table.IsActive ? "Deactivate" : "Activate")
+                                                    class="@(!table.IsActive ? "" : "is-danger")">
+                                                @(table.IsActive
+                                                    ? "Make inactive"
+                                                    : "Make assignable")
                                             </button>
                                         </form>
                                     </div>
-                                </div>
-                            </article>
-                        }
-                    </div>
-                </section>
-            }
-        </div>
+                                </details>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </details>
+        }
     }
-</section>
+
+</div>

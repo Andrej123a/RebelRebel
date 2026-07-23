@@ -1,798 +1,165 @@
-﻿@model List<Rebel.Domain.Entities.Event>
-@using Rebel.Domain.Enums
+@model List<Rebel.Domain.Entities.Event>
 
 @{
-    ViewData["Title"] = "Manage Events";
+    ViewData["Title"] = "Events";
 
     var today = DateTime.UtcNow.Date;
-
     var events = Model ?? new List<Rebel.Domain.Entities.Event>();
 
     var tonightEvents = events
-        .Where(ev => ev.Date.Date == today)
-        .OrderBy(ev => ev.StartTime)
+        .Where(eventItem => eventItem.Date.Date == today)
+        .OrderBy(eventItem => eventItem.StartTime)
         .ToList();
 
     var upcomingEvents = events
-        .Where(ev => ev.Date.Date > today)
-        .OrderBy(ev => ev.Date)
-        .ThenBy(ev => ev.StartTime)
+        .Where(eventItem => eventItem.Date.Date > today)
+        .OrderBy(eventItem => eventItem.Date)
+        .ThenBy(eventItem => eventItem.StartTime)
         .ToList();
 
     var pastEvents = events
-        .Where(ev => ev.Date.Date < today)
-        .OrderByDescending(ev => ev.Date)
-        .ThenByDescending(ev => ev.StartTime)
+        .Where(eventItem => eventItem.Date.Date < today)
+        .OrderByDescending(eventItem => eventItem.Date)
+        .ThenByDescending(eventItem => eventItem.StartTime)
         .ToList();
 
-    var activeEventsCount = events.Count(ev => ev.IsActive);
-    var hiddenEventsCount = events.Count(ev => !ev.IsActive);
-
-    var reservationStats =
-        ViewBag.ReservationStats as Dictionary<Guid, Dictionary<string, int>>
-        ?? new Dictionary<Guid, Dictionary<string, int>>();
+    var hiddenCount = events.Count(eventItem => !eventItem.IsActive);
 }
 
-@functions {
-    public string FormatEventType(EventType eventType)
-    {
-        return eventType switch
-        {
-            EventType.DJNight => "DJ Night",
-            EventType.BeerTasting => "Beer Tasting",
-            EventType.LiveMusic => "Live Music",
-            EventType.SpecialEvent => "Special Event",
-            EventType.AcousticNight => "Acoustic Night",
-            _ => eventType.ToString()
-        };
-    }
+<div class="admin-workspace">
 
-    public string FormatTimeRange(TimeSpan? startTime, TimeSpan? endTime)
-    {
-        if (!startTime.HasValue && !endTime.HasValue)
-        {
-            return "Time not specified";
-        }
+    <header class="admin-workspace-header">
+        <div class="admin-workspace-heading">
+            <span class="admin-workspace-eyebrow">
+                Gig calendar
+            </span>
 
-        if (startTime.HasValue && endTime.HasValue)
-        {
-            return $"{startTime.Value:hh\\:mm} – {endTime.Value:hh\\:mm}";
-        }
+            <h1 class="admin-workspace-title">
+                Events
+            </h1>
 
-        if (startTime.HasValue)
-        {
-            return $"Starts at {startTime.Value:hh\\:mm}";
-        }
-
-        return $"Ends at {endTime!.Value:hh\\:mm}";
-    }
-
-    public string GetEventTypeClass(EventType eventType)
-    {
-        return eventType switch
-        {
-            EventType.DJNight => "event-type-dj",
-            EventType.BeerTasting => "event-type-beer",
-            EventType.LiveMusic => "event-type-live",
-            EventType.SpecialEvent => "event-type-special",
-            EventType.AcousticNight => "event-type-acoustic",
-            _ => "event-type-default"
-        };
-    }
-
-    public string GetCapacityClass(
-        Rebel.Domain.Entities.Event ev,
-        int reservationsCount,
-        int guestsCount)
-    {
-        var reservationPressure = ev.MaxReservations.HasValue
-            ? (double)reservationsCount / ev.MaxReservations.Value
-            : 0;
-
-        var guestPressure = ev.MaxGuests.HasValue
-            ? (double)guestsCount / ev.MaxGuests.Value
-            : 0;
-
-        var pressure = Math.Max(reservationPressure, guestPressure);
-
-        return pressure >= 1
-            ? "is-full"
-            : pressure >= 0.8
-                ? "is-near-capacity"
-                : string.Empty;
-    }
-
-    public string GetCapacityText(
-        Rebel.Domain.Entities.Event ev,
-        int reservationsCount,
-        int guestsCount)
-    {
-        if (ev.MaxGuests.HasValue &&
-            guestsCount >= ev.MaxGuests.Value)
-        {
-            return "Guest cap reached";
-        }
-
-        if (ev.MaxReservations.HasValue &&
-            reservationsCount >= ev.MaxReservations.Value)
-        {
-            return "Booking cap reached";
-        }
-
-        if (ev.MaxGuests.HasValue &&
-            guestsCount >= ev.MaxGuests.Value * 0.8)
-        {
-            return $"{ev.MaxGuests.Value - guestsCount} guest seats left";
-        }
-
-        if (ev.MaxReservations.HasValue &&
-            reservationsCount >= ev.MaxReservations.Value * 0.8)
-        {
-            return $"{ev.MaxReservations.Value - reservationsCount} bookings left";
-        }
-
-        return string.Empty;
-    }
-}
-
-<div class="events-admin-page">
-
-    <section class="events-admin-hero">
-        <div>
-            <p class="events-admin-eyebrow">
-                Rebel Rebel by Fat Kitchen Admin
-            </p>
-
-            <h1>Manage Events</h1>
-
-            <p class="events-admin-description">
-                Create, update and manage upcoming Rebel Rebel by Fat Kitchen nights.
+            <p class="admin-workspace-copy">
+                See what is happening, monitor bookings, and update an event
+                without opening several separate dashboards.
             </p>
         </div>
 
-        <div class="admin-page-tools">
+        <div class="admin-workspace-actions">
             <a asp-controller="AdminEvents"
                asp-action="Create"
-               class="admin-tool-button is-primary">
-                Add Event
+               class="admin-primary-button">
+                Add event
             </a>
 
             <a asp-controller="Events"
                asp-action="Index"
                target="_blank"
-               class="admin-tool-button">
-                Public Events
+               rel="noopener"
+               class="admin-secondary-button">
+                Public page
             </a>
+        </div>
+    </header>
 
-            <a asp-controller="AdminReservations"
-               asp-action="Tonight"
-               class="admin-tool-button">
-                Tonight
-            </a>
+    <section class="admin-metric-bar"
+             aria-label="Event summary">
+        <div class="admin-metric is-attention">
+            <span>Tonight</span>
+            <strong>@tonightEvents.Count</strong>
+        </div>
+
+        <div class="admin-metric">
+            <span>Upcoming</span>
+            <strong>@upcomingEvents.Count</strong>
+        </div>
+
+        <div class="admin-metric">
+            <span>Hidden</span>
+            <strong>@hiddenCount</strong>
         </div>
     </section>
 
-    @if (events.Any())
+    @if (events.Count == 0)
     {
-        <section class="events-inventory-stats">
-
-            <div class="events-stat events-stat-main">
-                <span>Total events</span>
-                <strong>@events.Count</strong>
-                <small>Complete event archive</small>
-            </div>
-
-            <div class="events-stat events-stat-tonight">
-                <span>Tonight</span>
-                <strong>@tonightEvents.Count</strong>
-                <small>Happening today</small>
-            </div>
-
-            <div class="events-stat events-stat-upcoming">
-                <span>Upcoming</span>
-                <strong>@upcomingEvents.Count</strong>
-                <small>Scheduled nights</small>
-            </div>
-
-            <div class="events-stat events-stat-hidden">
-                <span>Hidden</span>
-                <strong>@hiddenEventsCount</strong>
-                <small>@activeEventsCount active events</small>
-            </div>
-
-        </section>
-
-        <section class="events-groups">
-
-            @if (tonightEvents.Any())
-            {
-                <details class="events-group events-group-tonight"
-                         data-event-group
-                         open>
-
-                    <summary class="events-group-summary">
-                        <span class="events-group-number">01</span>
-
-                        <span class="events-group-copy">
-                            <small>Live schedule</small>
-                            <strong>Tonight</strong>
-                        </span>
-
-                        <span class="events-group-count">
-                            @tonightEvents.Count
-                            @(tonightEvents.Count == 1 ? "event" : "events")
-                        </span>
-
-                        <span class="events-group-toggle">
-                            <span class="events-group-open">Open</span>
-                            <span class="events-group-close">Close</span>
-                            <i></i>
-                        </span>
-                    </summary>
-
-                    <div class="events-group-content">
-
-                        <div class="events-list-heading">
-                            <span>Event</span>
-                            <span>Date and time</span>
-                            <span>Reservations</span>
-                            <span>Status</span>
-                            <span>Actions</span>
-                        </div>
-
-                        @foreach (var ev in tonightEvents)
-                        {
-                            var stats = reservationStats.TryGetValue(
-                                ev.Id,
-                                out var eventStats)
-                                ? eventStats
-                                : new Dictionary<string, int>();
-
-                            var reservationsCount = stats.GetValueOrDefault("Reservations");
-                            var guestsCount = stats.GetValueOrDefault("Guests");
-                            var pendingCount = stats.GetValueOrDefault("Pending");
-                            var approvedCount = stats.GetValueOrDefault("Approved");
-                            var arrivedCount = stats.GetValueOrDefault("Arrived");
-                            var capacityClass = GetCapacityClass(ev, reservationsCount, guestsCount);
-                            var capacityText = GetCapacityText(ev, reservationsCount, guestsCount);
-
-                            <article class="events-list-row">
-
-                                <div class="events-row-main">
-                                    <div class="events-row-image">
-                                        @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
-                                        {
-                                            <img src="@Url.Content(ev.ImageUrl)"
-                                                 alt="@ev.Title"
-                                                 loading="lazy" />
-                                        }
-                                        else
-                                        {
-                                            <div class="events-row-placeholder">
-                                                <span>?</span>
-                                                <small>Event</small>
-                                            </div>
-                                        }
-                                </div>
-
-                                <div class="events-row-copy">
-                                    <span class="events-type @GetEventTypeClass(ev.EventType)">
-                                        @FormatEventType(ev.EventType)
-                                    </span>
-
-                                    <strong>@ev.Title</strong>
-
-                                    <p>
-                                        @(string.IsNullOrWhiteSpace(ev.Description)
-                                                                        ? "No description available."
-                                                                        : ev.Description)
-                            </p>
-                        </div>
-                    </div>
-
-                                <div class="events-row-date">
-                                    <small>Date and time</small>
-
-                                    <strong>
-                                        @ev.Date.ToString("dd MMM yyyy")
-                                    </strong>
-
-                                    <span>
-                                        @FormatTimeRange(ev.StartTime, ev.EndTime)
-                                    </span>
-                                </div>
-
-                                <a asp-controller="AdminReservations"
-                                   asp-action="Index"
-                                   asp-route-eventId="@ev.Id"
-                                   class="events-row-reservations @capacityClass">
-                                    <small>Reservations</small>
-                                    <strong>@reservationsCount</strong>
-                                    <span>@guestsCount guests</span>
-                                    @if (ev.MaxGuests.HasValue ||
-                                         ev.MaxReservations.HasValue)
-                                    {
-                                        <em>
-                                            Cap
-                                            @(ev.MaxReservations?.ToString() ?? "Unlimited") bookings ·
-                                            @(ev.MaxGuests?.ToString() ?? "Unlimited") guests
-                                        </em>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(capacityText))
-                                    {
-                                        <em class="capacity-warning">
-                                            @capacityText
-                                        </em>
-                                    }
-                                    <em>@pendingCount pending · @(approvedCount + arrivedCount) confirmed</em>
-                                </a>
-
-                                <div class="events-row-status">
-                                    <small>Status</small>
-
-                        @if (ev.IsActive)
-                                    {
-                                        <span class="events-status active">
-                                            <i></i>
-                                            Active
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="events-status hidden">
-                                            <i></i>
-                                            Hidden
-                                        </span>
-                                    }
-
-                                    <span class="events-period tonight">
-                                        Tonight
-                                    </span>
-                                </div>
-
-                                <div class="events-row-actions-wrap">
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Bookings"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action is-primary">
-                                        Bookings
-                                    </a>
-
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Edit"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action">
-                                        Edit
-                                    </a>
-
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Delete"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action is-danger">
-                                        Archive
-                                    </a>
-                                </div>
-
-                            </article>
-                        }
-
-                    </div>
-                </details>
-            }
-
-            @if (upcomingEvents.Any())
-            {
-                <details class="events-group"
-                         data-event-group
-                         @(tonightEvents.Any() ? null : "open")>
-
-                    <summary class="events-group-summary">
-                        <span class="events-group-number">
-                            @(tonightEvents.Any() ? "02" : "01")
-                        </span>
-
-                        <span class="events-group-copy">
-                            <small>Future schedule</small>
-                            <strong>Upcoming</strong>
-                        </span>
-
-                        <span class="events-group-count">
-                            @upcomingEvents.Count
-                            @(upcomingEvents.Count == 1 ? "event" : "events")
-                        </span>
-
-                        <span class="events-group-toggle">
-                            <span class="events-group-open">Open</span>
-                            <span class="events-group-close">Close</span>
-                            <i></i>
-                        </span>
-                    </summary>
-
-                    <div class="events-group-content">
-
-                        <div class="events-list-heading">
-                            <span>Event</span>
-                            <span>Date and time</span>
-                            <span>Reservations</span>
-                            <span>Status</span>
-                            <span>Actions</span>
-                        </div>
-
-                        @foreach (var ev in upcomingEvents)
-                        {
-                            var stats = reservationStats.TryGetValue(
-                                ev.Id,
-                                out var eventStats)
-                                ? eventStats
-                                : new Dictionary<string, int>();
-
-                            var reservationsCount = stats.GetValueOrDefault("Reservations");
-                            var guestsCount = stats.GetValueOrDefault("Guests");
-                            var pendingCount = stats.GetValueOrDefault("Pending");
-                            var approvedCount = stats.GetValueOrDefault("Approved");
-                            var arrivedCount = stats.GetValueOrDefault("Arrived");
-                            var capacityClass = GetCapacityClass(ev, reservationsCount, guestsCount);
-                            var capacityText = GetCapacityText(ev, reservationsCount, guestsCount);
-
-                            <article class="events-list-row">
-
-                                <div class="events-row-main">
-                                    <div class="events-row-image">
-                                        @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
-                                        {
-                                            <img src="@Url.Content(ev.ImageUrl)"
-                                                 alt="@ev.Title"
-                                                 loading="lazy" />
-                                        }
-                                        else
-                                        {
-                                            <div class="events-row-placeholder">
-                                                <span>?</span>
-                                                <small>Event</small>
-                                            </div>
-                                        }
-                                </div>
-
-                                <div class="events-row-copy">
-                                    <span class="events-type @GetEventTypeClass(ev.EventType)">
-                                        @FormatEventType(ev.EventType)
-                                    </span>
-
-                                    <strong>@ev.Title</strong>
-
-                                    <p>
-                                        @(string.IsNullOrWhiteSpace(ev.Description)
-                                                                        ? "No description available."
-                                                                        : ev.Description)
-                            </p>
-                        </div>
-                    </div>
-
-                                <div class="events-row-date">
-                                    <small>Date and time</small>
-
-                                    <strong>
-                                        @ev.Date.ToString("dd MMM yyyy")
-                                    </strong>
-
-                                    <span>
-                                        @FormatTimeRange(ev.StartTime, ev.EndTime)
-                                    </span>
-                                </div>
-
-                                <a asp-controller="AdminReservations"
-                                   asp-action="Index"
-                                   asp-route-eventId="@ev.Id"
-                                   class="events-row-reservations @capacityClass">
-                                    <small>Reservations</small>
-                                    <strong>@reservationsCount</strong>
-                                    <span>@guestsCount guests</span>
-                                    @if (ev.MaxGuests.HasValue ||
-                                         ev.MaxReservations.HasValue)
-                                    {
-                                        <em>
-                                            Cap
-                                            @(ev.MaxReservations?.ToString() ?? "Unlimited") bookings ·
-                                            @(ev.MaxGuests?.ToString() ?? "Unlimited") guests
-                                        </em>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(capacityText))
-                                    {
-                                        <em class="capacity-warning">
-                                            @capacityText
-                                        </em>
-                                    }
-                                    <em>@pendingCount pending · @(approvedCount + arrivedCount) confirmed</em>
-                                </a>
-
-                                <div class="events-row-status">
-                                    <small>Status</small>
-
-                        @if (ev.IsActive)
-                                    {
-                                        <span class="events-status active">
-                                            <i></i>
-                                            Active
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="events-status hidden">
-                                            <i></i>
-                                            Hidden
-                                        </span>
-                                    }
-
-                                    <span class="events-period upcoming">
-                                        Upcoming
-                                    </span>
-                                </div>
-
-                                <div class="events-row-actions-wrap">
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Bookings"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action is-primary">
-                                        Bookings
-                                    </a>
-
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Edit"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action">
-                                        Edit
-                                    </a>
-
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Delete"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action is-danger">
-                                        Archive
-                                    </a>
-                                </div>
-
-                            </article>
-                        }
-
-                    </div>
-                </details>
-            }
-
-            @if (pastEvents.Any())
-            {
-                var pastGroupNumber = 1;
-
-                if (tonightEvents.Any())
-                {
-                    pastGroupNumber++;
-                }
-
-                if (upcomingEvents.Any())
-                {
-                    pastGroupNumber++;
-                }
-
-                <details class="events-group events-group-past"
-                         data-event-group>
-
-                    <summary class="events-group-summary">
-                        <span class="events-group-number">
-                            @pastGroupNumber.ToString("00")
-                        </span>
-
-                        <span class="events-group-copy">
-                            <small>Event archive</small>
-                            <strong>Past Events</strong>
-                        </span>
-
-                        <span class="events-group-count">
-                            @pastEvents.Count
-                            @(pastEvents.Count == 1 ? "event" : "events")
-                        </span>
-
-                        <span class="events-group-toggle">
-                            <span class="events-group-open">Open</span>
-                            <span class="events-group-close">Close</span>
-                            <i></i>
-                        </span>
-                    </summary>
-
-                    <div class="events-group-content">
-
-                        <div class="events-list-heading">
-                            <span>Event</span>
-                            <span>Date and time</span>
-                            <span>Reservations</span>
-                            <span>Status</span>
-                            <span>Actions</span>
-                        </div>
-
-                        @foreach (var ev in pastEvents)
-                        {
-                            var stats = reservationStats.TryGetValue(
-                                ev.Id,
-                                out var eventStats)
-                                ? eventStats
-                                : new Dictionary<string, int>();
-
-                            var reservationsCount = stats.GetValueOrDefault("Reservations");
-                            var guestsCount = stats.GetValueOrDefault("Guests");
-                            var pendingCount = stats.GetValueOrDefault("Pending");
-                            var approvedCount = stats.GetValueOrDefault("Approved");
-                            var arrivedCount = stats.GetValueOrDefault("Arrived");
-                            var capacityClass = GetCapacityClass(ev, reservationsCount, guestsCount);
-                            var capacityText = GetCapacityText(ev, reservationsCount, guestsCount);
-
-                            <article class="events-list-row is-past">
-
-                                <div class="events-row-main">
-                                    <div class="events-row-image">
-                                        @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
-                                        {
-                                            <img src="@Url.Content(ev.ImageUrl)"
-                                                 alt="@ev.Title"
-                                                 loading="lazy" />
-                                        }
-                                        else
-                                        {
-                                            <div class="events-row-placeholder">
-                                                <span>?</span>
-                                                <small>Event</small>
-                                            </div>
-                                        }
-                                </div>
-
-                                <div class="events-row-copy">
-                                    <span class="events-type @GetEventTypeClass(ev.EventType)">
-                                        @FormatEventType(ev.EventType)
-                                    </span>
-
-                                    <strong>@ev.Title</strong>
-
-                                    <p>
-                                        @(string.IsNullOrWhiteSpace(ev.Description)
-                                                                        ? "No description available."
-                                                                        : ev.Description)
-                            </p>
-                        </div>
-                    </div>
-
-                                <div class="events-row-date">
-                                    <small>Date and time</small>
-
-                                    <strong>
-                                        @ev.Date.ToString("dd MMM yyyy")
-                                    </strong>
-
-                                    <span>
-                                        @FormatTimeRange(ev.StartTime, ev.EndTime)
-                                    </span>
-                                </div>
-
-                                <a asp-controller="AdminReservations"
-                                   asp-action="Index"
-                                   asp-route-eventId="@ev.Id"
-                                   class="events-row-reservations @capacityClass">
-                                    <small>Reservations</small>
-                                    <strong>@reservationsCount</strong>
-                                    <span>@guestsCount guests</span>
-                                    @if (ev.MaxGuests.HasValue ||
-                                         ev.MaxReservations.HasValue)
-                                    {
-                                        <em>
-                                            Cap
-                                            @(ev.MaxReservations?.ToString() ?? "Unlimited") bookings ·
-                                            @(ev.MaxGuests?.ToString() ?? "Unlimited") guests
-                                        </em>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(capacityText))
-                                    {
-                                        <em class="capacity-warning">
-                                            @capacityText
-                                        </em>
-                                    }
-                                    <em>@pendingCount pending · @(approvedCount + arrivedCount) confirmed</em>
-                                </a>
-
-                                <div class="events-row-status">
-                                    <small>Status</small>
-
-                        @if (ev.IsActive)
-                                    {
-                                        <span class="events-status active">
-                                            <i></i>
-                                            Active
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="events-status hidden">
-                                            <i></i>
-                                            Hidden
-                                        </span>
-                                    }
-
-                                    <span class="events-period past">
-                                        Past event
-                                    </span>
-                                </div>
-
-                                <div class="events-row-actions-wrap">
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Bookings"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action is-primary">
-                                        Bookings
-                                    </a>
-
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Edit"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action">
-                                        Edit
-                                    </a>
-
-                                    <a asp-controller="AdminEvents"
-                                       asp-action="Delete"
-                                       asp-route-id="@ev.Id"
-                                       class="admin-row-action is-danger">
-                                        Archive
-                                    </a>
-                                </div>
-
-                            </article>
-                        }
-
-                    </div>
-                </details>
-            }
-
-        </section>
+        <div class="admin-empty-state">
+            <strong>No events scheduled.</strong>
+            <span>Create the first event to publish it on the website.</span>
+        </div>
     }
     else
     {
-        <section class="events-empty-state">
-            <span class="events-empty-symbol">?</span>
+        @if (tonightEvents.Count > 0)
+        {
+            <section class="admin-section">
+                <header class="admin-section-heading">
+                    <div>
+                        <span class="admin-workspace-eyebrow">Live schedule</span>
+                        <h2>Tonight</h2>
+                    </div>
 
-            <div>
-                <p>No event signal</p>
+                    <span class="admin-section-count">
+                        @tonightEvents.Count
+                    </span>
+                </header>
 
-                <h2>No events created yet</h2>
+                <div class="admin-list">
+                    @foreach (var eventItem in tonightEvents)
+                    {
+                        <partial name="_EventAdminRow"
+                                 model="eventItem" />
+                    }
+                </div>
+            </section>
+        }
 
-                <span>
-                    Create the first Rebel Rebel by Fat Kitchen night and it will appear on the public Events page.
+        <section class="admin-section">
+            <header class="admin-section-heading">
+                <div>
+                    <span class="admin-workspace-eyebrow">Future schedule</span>
+                    <h2>Upcoming</h2>
+                </div>
+
+                <span class="admin-section-count">
+                    @upcomingEvents.Count
                 </span>
+            </header>
 
-                <a asp-controller="AdminEvents"
-                   asp-action="Create">
-                    + Create First Event
-                </a>
-            </div>
+            @if (upcomingEvents.Count == 0)
+            {
+                <div class="admin-empty-state">
+                    <strong>No upcoming events.</strong>
+                    <span>Add an event when the next night is confirmed.</span>
+                </div>
+            }
+            else
+            {
+                <div class="admin-list">
+                    @foreach (var eventItem in upcomingEvents)
+                    {
+                        <partial name="_EventAdminRow"
+                                 model="eventItem" />
+                    }
+                </div>
+            }
         </section>
+
+        @if (pastEvents.Count > 0)
+        {
+            <details class="admin-content-disclosure">
+                <summary>
+                    <span>Past events</span>
+                    <span>@pastEvents.Count events</span>
+                </summary>
+
+                <div class="admin-list">
+                    @foreach (var eventItem in pastEvents)
+                    {
+                        <partial name="_EventAdminRow"
+                                 model="eventItem" />
+                    }
+                </div>
+            </details>
+        }
     }
 
 </div>
-
-@section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const eventGroups = Array.from(
-                document.querySelectorAll("[data-event-group]")
-            );
-
-            eventGroups.forEach(function (group) {
-                group.addEventListener("toggle", function () {
-                    if (!group.open) {
-                        return;
-                    }
-
-                    eventGroups.forEach(function (otherGroup) {
-                        if (otherGroup !== group) {
-                            otherGroup.open = false;
-                        }
-                    });
-                });
-            });
-        });
-    </script>
-}

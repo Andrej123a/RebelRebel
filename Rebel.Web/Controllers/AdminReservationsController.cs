@@ -36,7 +36,8 @@ namespace Rebel.Web.Controllers
             DateTime? date,
             string? range,
             TimeSpan? time,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool needsTable = false)
         {
             var nowInSkopje = TimeZoneInfo.ConvertTimeFromUtc(
                 DateTime.UtcNow,
@@ -103,6 +104,14 @@ namespace Rebel.Web.Controllers
                     r.ReservationTime == time.Value);
             }
 
+            if (needsTable)
+            {
+                query = query.Where(r =>
+                    (r.Status == ReservationStatus.Pending ||
+                     r.Status == ReservationStatus.Approved) &&
+                    (r.TableLabel == null || r.TableLabel == string.Empty));
+            }
+
             var reservations = await query
                 .OrderBy(r => r.ReservationDate)
                 .ThenBy(r =>
@@ -119,6 +128,7 @@ namespace Rebel.Web.Controllers
             ViewBag.SelectedDate = date;
             ViewBag.SelectedRange = selectedRange;
             ViewBag.SelectedTime = time;
+            ViewBag.NeedsTable = needsTable;
 
             if (eventId.HasValue)
             {
@@ -201,6 +211,7 @@ namespace Rebel.Web.Controllers
                 .ToListAsync(cancellationToken);
 
             ViewBag.TonightDate = today;
+            ViewBag.CurrentTime = nowInSkopje.TimeOfDay;
 
             ViewBag.TotalReservations =
                 reservations.Count;

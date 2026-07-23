@@ -26,6 +26,10 @@ namespace Rebel.Web.Controllers
         {
             var weekStart = GetWeekStart(startDate ?? DateTime.Today);
             var weekEnd = weekStart.AddDays(6);
+            var eventWeekStart =
+                DateTime.SpecifyKind(weekStart, DateTimeKind.Utc);
+            var eventWeekEndExclusive =
+                DateTime.SpecifyKind(weekEnd.AddDays(1), DateTimeKind.Utc);
             var eventStats = await _context.Reservations
                 .AsNoTracking()
                 .Where(reservation =>
@@ -89,8 +93,8 @@ namespace Rebel.Web.Controllers
             model.Events = await _context.Events
                 .AsNoTracking()
                 .Where(ev =>
-                    ev.Date >= weekStart &&
-                    ev.Date <= weekEnd &&
+                    ev.Date >= eventWeekStart &&
+                    ev.Date < eventWeekEndExclusive &&
                     ev.IsActive)
                 .OrderBy(ev => ev.Date)
                 .ThenBy(ev => ev.StartTime)
@@ -114,6 +118,47 @@ namespace Rebel.Web.Controllers
                 weekEvent.ReservationCount = stats.ReservationCount;
                 weekEvent.GuestCount = stats.GuestCount;
             }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> StaffMember(
+            Guid id,
+            DateTime? startDate,
+            CancellationToken cancellationToken)
+        {
+            var weekStart = GetWeekStart(startDate ?? DateTime.Today);
+            var weekEnd = weekStart.AddDays(6);
+
+            var staffMember = await _context.StaffMembers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    staff => staff.Id == id,
+                    cancellationToken);
+
+            if (staffMember == null)
+            {
+                return NotFound();
+            }
+
+            var model = new AdminStaffMemberScheduleViewModel
+            {
+                StaffMember = staffMember,
+                StartDate = weekStart,
+                EndDate = weekEnd,
+                PreviousWeek = weekStart.AddDays(-7),
+                NextWeek = weekStart.AddDays(7),
+                Shifts = await _context.StaffShifts
+                    .AsNoTracking()
+                    .Where(shift =>
+                        shift.StaffMemberId == id &&
+                        shift.ShiftDate >= weekStart &&
+                        shift.ShiftDate <= weekEnd)
+                    .OrderBy(shift => shift.ShiftDate)
+                    .ThenBy(shift => shift.StartsAt)
+                    .ToListAsync(cancellationToken)
+            };
 
             return View(model);
         }

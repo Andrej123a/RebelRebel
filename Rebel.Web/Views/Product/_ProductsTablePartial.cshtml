@@ -1,8 +1,8 @@
-﻿@model IEnumerable<Rebel.Domain.Entities.Product>
+@model IEnumerable<Rebel.Domain.Entities.Product>
 
 @{
     var products = Model?.ToList()
-                   ?? new List<Rebel.Domain.Entities.Product>();
+        ?? new List<Rebel.Domain.Entities.Product>();
 
     var productGroups = products
         .GroupBy(product =>
@@ -11,220 +11,112 @@
                 : product.Category!.Name)
         .OrderBy(group => group.Key)
         .ToList();
-
-    var totalProducts = products.Count;
-    var availableProducts = products.Count(product => product.IsAvailable);
-    var unavailableProducts = products.Count(product => !product.IsAvailable);
 }
 
-@if (products.Any())
+@if (products.Count == 0)
 {
-    <div class="product-inventory-stats">
-
-        <div class="product-stat product-stat-main">
-            <span class="product-stat-label">Visible items</span>
-            <strong>@totalProducts</strong>
-            <small>Current inventory</small>
-        </div>
-
-        <div class="product-stat">
-            <span class="product-stat-label">Categories</span>
-            <strong>@productGroups.Count</strong>
-            <small>Product groups</small>
-        </div>
-
-        <div class="product-stat product-stat-available">
-            <span class="product-stat-label">Available</span>
-            <strong>@availableProducts</strong>
-            <small>Ready to serve</small>
-        </div>
-
-        <div class="product-stat product-stat-unavailable">
-            <span class="product-stat-label">Unavailable</span>
-            <strong>@unavailableProducts</strong>
-            <small>Needs attention</small>
-        </div>
-    </div>
-
-    <div class="product-category-list">
-        @{
-            var groupNumber = 0;
-        }
-
-        @foreach (var group in productGroups)
-        {
-            groupNumber++;
-
-            <details class="product-category-group"
-                     data-group-key="@group.Key"
-                     data-product-group>
-
-                <summary class="product-category-summary">
-
-                    <span class="product-category-number">
-                        @groupNumber.ToString("00")
-                    </span>
-
-                    <span class="product-category-copy">
-                        <small>Product category</small>
-                        <strong>@group.Key</strong>
-                    </span>
-
-                    <span class="product-category-total">
-                        @group.Count()
-                        @(group.Count() == 1 ? "item" : "items")
-                    </span>
-
-                    <span class="product-category-toggle">
-                        <span class="product-category-open-text">Open</span>
-                        <span class="product-category-close-text">Close</span>
-                        <i></i>
-                    </span>
-                </summary>
-
-                <div class="product-category-content">
-
-                    <div class="product-list-heading">
-                        <span>Product</span>
-                        <span>Price</span>
-                        <span>Status</span>
-                        <span>Actions</span>
-                    </div>
-
-                    <div class="product-list">
-                        @foreach (var item in group.OrderBy(product => product.Name))
-                        {
-                            <article class="product-list-row">
-
-                                <div class="product-row-main">
-                                    <div class="product-row-image">
-                                        @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                                        {
-                                            <img src="@Url.Content(item.ImageUrl)"
-                                                 alt="@item.Name"
-                                                 loading="lazy" />
-                                        }
-                                        else
-                                        {
-                                            <div class="product-row-placeholder">
-                                                <span>NO</span>
-                                                <small>IMAGE</small>
-                                            </div>
-                                        }
-                                    </div>
-
-                                    <div class="product-row-copy">
-                                        <small>Menu item</small>
-                                        <strong>@item.Name</strong>
-
-                                        <div class="product-tag-list">
-                                            @if (item.IsPopular)
-                                            {
-                                                <span><i>*</i>Popular</span>
-                                            }
-
-                                            @if (item.IsSpicy)
-                                            {
-                                                <span><i>🌶</i>Spicy</span>
-                                            }
-
-                                            @if (item.IsVegetarian)
-                                            {
-                                                <span><i>☘</i>Vegetarian</span>
-                                            }
-
-                                            @if (item.IsVegan)
-                                            {
-                                                <span><i>🌿</i>Vegan</span>
-                                            }
-
-                                            @if (item.IsGlutenFree)
-                                            {
-                                                <span><i>GF</i>Gluten free</span>
-                                            }
-
-                                            @if (item.ContainsNuts)
-                                            {
-                                                <span class="warning"><i>!</i>Nuts</span>
-                                            }
-
-                                            @if (item.IsLimited)
-                                            {
-                                                <span><i>#</i>Limited</span>
-                                            }
-
-                                            @if (item.IsPromo)
-                                            {
-                                                <span><i>%</i>Promo</span>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="product-row-price">
-                                    <small>Price</small>
-                                    <strong>
-                                        @item.Price.ToString("0.##")
-                                        <span>MKD</span>
-                                    </strong>
-                                </div>
-
-                                <div class="product-row-status">
-                                    <small>Status</small>
-
-                                    <form asp-controller="Product"
-                                          asp-action="ToggleAvailability"
-                                          asp-route-id="@item.Id"
-                                          method="post"
-                                          class="product-status-form">
-
-                                        @Html.AntiForgeryToken()
-
-                                        <button type="submit"
-                                                class="product-status @(item.IsAvailable ? "available" : "unavailable")"
-                                                aria-label="Mark @item.Name as @(item.IsAvailable ? "unavailable" : "available")">
-                                            <i></i>
-                                            @(item.IsAvailable ? "Available" : "Unavailable")
-                                        </button>
-                                    </form>
-                                </div>
-
-                                <div class="product-row-actions-wrap">
-                                    <a asp-controller="Product"
-                                       asp-action="Edit"
-                                       asp-route-id="@item.Id"
-                                       class="admin-row-action is-primary">
-                                        Edit
-                                    </a>
-
-                                    <a asp-controller="Product"
-                                       asp-action="Delete"
-                                       asp-route-id="@item.Id"
-                                       class="admin-row-action is-danger">
-                                        Archive
-                                    </a>
-                                </div>
-
-                            </article>
-                        }
-                    </div>
-                </div>
-            </details>
-        }
+    <div class="admin-empty-state">
+        <strong>No menu items found.</strong>
+        <span>Try clearing the selected filters.</span>
     </div>
 }
 else
 {
-    <div class="product-empty-state">
-        <span class="product-empty-number">00</span>
+    <div class="admin-section">
+        @foreach (var group in productGroups)
+        {
+            <details class="admin-content-disclosure"
+                     data-group-key="@group.Key"
+                     data-product-group>
+                <summary>
+                    <span>@group.Key</span>
+                    <span>@group.Count() items</span>
+                </summary>
 
-        <div>
-            <p>No inventory signal</p>
-            <h2>No products found</h2>
+                <div class="admin-list">
+                    @foreach (var item in group.OrderBy(product => product.Name))
+                    {
+                        var tagNames = new List<string>();
 
-            <span>
-                Try changing or resetting the selected filters.
-            </span>
-        </div>
+                        if (item.IsPopular) tagNames.Add("Popular");
+                        if (item.IsSpicy) tagNames.Add("Spicy");
+                        if (item.IsVegetarian) tagNames.Add("Vegetarian");
+                        if (item.IsVegan) tagNames.Add("Vegan");
+                        if (item.IsGlutenFree) tagNames.Add("Gluten free");
+                        if (item.ContainsNuts) tagNames.Add("Contains nuts");
+                        if (item.IsLimited) tagNames.Add("Limited");
+                        if (item.IsPromo) tagNames.Add("Promo");
+
+                        <article class="admin-list-row @(!item.IsAvailable ? "is-danger" : "")">
+                            <div class="admin-row-main">
+                                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                {
+                                    <img src="@Url.Content(item.ImageUrl)"
+                                         alt=""
+                                         loading="lazy"
+                                         class="admin-row-thumbnail" />
+                                }
+
+                                <div class="admin-row-copy">
+                                    <strong>@item.Name</strong>
+                                    <span>
+                                        @(tagNames.Count == 0
+                                            ? group.Key
+                                            : string.Join(" / ", tagNames))
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="admin-row-data">
+                                <strong>@item.Price.ToString("0.##") MKD</strong>
+                                <span>@group.Key</span>
+                            </div>
+
+                            <form asp-controller="Product"
+                                  asp-action="ToggleAvailability"
+                                  asp-route-id="@item.Id"
+                                  method="post"
+                                  class="product-status-form admin-state">
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit"
+                                        class="admin-state @(item.IsAvailable ? "is-success" : "is-danger")"
+                                        aria-label="Mark @item.Name as @(item.IsAvailable ? "unavailable" : "available")">
+                                    @(item.IsAvailable ? "Available" : "Unavailable")
+                                </button>
+                            </form>
+
+                            <div class="admin-row-actions">
+                                <a asp-controller="Product"
+                                   asp-action="Edit"
+                                   asp-route-id="@item.Id"
+                                   class="admin-secondary-button">
+                                    Edit
+                                </a>
+
+                                <details class="admin-more-menu">
+                                    <summary>More</summary>
+
+                                    <div class="admin-more-panel">
+                                        <a asp-controller="Product"
+                                           asp-action="Edit"
+                                           asp-route-id="@item.Id">
+                                            Edit item
+                                        </a>
+
+                                        <a asp-controller="Product"
+                                           asp-action="Delete"
+                                           asp-route-id="@item.Id"
+                                           class="is-danger">
+                                            Archive item
+                                        </a>
+                                    </div>
+                                </details>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </details>
+        }
     </div>
 }

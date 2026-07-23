@@ -1,149 +1,157 @@
-﻿@model IEnumerable<Rebel.Domain.Entities.Product>
+@model IEnumerable<Rebel.Domain.Entities.Product>
 
 @{
-    ViewData["Title"] = "Products";
+    ViewData["Title"] = "Menu";
+
+    var products = Model?.ToList()
+        ?? new List<Rebel.Domain.Entities.Product>();
+
+    var unavailableCount =
+        products.Count(product => !product.IsAvailable);
 }
 
-<div class="product-admin-page">
+<div class="admin-workspace">
 
-    <section class="product-admin-hero">
-        <div>
-            <p class="product-admin-eyebrow">
-                Rebel menu inventory
-            </p>
+    <header class="admin-workspace-header">
+        <div class="admin-workspace-heading">
+            <span class="admin-workspace-eyebrow">
+                Menu board
+            </span>
 
-            <h1>Products</h1>
+            <h1 class="admin-workspace-title">
+                Menu
+            </h1>
 
-            <p class="product-admin-description">
-                Search, filter and manage every item from one place.
+            <p class="admin-workspace-copy">
+                Keep prices, availability, dietary tags, and menu sections
+                accurate from one working list.
             </p>
         </div>
 
-        <div class="admin-page-tools">
+        <div class="admin-workspace-actions">
             <a asp-controller="Product"
                asp-action="Create"
-               class="admin-tool-button is-primary">
-                Add Item
+               class="admin-primary-button">
+                Add item
             </a>
 
             <a asp-controller="Category"
                asp-action="Index"
-               class="admin-tool-button">
+               class="admin-secondary-button">
                 Sections
             </a>
-
-            <a asp-controller="Product"
-               asp-action="Index"
-               asp-route-isAvailable="false"
-               class="admin-tool-button">
-                Sold Out
-            </a>
         </div>
+    </header>
+
+    <section class="admin-metric-bar"
+             aria-label="Menu summary">
+        <div class="admin-metric">
+            <span>Showing</span>
+            <strong>@products.Count</strong>
+        </div>
+
+        <div class="admin-metric">
+            <span>Available</span>
+            <strong>@products.Count(product => product.IsAvailable)</strong>
+        </div>
+
+        <a asp-controller="Product"
+           asp-action="Index"
+           asp-route-isAvailable="false"
+           class="admin-metric @(ViewBag.IsAvailable == false ? "active" : "")">
+            <span>Unavailable</span>
+            <strong>@unavailableCount</strong>
+        </a>
     </section>
 
-    <form id="productFilterForm"
-          class="product-filter-panel">
+    <details class="admin-filter-disclosure">
+        <summary>
+            <span>Search and filters</span>
+            <span>Open</span>
+        </summary>
 
-        <div class="product-filter-field product-filter-search">
-            <label for="searchTermInput">Search</label>
-
-            <div class="product-search-control">
-                <span class="product-search-symbol">⌕</span>
-
-                <input type="text"
+        <form id="productFilterForm"
+              class="admin-filter-panel">
+            <label>
+                Search
+                <input type="search"
                        name="searchTerm"
                        value="@ViewBag.SearchTerm"
-                       placeholder="Search products by name..."
+                       placeholder="Item name"
                        id="searchTermInput"
                        autocomplete="off" />
-            </div>
-        </div>
+            </label>
 
-        <div class="product-filter-field">
-            <label for="categorySelect">Category</label>
+            <label>
+                Section
+                <select name="categoryId"
+                        asp-items="ViewBag.Categories"
+                        id="categorySelect">
+                    <option value="">All sections</option>
+                </select>
+            </label>
 
-            <select name="categoryId"
-                    asp-items="ViewBag.Categories"
-                    id="categorySelect">
-                <option value="">All categories</option>
-            </select>
-        </div>
+            <label>
+                Availability
+                <select name="isAvailable"
+                        id="statusSelect">
+                    <option value="">All items</option>
+                    <option value="true"
+                            selected="@(ViewBag.IsAvailable == true ? "selected" : null)">
+                        Available
+                    </option>
+                    <option value="false"
+                            selected="@(ViewBag.IsAvailable == false ? "selected" : null)">
+                        Unavailable
+                    </option>
+                </select>
+            </label>
 
-        <div class="product-filter-field">
-            <label for="statusSelect">Status</label>
-
-            <select name="isAvailable"
-                    id="statusSelect">
-
-                <option value="">All statuses</option>
-
-                @if (ViewBag.IsAvailable == true)
-                {
-                    <option value="true" selected>Available</option>
-                }
-                else
-                {
-                    <option value="true">Available</option>
-                }
-
-                @if (ViewBag.IsAvailable == false)
-                {
-                    <option value="false" selected>Unavailable</option>
-                }
-                else
-                {
-                    <option value="false">Unavailable</option>
-                }
-            </select>
-        </div>
-
-        <div class="product-filter-field">
-            <label for="tagSelect">Tag</label>
-
-            <select name="tag"
-                    id="tagSelect">
-
-                <option value="">All tags</option>
-
-                @foreach (var tagOption in new[]
-                {
-                    ("popular", "Popular"),
-                    ("spicy", "Spicy"),
-                    ("vegetarian", "Vegetarian"),
-                    ("vegan", "Vegan"),
-                    ("gluten-free", "Gluten free"),
-                    ("nuts", "Contains nuts"),
-                    ("limited", "Limited"),
-                    ("promo", "Promo")
-                })
-                {
-                    if (ViewBag.Tag == tagOption.Item1)
+            <label>
+                Dietary tag
+                <select name="tag"
+                        id="tagSelect">
+                    <option value="">All tags</option>
+                    @foreach (var tagOption in new[]
                     {
-                        <option value="@tagOption.Item1" selected>@tagOption.Item2</option>
-                    }
-                    else
+                        ("popular", "Popular"),
+                        ("spicy", "Spicy"),
+                        ("vegetarian", "Vegetarian"),
+                        ("vegan", "Vegan"),
+                        ("gluten-free", "Gluten free"),
+                        ("nuts", "Contains nuts"),
+                        ("limited", "Limited"),
+                        ("promo", "Promo")
+                    })
                     {
-                        <option value="@tagOption.Item1">@tagOption.Item2</option>
+                        <option value="@tagOption.Item1"
+                                selected="@(ViewBag.Tag == tagOption.Item1 ? "selected" : null)">
+                            @tagOption.Item2
+                        </option>
                     }
-                }
-            </select>
-        </div>
+                </select>
+            </label>
 
-        <div class="product-filter-reset">
+            <button type="submit"
+                    class="admin-primary-button">
+                Apply filters
+            </button>
+        </form>
+
+        <div class="admin-filter-shortcuts">
             <a asp-controller="Product"
                asp-action="Index">
-                Reset filters
+                Clear filters
             </a>
         </div>
-    </form>
+    </details>
 
     <div id="productsTableContainer"
-         class="product-results"
          aria-live="polite">
-
         <partial name="_ProductsTablePartial"
                  model="Model" />
     </div>
+
 </div>
 
 @section Scripts {
@@ -155,7 +163,6 @@
             const statusSelect = document.getElementById("statusSelect");
             const tagSelect = document.getElementById("tagSelect");
             const productsContainer = document.getElementById("productsTableContainer");
-
             const filterUrl = '@Url.Action("FilterProducts", "Product")';
 
             let debounceTimer;
@@ -191,7 +198,6 @@
                     }
 
                     group.dataset.accordionBound = "true";
-
                     group.addEventListener("toggle", function () {
                         if (!group.open) {
                             return;
@@ -213,15 +219,12 @@
                         }
 
                         form.dataset.toggleBound = "true";
-
                         form.addEventListener("submit", async function (event) {
                             event.preventDefault();
-
                             const button = form.querySelector("button");
 
                             try {
                                 rememberOpenGroup();
-
                                 button?.setAttribute("disabled", "disabled");
 
                                 const response = await fetch(form.action, {
@@ -233,7 +236,7 @@
                                 });
 
                                 if (!response.ok) {
-                                    throw new Error("Failed to update product status.");
+                                    throw new Error("Failed to update item availability.");
                                 }
 
                                 await loadProducts();
@@ -257,7 +260,6 @@
                 });
 
                 try {
-                    productsContainer.classList.add("is-loading");
                     productsContainer.setAttribute("aria-busy", "true");
 
                     const response = await fetch(
@@ -271,25 +273,22 @@
                     );
 
                     if (!response.ok) {
-                        throw new Error("Failed to load products.");
+                        throw new Error("Failed to load menu items.");
                     }
 
                     productsContainer.innerHTML = await response.text();
-
                     bindProductGroups();
                 }
                 catch (error) {
                     console.error(error);
-
                     productsContainer.innerHTML = `
-                        <div class="product-load-error">
-                            <strong>Products could not be loaded.</strong>
-                            <span>Please refresh the page and try again.</span>
+                        <div class="admin-empty-state">
+                            <strong>Menu items could not be loaded.</strong>
+                            <span>Refresh the page and try again.</span>
                         </div>
                     `;
                 }
                 finally {
-                    productsContainer.classList.remove("is-loading");
                     productsContainer.removeAttribute("aria-busy");
                 }
             }
@@ -301,11 +300,8 @@
 
             searchInput.addEventListener("input", function () {
                 clearTimeout(debounceTimer);
-
                 debounceTimer = setTimeout(function () {
-                    const searchLength = searchInput.value.trim().length;
-
-                    if (searchLength === 1) {
+                    if (searchInput.value.trim().length === 1) {
                         return;
                     }
 

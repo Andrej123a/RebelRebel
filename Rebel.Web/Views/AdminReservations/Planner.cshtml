@@ -30,60 +30,55 @@
             group => group.ToList());
 }
 
-<section class="planner-page">
+<div class="admin-workspace planner-page">
 
-    <header class="planner-hero">
-        <div>
-            <p>Reservation rhythm</p>
-            <h1>Week Planner</h1>
-            <span>
-                @startDate.ToString("dd MMM") - @endDate.ToString("dd MMM yyyy")
+    <header class="admin-workspace-header">
+        <div class="admin-workspace-heading">
+            <span class="admin-workspace-eyebrow">
+                Weekly capacity
             </span>
+
+            <h1 class="admin-workspace-title">
+                Week planner
+            </h1>
+
+            <p class="admin-workspace-copy">
+                @startDate.ToString("dd MMM") - @endDate.ToString("dd MMM yyyy").
+                Select any time slot to open its reservations.
+            </p>
         </div>
 
-        <div class="admin-page-tools">
+        <div class="admin-workspace-actions">
             <a asp-controller="AdminReservations"
                asp-action="Planner"
                asp-route-startDate="@previousWeek.ToString("yyyy-MM-dd")"
-               class="admin-tool-button">
-                Previous Week
+               class="admin-secondary-button">
+                Previous
             </a>
 
             <a asp-controller="AdminReservations"
                asp-action="Planner"
                asp-route-startDate="@today.ToString("yyyy-MM-dd")"
-               class="admin-tool-button">
-                This Week
+               class="admin-primary-button">
+                This week
             </a>
 
             <a asp-controller="AdminReservations"
                asp-action="Planner"
                asp-route-startDate="@nextWeek.ToString("yyyy-MM-dd")"
-               class="admin-tool-button">
-                Next Week
-            </a>
-
-            <a asp-controller="AdminReservations"
-               asp-action="Tonight"
-               class="admin-tool-button is-primary">
-                Tonight
-            </a>
-
-            <a asp-controller="AdminReservations"
-               asp-action="Index"
-               class="admin-tool-button">
-                Booking Board
-            </a>
-
-            <a asp-controller="AdminTables"
-               asp-action="Index"
-               class="admin-tool-button">
-                Floor Plan
+               class="admin-secondary-button">
+                Next
             </a>
         </div>
     </header>
 
-    <section class="planner-controls">
+    <details class="admin-filter-disclosure">
+        <summary>
+            <span>Planner options</span>
+            <span>Open</span>
+        </summary>
+
+        <section class="planner-controls">
         <form asp-controller="AdminReservations"
               asp-action="Planner"
               method="get">
@@ -104,7 +99,8 @@
             <span><i class="legend-gap"></i>No table</span>
             <span><i class="legend-event"></i>Event</span>
         </div>
-    </section>
+        </section>
+    </details>
 
     <div class="planner-grid-wrap">
 
@@ -204,5 +200,5 @@
 
     </div>
 
-</section>
+</div>
 

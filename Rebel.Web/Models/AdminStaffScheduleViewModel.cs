@@ -84,4 +84,20 @@ namespace Rebel.Web.Models
 
         public int GuestCount { get; set; }
     }
+
+    public class AdminStaffMemberScheduleViewModel
+    {
+        public StaffMember StaffMember { get; set; } = new();
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime EndDate { get; set; }
+
+        public DateTime PreviousWeek { get; set; }
+
+        public DateTime NextWeek { get; set; }
+
+        public List<StaffShift> Shifts { get; set; } =
+            new();
+    }
 }
