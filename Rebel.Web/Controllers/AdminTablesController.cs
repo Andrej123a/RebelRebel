@@ -4,12 +4,16 @@ using Microsoft.EntityFrameworkCore;
 using Rebel.Domain.Entities;
 using Rebel.Domain.Enums;
 using Rebel.Infrastructure.Data;
+using Rebel.Web.Models;
 
 namespace Rebel.Web.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminTablesController : Controller
     {
+        private static readonly TimeZoneInfo SkopjeTimeZone =
+            TimeZoneInfo.FindSystemTimeZoneById("Europe/Skopje");
+
         private readonly AppDbContext _context;
 
         public AdminTablesController(AppDbContext context)
@@ -21,13 +25,85 @@ namespace Rebel.Web.Controllers
         public async Task<IActionResult> Index(
             CancellationToken cancellationToken)
         {
+            var nowInSkopje = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                SkopjeTimeZone);
+
+            var today = nowInSkopje.Date;
+
             var tables = await _context.PubTables
                 .AsNoTracking()
                 .OrderBy(table => table.Area)
                 .ThenBy(table => table.Label)
                 .ToListAsync(cancellationToken);
 
-            return View(tables);
+            var operationalReservations = await _context.Reservations
+                .AsNoTracking()
+                .Where(reservation =>
+                    reservation.TableLabel != null &&
+                    reservation.ReservationDate >= today &&
+                    (reservation.Status == ReservationStatus.Approved ||
+                     reservation.Status == ReservationStatus.Arrived))
+                .OrderBy(reservation => reservation.ReservationDate)
+                .ThenBy(reservation => reservation.ReservationTime)
+                .ToListAsync(cancellationToken);
+
+            var reservationsByTable = operationalReservations
+                .GroupBy(
+                    reservation => reservation.TableLabel!.Trim(),
+                    StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.ToList(),
+                    StringComparer.OrdinalIgnoreCase);
+
+            var model = new AdminFloorPlanViewModel
+            {
+                CurrentLocalDate = today,
+                Tables = tables
+                    .Select(table =>
+                    {
+                        reservationsByTable.TryGetValue(
+                            table.Label,
+                            out var tableReservations);
+
+                        tableReservations ??= new List<Reservation>();
+
+                        var arrivedReservation = tableReservations
+                            .Where(reservation =>
+                                reservation.Status ==
+                                    ReservationStatus.Arrived &&
+                                reservation.ReservationDate == today)
+                            .OrderByDescending(reservation =>
+                                reservation.ReservationTime)
+                            .FirstOrDefault();
+
+                        var nextReservation = tableReservations
+                            .Where(reservation =>
+                                reservation.Status ==
+                                    ReservationStatus.Approved &&
+                                (reservation.ReservationDate > today ||
+                                 (reservation.ReservationDate == today &&
+                                  reservation.ReservationTime >=
+                                      nowInSkopje.TimeOfDay)))
+                            .OrderBy(reservation =>
+                                reservation.ReservationDate)
+                            .ThenBy(reservation =>
+                                reservation.ReservationTime)
+                            .FirstOrDefault();
+
+                        return new AdminFloorTableViewModel
+                        {
+                            Table = table,
+                            OperationalReservation =
+                                arrivedReservation ?? nextReservation,
+                            IsOccupied = arrivedReservation != null
+                        };
+                    })
+                    .ToList()
+            };
+
+            return View(model);
         }
 
         [HttpGet]

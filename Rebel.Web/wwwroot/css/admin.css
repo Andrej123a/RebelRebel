@@ -10252,3 +10252,114 @@ a.admin-metric.active {
         overflow-wrap: anywhere;
     }
 }
+
+/* Floor plan: operational booking visibility */
+.table-floor-row {
+    grid-template-columns:
+        minmax(170px, 1fr)
+        minmax(110px, 0.45fr)
+        minmax(220px, 0.9fr)
+        minmax(90px, auto)
+        auto;
+}
+
+.table-next-booking {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+
+.table-next-booking > span {
+    color: var(--rebel-yellow);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+}
+
+.table-next-booking > strong,
+.table-next-booking > a {
+    overflow: hidden;
+    color: #f2eee7;
+    font-size: 0.84rem;
+    font-weight: 800;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-next-booking > a:hover {
+    color: var(--rebel-yellow);
+}
+
+.table-next-booking > small {
+    overflow: hidden;
+    color: var(--workspace-muted);
+    font-size: 0.67rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-next-booking.is-empty > span,
+.table-next-booking.is-empty > strong {
+    color: #858a91;
+}
+
+@media (max-width: 1180px) {
+    .table-floor-row {
+        grid-template-columns: minmax(190px, 1fr) minmax(210px, 1fr) auto;
+    }
+
+    .table-floor-row > .admin-row-data {
+        display: none;
+    }
+
+    .table-floor-row > .admin-state {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .table-floor-row > .table-next-booking {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
+
+    .table-floor-row > .admin-row-actions {
+        grid-column: 3;
+        grid-row: 1 / span 2;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .table-floor-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .table-floor-row > .table-next-booking {
+        grid-column: 1;
+        grid-row: auto;
+        padding-top: 11px;
+        border-top: 1px solid var(--workspace-line);
+    }
+
+    .table-floor-row > .admin-state {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .table-floor-row > .admin-row-actions {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+    }
+}
+
+@media (max-width: 520px) {
+    .table-floor-row {
+        grid-template-columns: 1fr;
+    }
+
+    .table-floor-row > .admin-row-actions {
+        grid-column: 1;
+        grid-row: auto;
+    }
+}

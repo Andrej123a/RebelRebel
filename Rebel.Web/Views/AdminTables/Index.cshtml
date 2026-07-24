@@ -1,20 +1,20 @@
-@model List<Rebel.Domain.Entities.PubTable>
+@model Rebel.Web.Models.AdminFloorPlanViewModel
 
 @{
     ViewData["Title"] = "Tables";
 
-    var activeTables = Model.Count(table => table.IsActive);
-    var inactiveTables = Model.Count(table => !table.IsActive);
+    var activeTables = Model.Tables.Count(item => item.Table.IsActive);
+    var inactiveTables = Model.Tables.Count(item => !item.Table.IsActive);
 
-    var activeCapacity = Model
-        .Where(table => table.IsActive)
-        .Sum(table => table.Capacity);
+    var activeCapacity = Model.Tables
+        .Where(item => item.Table.IsActive)
+        .Sum(item => item.Table.Capacity);
 
-    var tableGroups = Model
-        .GroupBy(table =>
-            string.IsNullOrWhiteSpace(table.Area)
+    var tableGroups = Model.Tables
+        .GroupBy(item =>
+            string.IsNullOrWhiteSpace(item.Table.Area)
                 ? "Main floor"
-                : table.Area)
+                : item.Table.Area)
         .OrderBy(group => group.Key)
         .ToList();
 }
@@ -60,7 +60,7 @@
         </div>
 
         <div class="admin-metric">
-            <span>Available seats</span>
+            <span>Active capacity</span>
             <strong>@activeCapacity</strong>
         </div>
 
@@ -70,7 +70,7 @@
         </div>
     </section>
 
-    @if (Model.Count == 0)
+    @if (Model.Tables.Count == 0)
     {
         <div class="admin-empty-state">
             <strong>No tables configured.</strong>
@@ -83,23 +83,38 @@
         {
             var group = tableGroups[index];
             var groupCapacity = group
-                .Where(table => table.IsActive)
-                .Sum(table => table.Capacity);
+                .Where(item => item.Table.IsActive)
+                .Sum(item => item.Table.Capacity);
 
             <details class="admin-content-disclosure table-zone-disclosure"
                      open="@(index == 0 ? "open" : null)">
                 <summary>
                     <span>@group.Key</span>
                     <span>
-                        @group.Count(table => table.IsActive) active /
+                        @group.Count(item => item.Table.IsActive) active /
                         @groupCapacity seats
                     </span>
                 </summary>
 
                 <div class="admin-list">
-                    @foreach (var table in group.OrderBy(table => table.Label))
+                    @foreach (var item in group.OrderBy(item => item.Table.Label))
                     {
-                        <article class="admin-list-row @(!table.IsActive ? "is-danger" : "")">
+                        var table = item.Table;
+                        var reservation = item.OperationalReservation;
+                        var isToday =
+                            reservation?.ReservationDate ==
+                                Model.CurrentLocalDate;
+
+                        var isTomorrow =
+                            reservation?.ReservationDate ==
+                                Model.CurrentLocalDate.AddDays(1);
+
+                        var reservationDateLabel =
+                            isToday ? "Today" :
+                            isTomorrow ? "Tomorrow" :
+                            reservation?.ReservationDate.ToString("ddd, dd MMM");
+
+                        <article class="admin-list-row table-floor-row @(!table.IsActive ? "is-danger" : item.IsOccupied ? "is-attention" : "")">
                             <div class="admin-row-main">
                                 <div class="admin-row-copy">
                                     <strong>@table.Label</strong>
@@ -112,8 +127,45 @@
                                 <span>Maximum party size</span>
                             </div>
 
-                            <span class="admin-state @(table.IsActive ? "is-success" : "is-danger")">
-                                @(table.IsActive ? "Assignable" : "Inactive")
+                            <div class="table-next-booking @(reservation == null ? "is-empty" : "")">
+                                @if (reservation == null)
+                                {
+                                    <span>Next booking</span>
+                                    <strong>Schedule clear</strong>
+                                    <small>No upcoming reservation</small>
+                                }
+                                else
+                                {
+                                    <span>
+                                        @(item.IsOccupied
+                                            ? "Current booking"
+                                            : "Next booking")
+                                    </span>
+
+                                    <a asp-controller="AdminReservations"
+                                       asp-action="Details"
+                                       asp-route-id="@reservation.Id">
+                                        @(item.IsOccupied
+                                            ? "Occupied now"
+                                            : $"{reservationDateLabel} / {reservation.ReservationTime:hh\\:mm}")
+                                    </a>
+
+                                    <small>
+                                        @reservation.FullName /
+                                        @reservation.NumberOfGuests
+                                        @(reservation.NumberOfGuests == 1
+                                            ? "guest"
+                                            : "guests")
+                                    </small>
+                                }
+                            </div>
+
+                            <span class="admin-state @(!table.IsActive ? "is-danger" : item.IsOccupied ? "is-attention" : "is-success")">
+                                @(!table.IsActive
+                                    ? "Inactive"
+                                    : item.IsOccupied
+                                        ? "Occupied"
+                                        : "Assignable")
                             </span>
 
                             <div class="admin-row-actions">
